@@ -15,6 +15,7 @@ def singleton(cls):
 
 @singleton
 class LiveQuery(LoggingObject):
+	""" Represents a Live query object. """
 	def __init__(self):
 		self.indent = 0
 		self.tick_callback = None
