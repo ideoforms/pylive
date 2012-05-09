@@ -41,4 +41,3 @@ class Clip(LoggingObject):
 		self.trace("playing")
 		live = LiveQuery()
 		live.cmd("/live/play/clip", self.track.index, self.index)
-		# self.track.set_playing()

@@ -64,8 +64,8 @@ class Track(LoggingObject):
 				# name = live.query("/live/name/clip", self.index, number)
 				# name = name[2]
 				# self.clips[number].name = name
-				loop_start = live.query_one("/live/clip/loopstart", self.index, number)
-				print "loop start = %d" % loop_start
+				# loop_start = live.query_one("/live/clip/loopstart", self.index, number)
+				# print "loop start = %d" % loop_start
 				self.clip_init = number
 
 	def __str__(self):
@@ -78,6 +78,13 @@ class Track(LoggingObject):
 		self.trace()
 		for index, clip in self.clips.items():
 			clip.dump()
+
+	def clips_between(self, index_start, index_finish):
+		clips = []
+		for n in range(index_start, index_finish):
+			if n in self.clips:
+				clips.append(self.clips[n])
+		return clips
 
 	def play_clip(self, index):
 		self.playing = True
