@@ -7,3 +7,4 @@ from live.track import *
 from live.clip import *
 from live.set import *
 from live.group import *
+from live.query import *

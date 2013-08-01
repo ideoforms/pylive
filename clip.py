@@ -1,4 +1,4 @@
-from live.liveq import *
+from live.query import *
 from live.object import *
 
 import random

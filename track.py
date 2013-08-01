@@ -1,6 +1,6 @@
 from live.object import *
 from live.clip import *
-from live.liveq import *
+from live.query import *
 
 import re
 import random
