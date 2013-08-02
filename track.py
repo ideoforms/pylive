@@ -50,13 +50,12 @@ class Track(LoggingObject):
 
 		clipinfo = info[2:]
 
-		live = LiveQuery()
 		for n in range(0, len(clipinfo), 3):
 			number = n / 3
 			state = clipinfo[n + 1]
 			length = clipinfo[n + 2]
 			if state > 0:
-				self.clips[number] = Clip(self, number, state, length)
+				self.clips[number] = live.Clip(self, number, state, length)
 				self.clips[number].indent = 3 if self.group else 2
 				#--------------------------------------------------------------------------
 				# would be nice, but slows things down fivefold.
@@ -70,7 +69,7 @@ class Track(LoggingObject):
 
 	def __str__(self):
 		if self.group:
-			return "live.track(%s,%d)" % (self.group.group_index, self.index)
+			return "live.track(group %s, index %d): %s" % (self.group.group_index, self.index, self.name)
 		else:
 			return "live.track(_,%d)" % (self.index)
 
@@ -102,7 +101,7 @@ class Track(LoggingObject):
 	def stop(self):
 		self.playing = False
 		self.clip_playing = None
-		live = LiveQuery()
+		live = live.Query()
 		live.cmd("/live/stop/track", self.index)
 
 	def syncopate(self):
@@ -118,7 +117,7 @@ class Track(LoggingObject):
 		return self.clips
 
 	def sync(self):
-		live = LiveQuery()
+		live = live.Query()
 		info = live.query("/live/track/info")
 		print "track %d: info %s" % (self.index, info[0])
 		self.playing = True if info[0] > 1 else False

@@ -1,9 +1,9 @@
-from live.query import *
-from live.object import *
+import live.query
+import live.object
 
 import random
 
-class Clip(LoggingObject):
+class Clip(live.LoggingObject):
 	def __init__(self, track, index, state, length):
 		self.track = track
 		self.index = index
@@ -25,13 +25,13 @@ class Clip(LoggingObject):
 		else:
 			self.looplen += random.choice([ -1, 1 ])
 		self.trace("syncopating loop length from %d to %d (total length %d)" % (looplen_old, self.looplen, self.length))
-		live = LiveQuery()
+		live = live.Query()
 		live.cmd("/live/clip/loopend", self.track.index, self.index, self.looplen)
 
 	def reset(self):
 		if self.looplen != self.length:
 			self.trace("resetting loop length to %d" % self.length)
-			live = LiveQuery()
+			live = live.Query()
 			live.cmd("/live/clip/loopend", self.track.index, self.index, self.looplen)
 
 	def dump(self):
@@ -39,5 +39,5 @@ class Clip(LoggingObject):
 
 	def play(self):
 		self.trace("playing")
-		live = LiveQuery()
-		live.cmd("/live/play/clip", self.track.index, self.index)
+		lq = live.Query()
+		lq.cmd("/live/play/clip", self.track.index, self.index)

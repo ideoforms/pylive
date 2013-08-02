@@ -14,7 +14,7 @@ def singleton(cls):
 	return getinstance
 
 @singleton
-class LiveQuery(LoggingObject):
+class Query(LoggingObject):
 	def __init__(self):
 		self.indent = 0
 		self.tick_callback = None
@@ -69,7 +69,7 @@ class LiveQuery(LoggingObject):
 			self.listen()
 
 		self.query_address = msg
-		self.query_rv = None
+		self.query_rv = []
 
 		msg = OSCMessage(msg)
 		msg.extend(list(args))
@@ -82,7 +82,7 @@ class LiveQuery(LoggingObject):
 
 		counter = 0
 		counter_max = 500
-		while self.query_rv is None and counter < counter_max:
+		while not self.query_rv and counter < counter_max:
 			# print "...sleep... (%d)" % counter
 			time.sleep(0.01)
 			counter += 1
@@ -95,14 +95,13 @@ class LiveQuery(LoggingObject):
 
 	def query_one(self, msg, *args):
 		rv = self.query(msg, *args)
-		if rv is None:
-			return rv
+		if not rv:
+			return None
 		return rv[0]
 
 	def handler(self, address, tags, data, source):
-		# print "%s: %s" % (address, value)
 		if address == self.query_address:
-			self.query_rv = data
+			self.query_rv += data
 
 		if address == "/live/clip/info" and data == [ 0, 0, 3 ]:
 			print "TICK"
