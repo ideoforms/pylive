@@ -1,6 +1,6 @@
 import time
 import signal
-import thread
+import threading
 
 from OSC import *
 from live.object import *
@@ -19,42 +19,32 @@ class Query(LoggingObject):
 		self.indent = 0
 		self.tick_callback = None
 		self.listening = False
+		self.listen_port = 9001
 
 		self.osc_client = OSCClient()
 		self.osc_client.connect(("localhost", 9000))
-		self.osc_server = OSCServer(("localhost", 9001))
+		self.osc_server = OSCServer(("localhost", self.listen_port))
 		self.osc_server_thread = None
+		self.osc_read_event = None
 
 	def __str__(self):
 		return "live.query"
 
 	def stop(self):
 		if self.listening:
-			self.nolisten()
+			self.osc_server.close()
+			self.listening = False
 
 	def listen(self):
 		try:
 			self.trace("started listening")
 			self.osc_server.addMsgHandler("default", self.handler)
-			thread.start_new_thread(self.osc_server.serve_forever, ())
+			self.osc_server_thread = threading.Thread(target = self.osc_server.serve_forever)
+			self.osc_server_thread.daemonMode = True
+			self.osc_server_thread.start()
 			self.listening = True
 		except Exception, e:
-			self.warn("listen failed (couldn't bind to port %d): %s" % (self.port, e))
-
-	def nolisten(self):
-		print "stopping listening"
-		self.osc_server.close()
-		self.listening = False
-
-	def clipinfo(self, msg, source = None):
-		track = msg[2]
-		clips = msg[4:]
-		for n in range(0, len(clips), 3):
-			number = n / 3
-			state = clips[n + 1]
-			length = clips[n + 2]
-			if state > 0:
-				print "clip [%d, %d] %d, %d" % (track, number, state, length)
+			self.warn("listen failed (couldn't bind to port %d): %s" % (self.listen_port, e))
 
 	def cmd(self, msg, *args):
 		# send msg without expected response
@@ -71,25 +61,15 @@ class Query(LoggingObject):
 		self.query_address = msg
 		self.query_rv = []
 
+		self.osc_server_event = threading.Event()
+
 		msg = OSCMessage(msg)
 		msg.extend(list(args))
 		self.osc_client.send(msg)
 
-		# set a timeout just in case things have gone screwy
-		# XXX: can't use signals in non-main threads :-(
-		# signal.signal(signal.SIGALRM, self.exc)
-		# signal.alarm(1)
-
-		counter = 0
-		counter_max = 500
-		while not self.query_rv and counter < counter_max:
-			# print "...sleep... (%d)" % counter
-			time.sleep(0.01)
-			counter += 1
-		if counter >= counter_max:
-			print "timed out waiting for Live response!"
-
-		# signal.alarm(0)
+		rv = self.osc_server_event.wait(5)
+		if not rv:
+			print "*** timed out waiting for server response"
 
 		return self.query_rv
 
@@ -102,6 +82,7 @@ class Query(LoggingObject):
 	def handler(self, address, tags, data, source):
 		if address == self.query_address:
 			self.query_rv += data
+			self.osc_server_event.set()
 
 		if address == "/live/clip/info" and data == [ 0, 0, 3 ]:
 			print "TICK"
