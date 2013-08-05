@@ -13,6 +13,19 @@ def singleton(cls):
 		return instances[cls]
 	return getinstance
 
+#------------------------------------------------------------------------
+# Helper methods to save instantiating an object when making calls.
+#------------------------------------------------------------------------
+
+def query(*args, **kwargs):
+	return Query().query(*args, **kwargs)
+
+def query_one(*args, **kwargs):
+	return Query().query_one(*args, **kwargs)
+
+def cmd (*args, **kwargs):
+	Query().cmd(*args, **kwargs)
+
 @singleton
 class Query(LoggingObject):
 	def __init__(self):
@@ -40,7 +53,7 @@ class Query(LoggingObject):
 			self.trace("started listening")
 			self.osc_server.addMsgHandler("default", self.handler)
 			self.osc_server_thread = threading.Thread(target = self.osc_server.serve_forever)
-			self.osc_server_thread.daemonMode = True
+			self.osc_server_thread.setDaemon(True)
 			self.osc_server_thread.start()
 			self.listening = True
 		except Exception, e:
@@ -52,13 +65,27 @@ class Query(LoggingObject):
 		msg.extend(list(args))
 		self.osc_client.send(msg)
 
-	def query(self, msg, *args):
-		# cheeky way of doing synchronous communication
-		# - wait around for response from the OSC thread
+	def query(self, msg, *args, **kwargs):
+		#------------------------------------------------------------------------
+		# use **kwargs because we want to be able to specify an optional kw
+		# arg after variable-length args -- 
+		# eg live.query("/set/freq", 440, 1.0, response_address = "/verify/freq")
+		# http://stackoverflow.com/questions/5940180/python-default-keyword-arguments-after-variable-length-positional-arguments
+		#------------------------------------------------------------------------
 		if not self.listening:
 			self.listen()
 
-		self.query_address = msg
+		#------------------------------------------------------------------------
+		# some calls produce responses at different addresses
+		# (eg /live/device -> /live/deviceall). specify a response_address to
+		# take account of this.
+		#------------------------------------------------------------------------
+		response_address = kwargs.get("response_address", None)
+		if response_address:
+			self.query_address = response_address
+		else:
+			self.query_address = msg
+
 		self.query_rv = []
 
 		self.osc_server_event = threading.Event()

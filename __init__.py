@@ -5,6 +5,8 @@ from live.object import *
 from live.query import *
 from live.track import *
 from live.clip import *
+from live.device import *
+from live.parameter import *
 from live.set import *
 from live.group import *
 from live.query import *

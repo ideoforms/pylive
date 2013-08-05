@@ -16,11 +16,10 @@ STATUS_STOPPED = 0
 STATUS_PLAYING = 2
 
 class Track(LoggingObject):
-	def __init__(self, name, info, group = None):
+	def __init__(self, set, index, name, group = None):
+		self.set = set
+		self.index = index
 		self.name = name
-		self.movement = 0
-		self.index = info[0]
-		self.playing = True if info[1] == STATUS_PLAYING else False
 		self.group = group
 		self.indent = 2 if self.group else 1
 
@@ -47,34 +46,19 @@ class Track(LoggingObject):
 		self.clip_init = None
 		self.clip_playing = None
 		self.clips = {}
-
-		clipinfo = info[2:]
-
-		for n in range(0, len(clipinfo), 3):
-			number = n / 3
-			state = clipinfo[n + 1]
-			length = clipinfo[n + 2]
-			if state > 0:
-				self.clips[number] = live.Clip(self, number, state, length)
-				self.clips[number].indent = 3 if self.group else 2
-				#--------------------------------------------------------------------------
-				# would be nice, but slows things down fivefold.
-				#--------------------------------------------------------------------------
-				# name = live.query("/live/name/clip", self.index, number)
-				# name = name[2]
-				# self.clips[number].name = name
-				# loop_start = live.query_one("/live/clip/loopstart", self.index, number)
-				# print "loop start = %d" % loop_start
-				self.clip_init = number
+		self.devices = []
 
 	def __str__(self):
 		if self.group:
-			return "live.track(group %s, index %d): %s" % (self.group.group_index, self.index, self.name)
+			return "live.track(%d): %s" % (self.group.group_index, self.index, self.name)
 		else:
-			return "live.track(_,%d)" % (self.index)
+			return "live.track(%d): %s" % (self.index, self.name)
 
 	def dump(self):
 		self.trace()
+		if self.devices:
+			for device in self.devices:
+				device.dump()
 		for index, clip in self.clips.items():
 			clip.dump()
 
@@ -101,8 +85,7 @@ class Track(LoggingObject):
 	def stop(self):
 		self.playing = False
 		self.clip_playing = None
-		live = live.Query()
-		live.cmd("/live/stop/track", self.index)
+		self.set.stop_track(self.index)
 
 	def syncopate(self):
 		if self.clip_playing is not None:
@@ -117,6 +100,7 @@ class Track(LoggingObject):
 		return self.clips
 
 	def sync(self):
+		# XXX: why is this needed?
 		live = live.Query()
 		info = live.query("/live/track/info")
 		print "track %d: info %s" % (self.index, info[0])
@@ -153,3 +137,57 @@ class Track(LoggingObject):
 
 	def is_texture(self):
 		return self.type == TYPE_TEXTURE
+
+	#------------------------------------------------------------------------
+	# get/set: volume
+	#------------------------------------------------------------------------
+	def set_volume(self, value):
+		self.set.set_track_volume(self.index, value)
+	def get_volume(self):
+		return self.set.get_track_volume(self.index)
+	volume = property(get_volume, set_volume)
+
+	#------------------------------------------------------------------------
+	# get/set: pan
+	#------------------------------------------------------------------------
+	def set_pan(self, value):
+		self.set.set_track_pan(self.index, value)
+	def get_pan(self):
+		return self.set.get_track_pan(self.index)
+	pan = property(get_pan, set_pan)
+
+	#------------------------------------------------------------------------
+	# get/set: mute
+	#------------------------------------------------------------------------
+	def set_mute(self, value):
+		self.set.set_track_mute(self.index, value)
+	def get_mute(self):
+		return self.set.get_track_mute(self.index)
+	mute = property(get_mute, set_mute)
+
+	#------------------------------------------------------------------------
+	# get/set: arm
+	#------------------------------------------------------------------------
+	def set_arm(self, value):
+		self.set.set_track_arm(self.index, value)
+	def get_arm(self):
+		return self.set.get_track_arm(self.index)
+	arm = property(get_arm, set_arm)
+
+	#------------------------------------------------------------------------
+	# get/set: solo
+	#------------------------------------------------------------------------
+	def set_solo(self, value):
+		self.set.set_track_solo(self.index, value)
+	def get_solo(self):
+		return self.set.get_track_solo(self.index)
+	solo = property(get_solo, set_solo)
+
+	#------------------------------------------------------------------------
+	# get/set: send
+	#------------------------------------------------------------------------
+	def set_send(self, send_index, value):
+		self.set.set_track_send(self.index, send_index, value)
+	def get_send(self, send_index):
+		return self.set.get_track_send(self.index, send_index)
+
