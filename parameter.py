@@ -35,7 +35,7 @@ class Parameter(live.LoggingObject):
 
 	value = property(get_value, set_value)
 
-	def randomize(self):
+	def randomise(self):
 		if self.is_integer():
 			value = random.randint(self.minimum, self.maximum)
 		else:

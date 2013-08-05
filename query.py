@@ -1,5 +1,6 @@
 import time
 import signal
+import inspect
 import threading
 
 from OSC import *
@@ -30,7 +31,7 @@ def cmd (*args, **kwargs):
 class Query(LoggingObject):
 	def __init__(self):
 		self.indent = 0
-		self.tick_callback = None
+		self.beat_callback = None
 		self.listening = False
 		self.listen_port = 9001
 
@@ -39,6 +40,8 @@ class Query(LoggingObject):
 		self.osc_server = OSCServer(("localhost", self.listen_port))
 		self.osc_server_thread = None
 		self.osc_read_event = None
+
+		self.response_address = None
 
 	def __str__(self):
 		return "live.query"
@@ -82,9 +85,9 @@ class Query(LoggingObject):
 		#------------------------------------------------------------------------
 		response_address = kwargs.get("response_address", None)
 		if response_address:
-			self.query_address = response_address
+			self.response_address = response_address
 		else:
-			self.query_address = msg
+			self.response_address = msg
 
 		self.query_rv = []
 
@@ -107,12 +110,27 @@ class Query(LoggingObject):
 		return rv[0]
 
 	def handler(self, address, tags, data, source):
-		if address == self.query_address:
+		# print "handler: %s %s" % (address, data)
+		if address == self.response_address:
 			self.query_rv += data
 			self.osc_server_event.set()
+			return
 
-		if address == "/live/clip/info" and data == [ 0, 0, 3 ]:
-			print "TICK"
-			if self.tick_callback is not None:
-				self.tick_callback()
-
+		if address == "/live/beat":
+			if self.beat_callback is not None:
+				#------------------------------------------------------------------------
+				# Beat callbacks are used if we want to trigger an event on each beat,
+				# to synchronise with the timing of the Live set.
+				#
+				# Callbacks may take one argument: the current beat count.
+				# If not specified, call with 0 arguments.
+				#------------------------------------------------------------------------
+				# It might be nice to send the current beat # as a parameter, but we
+				# also want to be able to handle callbacks with no args -- TODO: look
+				# into this.
+				#------------------------------------------------------------------------
+				# argspec = inspect.getargspec(self.beat_callback)
+				# if len(argspec.args) > 0:
+				#	self.beat_callback(data[0])
+				#------------------------------------------------------------------------
+				self.beat_callback()

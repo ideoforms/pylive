@@ -2,6 +2,7 @@ __version__ = "0"
 __author__ = "Daniel Jones <http://www.erase.net/>"
 
 from live.object import *
+from live.constants import *
 from live.query import *
 from live.track import *
 from live.clip import *
