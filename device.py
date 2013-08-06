@@ -4,6 +4,16 @@ import live.object
 import random
 
 class Device(live.LoggingObject):
+	""" Represents an instrument or audio effect residing within a Track.
+	Contains one one or more Parameters.
+
+	Properties:
+	track -- Track object that this Device resides within
+	index -- Numeric index of this device
+	name -- Human-readable name
+	parameters -- List of Parameter objects
+	"""
+
 	def __init__(self, track, index, name):
 		self.track = track
 		self.index = index
@@ -19,6 +29,7 @@ class Device(live.LoggingObject):
 
 	@property
 	def set(self):
+		""" Helper function to return the Set that this Device resides within. """
 		return self.track.set
 
 	def set_parameter(self, index, value):

@@ -12,18 +12,18 @@ import threading
 # @live.singleton
 
 class Set (live.LoggingObject):
+	""" Set represents an entire running Live set. It communicates via a
+	live.Query object to the Live instance, which must be running LiveOSC
+	as an active control surface.
+
+	A Set contains a number of Track objects, which may optionally have a
+	parent Group. Each Track object contains one or more Clip objects, and
+	one or more Devices, each of which possess Parameters.
+
+	A Set object is initially unpopulated, and must interrogate the Live set
+	for its contents by calling the scan() method. """
+
 	def __init__(self):
-		""" Set represents an entire running Live set. It communicates via a
-		live.Query object to the Live instance, which must be running LiveOSC
-		as an active control surface.
-
-		A Set contains a number of Track objects, which may optionally have a
-		parent Group. Each Track object contains one or more Clip objects, and
-		one or more Devices, each of which possess Parameters.
-
-		A Set object is initially unpopulated, and must interrogate the Live set
-		for its contents by calling the scan() method. """
-
 		self.indent = 0
 		self.groups = []
 		self.tracks = []
@@ -377,7 +377,7 @@ class Set (live.LoggingObject):
 	# SCAN
 	#------------------------------------------------------------------------
 
-	def scan(self, scan_devices = False, scan_clip_names = False):
+	def scan(self, group_re = None, scan_devices = False, scan_clip_names = False):
 		""" Interrogates the currently open Ableton Live set for its structure:
 		number of tracks, clips, scenes, etc.
 
@@ -391,6 +391,9 @@ class Set (live.LoggingObject):
 		if not track_count:
 			self.warn("couldn't connect to Ableton Live! (obj: %s)" % self.live)
 			sys.exit()
+
+		if not group_re:
+			group_re = self.group_re
 
 		self.scanned = True
 
@@ -415,18 +418,22 @@ class Set (live.LoggingObject):
 		for track_index in range(track_count):
 			track_name = track_names[track_index]
 			self.trace("scan_layout: track %d (%s)" % (track_index, track_name))
-			match = re.search(self.group_re, track_name)
+			match = re.search(group_re, track_name)
 			#------------------------------------------------------------------------
 			# if this track's name matches our Group regular expression, assume
 			# it is a Group track. this is sadly necessary because the API does not
 			# expose whether or not a track is a group track!
 			#------------------------------------------------------------------------
 			if match:
-				group_index = int(match.group(1))
-				group_name = match.group(2)
-				group = live.Group(track_index, group_index, group_name)
+				# Formerly took the group index from the group title so we could have gappy
+				# groups (for V4). Now want to move this into a separate area of code.
+				# group_index = int(match.group(1))
+				# group_name = match.group(2)
+				group_index = len(self.groups)
+				group = live.Group(self, track_index, group_index, track_name)
 				current_group = group
 				self.groups.append(group)
+
 			else:
 				# TODO: consistence between Group and Track constructors
 				track_info = self.get_track_info(track_index)
@@ -436,7 +443,6 @@ class Set (live.LoggingObject):
 					current_group.add_track(track)
 				self.tracks.append(track)
 
-				print "scanning devices for track %s (set %s)" % (track, track.set)
 				clip_info = track_info[2:]
 
 				for n in range(0, len(clip_info), 3):

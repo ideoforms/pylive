@@ -29,6 +29,19 @@ def cmd (*args, **kwargs):
 
 @singleton
 class Query(LoggingObject):
+	""" Object responsible for passing OSC queries to the LiveOSC server,
+	parsing and proxying responses.
+
+	This object is a singleton, under the assumption that only one Live instance
+	can be running, so only one global Live Query object should be needed.
+
+	Following this assumption, static helper functions also exist:
+
+		live.query(path, *args)
+		live.query_one(path, *args)
+		live.cmd(path, *args)
+	"""
+
 	def __init__(self):
 		self.indent = 0
 		self.beat_callback = None
@@ -40,6 +53,7 @@ class Query(LoggingObject):
 		self.osc_server = OSCServer(("localhost", self.listen_port))
 		self.osc_server_thread = None
 		self.osc_read_event = None
+		self.osc_timeout = 5
 
 		self.response_address = None
 
@@ -47,11 +61,13 @@ class Query(LoggingObject):
 		return "live.query"
 
 	def stop(self):
+		""" Terminate this query object and unbind from OSC listening. """
 		if self.listening:
 			self.osc_server.close()
 			self.listening = False
 
 	def listen(self):
+		""" Commence listening for OSC messages from LiveOSC. """
 		try:
 			self.trace("started listening")
 			self.osc_server.addMsgHandler("default", self.handler)
@@ -63,12 +79,21 @@ class Query(LoggingObject):
 			self.warn("listen failed (couldn't bind to port %d): %s" % (self.listen_port, e))
 
 	def cmd(self, msg, *args):
-		# send msg without expected response
+		""" Send a Live command without expecting a response back:
+
+			live.cmd("/live/tempo", 110.0) """
+		
 		msg = OSCMessage(msg)
 		msg.extend(list(args))
 		self.osc_client.send(msg)
 
 	def query(self, msg, *args, **kwargs):
+		""" Send a Live command and synchronously wait for its response:
+
+			return live.query("/live/tempo")
+
+		Returns a list of values. """
+
 		#------------------------------------------------------------------------
 		# use **kwargs because we want to be able to specify an optional kw
 		# arg after variable-length args -- 
@@ -97,13 +122,18 @@ class Query(LoggingObject):
 		msg.extend(list(args))
 		self.osc_client.send(msg)
 
-		rv = self.osc_server_event.wait(5)
+		rv = self.osc_server_event.wait(self.osc_timeout)
 		if not rv:
 			print "*** timed out waiting for server response"
 
 		return self.query_rv
 
 	def query_one(self, msg, *args):
+		""" Send a Live command and synchronously wait for its response:
+
+			return live.query_one("/live/tempo")
+
+		Returns a single scalar value (in this case, a float). """
 		rv = self.query(msg, *args)
 		if not rv:
 			return None

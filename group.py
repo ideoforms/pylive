@@ -1,24 +1,34 @@
 from live.object import *
 
 class Group (LoggingObject):
-	def __init__(self, track_index, group_index, name):
-		self.indent = 1
+	""" Represents a grouped set of Track objects.
+	Because we can't programmatically query whether a track in Live is an
+	individual or group track, the user must name groups using a special
+	format which is passed to set.scan(group_re = RE)
+
+	Properties:
+	track_index -- The numerical track index of this group
+	group_index -- Groups are auto-numbered from 0
+	name -- Human-readable name
+	tracks -- List of Track objects contained within this group
+	"""
+
+	def __init__(self, set, track_index, group_index, name):
+		self.set = set
 		self.track_index = track_index
 		self.group_index = group_index
+		self.indent = 1
 		self.name = name
 		self.tracks = []
-		self.scene_first = None
-		self.scene_last = None
 
 	def __str__(self):
-		string = "live.group(%s): %s" % (self.group_index, self.name)
+		string = "live.group(%d): %s" % (self.group_index, self.name)
 		if len(self.tracks):
 			string = string + " [tracks %d-%d]" % (self.tracks[0].index, self.tracks[len(self.tracks) - 1].index)
-		if self.scene_first:
-			string = string + " [scenes %d-%d]" % (self.scene_first, self.scene_last)
 		return string
 
 	def add_track(self, track):
+		""" Append a new track to this group. Should probably only be called by Set.scan(). """
 		self.tracks.append(track)
 
 	def dump(self):

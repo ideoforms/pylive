@@ -7,6 +7,19 @@ import re
 import random
 
 class Track(LoggingObject):
+	""" Represents a single Track, either audio or MIDI.
+	Resides within a Set, and contains one or more Device and Clip objects.
+	May be contained within a Group.
+
+	Properties:
+	set -- The containing Set object
+	index -- The numerical index of this Track within the Set
+	name -- Human-readable name
+	group -- (Optional) reference to containing Group object
+	clips -- Dictionary of contained Clips: { index : Clip }
+	devices -- List of contained Devices
+	"""
+
 	def __init__(self, set, index, name, group = None):
 		self.set = set
 		self.index = index
@@ -21,7 +34,7 @@ class Track(LoggingObject):
 
 	def __str__(self):
 		if self.group:
-			return "live.track(%d): %s" % (self.group.group_index, self.index, self.name)
+			return "live.track(%d,%d): %s" % (self.group.group_index, self.index, self.name)
 		else:
 			return "live.track(%d): %s" % (self.index, self.name)
 
@@ -34,6 +47,7 @@ class Track(LoggingObject):
 			clip.dump()
 
 	def clips_between(self, index_start, index_finish):
+		""" Returns a list of Clip objects between index_start and index_finish """
 		clips = []
 		for n in range(index_start, index_finish):
 			if n in self.clips:
@@ -41,12 +55,14 @@ class Track(LoggingObject):
 		return clips
 
 	def play_clip(self, index):
+		""" Plays clip of given index. """
 		self.playing = True
 		self.clip_playing = index
 		clip = self.clips[index]
 		clip.play()
 
 	def play_clip_random(self):
+		""" Plays a random clip. """
 		if len(self.clips.keys()) == 0:
 			self.warn("no clips found on track, returning")
 			return
@@ -54,6 +70,7 @@ class Track(LoggingObject):
 		self.play_clip(index)
 
 	def stop(self):
+		""" Immediately stop track from playing. """
 		self.playing = False
 		self.clip_playing = None
 		self.set.stop_track(self.index)
@@ -65,6 +82,7 @@ class Track(LoggingObject):
 			self.warn("asked to syncopate but not yet playing!")
 
 	def has_clip(self, index):
+		""" Determine whether this track contains a clip at slot index. """
 		return self.clips.has_key(index)
 
 	def get_clips(self):
@@ -77,6 +95,7 @@ class Track(LoggingObject):
 		self.playing = True if info[0] > 1 else False
 
 	def walk(self):
+		""" Move forward or backwards between clips. """
 		if not self.playing:
 			if self.clip_init:
 				self.trace("walking to initial clip %d" % self.clip_init)
@@ -98,15 +117,6 @@ class Track(LoggingObject):
 			else:
 				self.trace("walking to random clip")
 				self.play_clip_random()
-
-	def is_melody(self):
-		return self.type == TYPE_MELODY
-
-	def is_rhythm(self):
-		return self.type == TYPE_RHYTHM
-
-	def is_texture(self):
-		return self.type == TYPE_TEXTURE
 
 	#------------------------------------------------------------------------
 	# get/set: volume
@@ -163,7 +173,9 @@ class Track(LoggingObject):
 	#------------------------------------------------------------------------
 
 	def set_send(self, send_index, value):
+		""" Set the send level of the given send_index (0..1) """
 		self.set.set_track_send(self.index, send_index, value)
 	def get_send(self, send_index):
+		""" Get the send level of the given send_index (0..1) """
 		return self.set.get_track_send(self.index, send_index)
 

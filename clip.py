@@ -4,7 +4,15 @@ import live.object
 import random
 
 class Clip(live.LoggingObject):
-	""" An object representing a single clip in a Live set. """
+	""" An object representing a single clip in a Live set.
+
+	Properties:
+	track -- Track object this clip resides within.
+	index -- index of this clip
+	length -- length of cip, in beats
+	name -- human-readable name
+	state -- one of CLIP_STATE_EMPTY, CLIP_STATE_STOPPED, CLIP_STATE_PLAYING
+	"""
 
 	def __init__(self, track, index, length):
 		""" Create a new clip.
@@ -23,7 +31,6 @@ class Clip(live.LoggingObject):
 		self.name = None
 
 	def __str__(self):
-		# group_index = self.track.group.group_index if self.track.group else "_"
 		name = ": %s" % self.name if self.name else ""
 		return "live.clip(%d,%d)%s" % (self.track.index, self.index, name)
 
