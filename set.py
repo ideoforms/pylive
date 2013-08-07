@@ -8,6 +8,8 @@ import sys
 import pickle
 import threading
 
+from live.object import name_cache
+
 # i think we should be ok without this
 # @live.singleton
 
@@ -31,6 +33,11 @@ class Set (live.LoggingObject):
 		self.live = live.Query()
 		self.scanned = False
 
+		""" Set caching to True to avoid re-querying properties such as tempo each
+		time they are requested. Increases efficiency in cases where no other
+		processes are going to modify Live's state. """
+		self.caching = False
+
 		self.max_tracks_per_query = 256
 
 		self.beat_event = threading.Event()
@@ -42,9 +49,11 @@ class Set (live.LoggingObject):
 	# /live/tempo
 	#------------------------------------------------------------------------
 
+	@name_cache
 	def get_tempo(self):
 		return self.live.query("/live/tempo")[0]
 
+	@name_cache
 	def set_tempo(self, value):
 		self.live.cmd("/live/tempo", value)
 
@@ -342,10 +351,14 @@ class Set (live.LoggingObject):
 
 	#------------------------------------------------------------------------
 	# /live/clip/info
+	# /live/clip/loopend
 	#------------------------------------------------------------------------
 
 	def get_clip_info(self, track_index, clip_index):
 		return self.live.query("/live/clip/info", track_index, clip_index)
+
+	def set_clip_loop_end(self, track_index, clip_index, loop_end):
+		self.live.cmd("/live/clip/loopend", track_index, clip_index, loop_end)
 
 	#------------------------------------------------------------------------
 	# /live/devicelist
@@ -450,6 +463,13 @@ class Set (live.LoggingObject):
 					state = clip_info[n + 1]
 					length = clip_info[n + 2]
 					if state > 0:
+						#--------------------------------------------------------------------------
+						# for consistency, we are now using a list (rather than dict) to store
+						# clips. as clipslots can be empty, populated any leading slots with None.
+						#--------------------------------------------------------------------------
+						while len(track.clips) <= clip_index:
+							track.clips.append(None)
+
 						track.clips[clip_index] = live.Clip(track, clip_index, length)
 						track.clips[clip_index].state = state
 						track.clips[clip_index].indent = 3 if track.group else 2

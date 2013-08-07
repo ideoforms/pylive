@@ -29,7 +29,7 @@ class Track(LoggingObject):
 
 		self.clip_init = None
 		self.clip_playing = None
-		self.clips = {}
+		self.clips = []
 		self.devices = []
 
 	def __str__(self):
@@ -43,7 +43,8 @@ class Track(LoggingObject):
 		if self.devices:
 			for device in self.devices:
 				device.dump()
-		for index, clip in self.clips.items():
+		active_clips = self.active_clips
+		for clip in active_clips:
 			clip.dump()
 
 	def clips_between(self, index_start, index_finish):
@@ -88,9 +89,16 @@ class Track(LoggingObject):
 	def get_clips(self):
 		return self.clips
 
+	@property
+	def active_clips(self):
+		""" Return a dictionary of all non-empty clipslots: { index : Clip, ... } """
+		active_clips = filter(lambda n: n is not None, self.clips)
+		return active_clips
+	get_active_clips = active_clips
+
 	def sync(self):
 		# XXX: why is this needed?
-		info = live.query("/live/track/info")
+		info = self.set.get_track_info()
 		print "track %d: info %s" % (self.index, info[0])
 		self.playing = True if info[0] > 1 else False
 
