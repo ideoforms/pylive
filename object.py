@@ -46,7 +46,7 @@ def name_cache(fn):
 	action = name[:3]
 	variable = name[4:]
 
-	def cached_fn(obj, *args):
+	def cached_fn(obj, *args, **kwargs):
 		if hasattr(obj, "caching") and not obj.caching:
 			return fn(obj, *args)
 
@@ -54,10 +54,12 @@ def name_cache(fn):
 			obj.__cache = {}
 
 		if action == "set":
-			fn(obj, *args)
+			if not kwargs.has_key("cache_only"):
+				fn(obj, *args)
 			obj.__cache[variable] = args[0]
 		elif action == "get":
 			if not variable in obj.__cache:
+				print "getting %s from real object" % variable
 				obj.__cache[variable] = fn(obj, *args)
 			return obj.__cache[variable]
 

@@ -1,3 +1,5 @@
+from live.constants import *
+
 import live.query
 import live.object
 
@@ -32,7 +34,10 @@ class Clip(live.LoggingObject):
 
 	def __str__(self):
 		name = ": %s" % self.name if self.name else ""
-		return "live.clip(%d,%d)%s" % (self.track.index, self.index, name)
+		state_symbols = { CLIP_STATUS_EMPTY : " ", CLIP_STATUS_STOPPED : "-", CLIP_STATUS_PLAYING : ">" }
+		state_symbol = state_symbols[self.state]
+		
+		return "live.clip(%d,%d)%s [%s]" % (self.track.index, self.index, name, state_symbol)
 
 	def dump(self):
 		""" Output a human-readable description of this clip. """

@@ -48,6 +48,10 @@ class Query(LoggingObject):
 		self.listening = False
 		self.listen_port = 9001
 
+		# handler callbacks for particular messages from Live.
+		# used so that other processes can register callbacks when states change.
+		self.handlers = {}
+
 		self.osc_client = OSCClient()
 		self.osc_client.connect(("localhost", 9000))
 		self.osc_server = OSCServer(("localhost", self.listen_port))
@@ -141,6 +145,17 @@ class Query(LoggingObject):
 
 	def handler(self, address, tags, data, source):
 		# print "handler: %s %s" % (address, data)
+		#------------------------------------------------------------------------
+		# Execute any callbacks that have been registered for this message
+		#------------------------------------------------------------------------
+		if address in self.handlers:
+			for handler in self.handlers[address]:
+				handler(*data)
+
+		#------------------------------------------------------------------------
+		# If this message is awaiting a synchronous return, trigger the
+		# thread event and update our return value. 
+		#------------------------------------------------------------------------
 		if address == self.response_address:
 			self.query_rv += data
 			self.osc_server_event.set()
@@ -164,3 +179,9 @@ class Query(LoggingObject):
 				#	self.beat_callback(data[0])
 				#------------------------------------------------------------------------
 				self.beat_callback()
+
+	def add_handler(self, address, handler):
+		if not address in self.handlers:
+			self.handlers[address] = []
+		self.handlers[address].append(handler)
+

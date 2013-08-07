@@ -516,6 +516,13 @@ class Set (live.LoggingObject):
 							param.maximum = maximum
 							device.parameters.append(param)
 
+		
+		#--------------------------------------------------------------------------
+		# finally, add handlers to catch any state changes in the set, so we
+		# remain up-to-date with whether clips are playing, etc...
+		#--------------------------------------------------------------------------
+		self._add_handlers()
+
 	def load(self, filename = "set.pickle"):
 		""" Read a saved Set structure from disk. """
 		data = pickle.load(file(filename))
@@ -539,6 +546,7 @@ class Set (live.LoggingObject):
 			self.trace("dump: currently empty, performing scan")
 			self.scan()
 		self.trace("dump: %d tracks in %d groups" % (len(self.tracks), len(self.groups)))
+		self.trace("tempo = %.1f" % self.tempo)
 		current_group = None
 
 		#------------------------------------------------------------------------
@@ -567,3 +575,19 @@ class Set (live.LoggingObject):
 		self.live.beat_callback = self.beat_callback
 		self.beat_event.wait()
 		return
+
+	def _add_handlers(self):
+		self.live.add_handler("/live/clip/info", self._update_clip_state)
+		self.live.add_handler("/live/tempo", self._update_tempo)
+
+	def _update_tempo(self, tempo):
+		self.set_tempo(tempo, cache_only = True)
+		# self.dump()
+
+	def _update_clip_state(self, track_index, clip_index, state):
+		if not self.scanned:
+			return
+		track = self.tracks[track_index]
+		clip = track.clips[clip_index]
+		clip.state = state
+		# self.dump()

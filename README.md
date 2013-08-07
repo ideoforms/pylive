@@ -10,6 +10,21 @@ PyLive is a framework for controlling Ableton Live from a standalone Python scri
 * [LiveOSC](http://livecontrol.q3f.org/ableton-liveapi/liveosc/)
 * [Python 2.6+](http://www.python.org)
 
+## Usage
+
+	import live
+
+	set = live.Set()
+	set.scan(scan_clip_names = True)
+	set.tempo = 110.0
+
+	track = set.tracks[0]
+	print "track name %s" % track.name
+
+	clip = track.clips[0]
+	print "clip name %s, length %d beats" % (clip.name, clip.length)
+	clip.play()
+
 ## Overview
 
 ## Classes
