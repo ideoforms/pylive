@@ -38,7 +38,13 @@ To begin interacting with an Ableton Live set, the typical workflow is as follow
 
 * Create a `live.Set` object.
 * Call `set.scan()`, which queries Live for an index of tracks, clip statuses, and (optionally) clip names and devices
-* Interact with Live by setting and getting properties on your `Set`, including `set.tracks`, `set.tracks[N].clips`, `set.tempo`, etc.
+* Interact with Live by setting and getting properties on your `Set`:
+** `set.tempo`, `set.time`, `set.overdub` are global Set properties
+** `set.tracks` is a list of Track objects
+** `set.tracks[N].name`, `set.tracks[N].mute`, are Track properties
+** `set.tracks[N].clips` is a list of Clip objects (with empty slots containing `None`)
+** `set.tracks[N].devices` is a list of Device objects
+** `set.tracks[N].devices[M].parameters` is a list of Parameter objects
 
 Getters and setters use Python's `@property` idiom, meaning that accessing `set.tempo` will query or update your Live set.
 

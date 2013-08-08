@@ -23,7 +23,13 @@ class Set (live.LoggingObject):
 	one or more Devices, each of which possess Parameters.
 
 	A Set object is initially unpopulated, and must interrogate the Live set
-	for its contents by calling the scan() method. """
+	for its contents by calling the scan() method.
+
+	Properties:
+	tempo -- tempo in BPM
+	time -- time position, in beats
+	overdub -- global overdub setting
+	"""
 
 	def __init__(self, address = ("localhost", 9000)):
 		self.indent = 0
@@ -233,12 +239,15 @@ class Set (live.LoggingObject):
 
 	@property
 	def track_names(self):
+		""" Return a list of all track names. """
 		return self.get_track_names()
 
 	def get_track_name(self, index):
+		""" Return a given track's name. """
 		return self.live.query("/live/name/track", index)
 
 	def set_track_name(self, index, value):
+		""" Set a given track's name. """
 		self.live.cmd("/live/name/track", index, value)
 
 
