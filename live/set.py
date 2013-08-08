@@ -25,12 +25,12 @@ class Set (live.LoggingObject):
 	A Set object is initially unpopulated, and must interrogate the Live set
 	for its contents by calling the scan() method. """
 
-	def __init__(self):
+	def __init__(self, address = ("localhost", 9000)):
 		self.indent = 0
 		self.groups = []
 		self.tracks = []
 		self.group_re = re.compile("^(\d+)\. (\S.+)")
-		self.live = live.Query()
+		self.live = live.Query(address)
 		self.scanned = False
 
 		""" Set caching to True to avoid re-querying properties such as tempo each
