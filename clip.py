@@ -34,7 +34,7 @@ class Clip(live.LoggingObject):
 
 	def __str__(self):
 		name = ": %s" % self.name if self.name else ""
-		state_symbols = { CLIP_STATUS_EMPTY : " ", CLIP_STATUS_STOPPED : "-", CLIP_STATUS_PLAYING : ">" }
+		state_symbols = { CLIP_STATUS_EMPTY : " ", CLIP_STATUS_STOPPED : "-", CLIP_STATUS_PLAYING : ">", CLIP_STATUS_STARTING : "*" }
 		state_symbol = state_symbols[self.state]
 		
 		return "live.clip(%d,%d)%s [%s]" % (self.track.index, self.index, name, state_symbol)
@@ -74,3 +74,60 @@ class Clip(live.LoggingObject):
 		self.trace("stopping")
 		self.set.stop_clip(self.track.index, self.index)
 
+	def get_next_clip(self, wrap = False, allow_gaps = True):
+		""" Return the next clip in the track, or None if not found.
+		wrap -- If set, will wrap from (N-1) to 0 and vice versa.
+		allow_gaps -- If unset, requires that clip slots must be contiguous.
+		"""
+		clips = self.track.clips
+		index = clips.index(self)
+		clip_range = []
+		for n in range(index, len(clips)):
+			if clips[n] is None:
+				if not allow_gaps:
+					break
+			else:
+				clip_range.append(clips[n])
+		for n in reversed(range(0, index)):
+			if clips[n] is None:
+				if not allow_gaps:
+					break
+			else:
+				clip_range.insert(0, clips[n])
+
+		index = clip_range.index(self)
+		next_index = index + 1
+		if wrap:
+			next_index = next_index % len(clip_range)
+		if next_index < len(clip_range):
+			return clip_range[next_index]
+		return None
+
+	def get_prev_clip(self, wrap = False, allow_gaps = True):
+		""" Return the previous clip in the track, or None if not found.
+		wrap -- If set, will wrap from (N-1) to 0 and vice versa.
+		allow_gaps -- If unset, requires that clip slots must be contiguous.
+		"""
+		clips = self.track.clips
+		index = clips.index(self)
+		clip_range = []
+		for n in range(index, len(clips)):
+			if clips[n] is None:
+				if not allow_gaps:
+					break
+			else:
+				clip_range.append(clips[n])
+		for n in reversed(range(0, index)):
+			if clips[n] is None:
+				if not allow_gaps:
+					break
+			else:
+				clip_range.insert(0, clips[n])
+
+		index = clip_range.index(self)
+		prev_index = index - 1
+		if wrap and prev_index < 0:
+			prev_index += len(clip_range)
+		if prev_index >= 0:
+			return clip_range[prev_index]
+		return None

@@ -96,6 +96,13 @@ class Track(LoggingObject):
 		return active_clips
 	get_active_clips = active_clips
 
+	def clip_playing(self):
+		""" Return the currently playing Clip, or None. """
+		for clip in self.clips:
+			if clip.state == CLIP_STATE_PLAYING:
+				return clip
+		return None
+
 	def sync(self):
 		# XXX: why is this needed?
 		info = self.set.get_track_info()
