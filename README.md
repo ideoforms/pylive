@@ -6,9 +6,9 @@ PyLive is a framework for controlling Ableton Live from a standalone Python scri
 
 ## Requirements
 
-* [Ableton Live 7+](http://www.ableton.com/live) with [LiveOSC](http://livecontrol.q3f.org/ableton-liveapi/liveosc/) MIDI Remote script
+* [Ableton Live 7+](http://www.ableton.com/live) with the [LiveOSC](http://livecontrol.q3f.org/ableton-liveapi/liveosc/) MIDI Remote script
 * [Python 2.6+](http://www.python.org)
-* [PyOSC](https://trac.v2.nl/wiki/pyOSC) package
+* [PyOSC](https://trac.v2.nl/wiki/pyOSC)
 
 ## Usage
 
@@ -43,6 +43,8 @@ To begin interacting with an Ableton Live set, the typical workflow is as follow
 Getters and setters use Python's `@property` idiom, meaning that accessing `set.tempo` will query or update your Live set.
 
 If you know that no other processes will interact with Live, set `set.caching = True` to cache properties such as tempo. This will query the Live set on the first instance, and subsequently return locally-stored values.
+
+For further help, see `pydoc live`.
 
 ## Classes
 
