@@ -28,12 +28,12 @@ __version__ = "0"
 __author__ = "Daniel Jones <http://www.erase.net/>"
 __all__ = [ "Query", "Set", "Track", "Group", "Clip", "Device", "Parameter" ]
 
-from live.object import *
-from live.constants import *
-from live.set import *
-from live.query import *
-from live.track import *
-from live.group import *
-from live.clip import *
-from live.device import *
-from live.parameter import *
+from object import *
+from constants import *
+from set import *
+from query import *
+from track import *
+from group import *
+from clip import *
+from device import *
+from parameter import *
