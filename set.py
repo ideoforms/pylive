@@ -5,6 +5,7 @@ import live.device
 
 import re
 import sys
+import time
 import pickle
 import threading
 
@@ -579,7 +580,12 @@ class Set (live.LoggingObject):
 	def wait_for_next_beat(self):
 		self.beat_event.clear()
 		self.live.beat_callback = self.beat_callback
-		self.beat_event.wait()
+
+		# don't want to use .wait() as it prevents response to keyboard input
+		# so ctrl-c will not work.
+		while not self.beat_event.is_set():
+			time.sleep(0.01)
+
 		return
 
 	def _add_handlers(self):
