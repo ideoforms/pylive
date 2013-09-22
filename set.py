@@ -532,11 +532,17 @@ class Set (live.LoggingObject):
 
 	def save(self, filename = "set.pickle"):
 		""" Save the current Set structure to disk.
-		Use to avoid the lengthy scan() process. """
+		Use to avoid the lengthy scan() process.
+		TODO: Add a __reduce__ function to do this in an idiomatic way. """
 		fd = file(filename, "w")
 		data = vars(self)
+		_live = data["live"]
+		_beat_event = data["beat_event"]
 		del data["live"]
+		del data["beat_event"]
 		pickle.dump(data, fd)
+		data["live"] = _live
+		data["beat_event"] = _beat_event
 		print "save: set saved OK (%s)" % filename
 
 	def dump(self):
