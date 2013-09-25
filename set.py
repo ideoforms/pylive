@@ -31,7 +31,6 @@ class Set (live.LoggingObject):
 		self.groups = []
 		self.tracks = []
 		self.group_re = re.compile("^(\d+)\. (\S.+)")
-		self.live = live.Query()
 		self.scanned = False
 
 		""" Set caching to True to avoid re-querying properties such as tempo each
@@ -42,6 +41,10 @@ class Set (live.LoggingObject):
 		self.max_tracks_per_query = 256
 
 		self.beat_event = threading.Event()
+
+	@property
+	def live(self):
+		return live.Query()
 
 	def __str__(self):
 		return "live.set"
@@ -475,6 +478,12 @@ class Set (live.LoggingObject):
 						track.clips[clip_index].state = state
 						track.clips[clip_index].indent = 3 if track.group else 2
 
+						if current_group:
+							while len(current_group.clips) <= clip_index:
+								current_group.clips.append(None)
+							current_group.clips[clip_index] = live.Clip(current_group, clip_index, length)
+							current_group.clips[clip_index].state = state
+
 						if not track.clip_init:
 							track.clip_init = clip_index
 	
@@ -530,6 +539,10 @@ class Set (live.LoggingObject):
 		for key, value in data.items():
 			setattr(self, key, value)
 		print "load: set loaded OK (%d tracks)" % (len(self.tracks))
+		print "*** LOAD ***"
+		self.beat_event = threading.Event()
+		# self.live = live.Query()
+		print "self.live is %s" % self.live
 
 	def save(self, filename = "set.pickle"):
 		""" Save the current Set structure to disk.
@@ -539,10 +552,10 @@ class Set (live.LoggingObject):
 		data = vars(self)
 		_live = data["live"]
 		_beat_event = data["beat_event"]
-		del data["live"]
+		# del data["live"]
 		del data["beat_event"]
 		pickle.dump(data, fd)
-		data["live"] = _live
+		# data["live"] = _live
 		data["beat_event"] = _beat_event
 		print "save: set saved OK (%s)" % filename
 
@@ -600,6 +613,11 @@ class Set (live.LoggingObject):
 		if not self.scanned:
 			return
 		track = self.tracks[track_index]
-		clip = track.clips[clip_index]
-		clip.state = state
+
+		# can get a clip_info for clips outside of our clip range
+		# (eg updating the status of a "stop" clip when we play a whole scene)
+		if clip_index < len(track.clips):
+			clip = track.clips[clip_index]
+			if clip:
+				clip.state = state
 		# self.dump()

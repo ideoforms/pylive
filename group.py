@@ -17,9 +17,14 @@ class Group (LoggingObject):
 		self.set = set
 		self.track_index = track_index
 		self.group_index = group_index
+
+		# needed so that Clip objects can call the 'index' method on Group and Track accordingly
+		# TODO: rename 'index' to 'track_index' on Track objects too
+		self.index = track_index
 		self.indent = 1
 		self.name = name
 		self.tracks = []
+		self.clips = []
 
 	def __str__(self):
 		string = "live.group(%d): %s" % (self.group_index, self.name)
@@ -35,3 +40,8 @@ class Group (LoggingObject):
 		self.trace("%d tracks" % len(self.tracks))
 		for track in self.tracks:
 			track.dump()
+
+	def play_clip(self, clip_index):
+		""" Start playing group clip. """
+		self.set.play_clip(self.track_index, clip_index)
+
