@@ -550,7 +550,7 @@ class Set (live.LoggingObject):
 		TODO: Add a __reduce__ function to do this in an idiomatic way. """
 		fd = file(filename, "w")
 		data = vars(self)
-		_live = data["live"]
+		# _live = data["live"]
 		_beat_event = data["beat_event"]
 		# del data["live"]
 		del data["beat_event"]

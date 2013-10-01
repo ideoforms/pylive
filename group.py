@@ -32,6 +32,16 @@ class Group (LoggingObject):
 			string = string + " [tracks %d-%d]" % (self.tracks[0].index, self.tracks[len(self.tracks) - 1].index)
 		return string
 
+	@property
+	def scene_indexes(self):
+		indexes = {}
+		for track in self.tracks:
+			for index in track.scene_indexes:
+				indexes[index] = 1
+		indexes = indexes.keys()
+		indexes = sorted(indexes)
+		return indexes
+
 	def add_track(self, track):
 		""" Append a new track to this group. Should probably only be called by Set.scan(). """
 		self.tracks.append(track)
@@ -44,4 +54,11 @@ class Group (LoggingObject):
 	def play_clip(self, clip_index):
 		""" Start playing group clip. """
 		self.set.play_clip(self.track_index, clip_index)
+
+	@property
+	def active_clips(self):
+		""" Return a dictionary of all non-empty clipslots: { index : Clip, ... } """
+		active_clips = filter(lambda n: n is not None, self.clips)
+		return active_clips
+	get_active_clips = active_clips
 

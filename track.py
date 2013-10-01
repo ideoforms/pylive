@@ -47,6 +47,14 @@ class Track(LoggingObject):
 		for clip in active_clips:
 			clip.dump()
 
+	@property
+	def scene_indexes(self):
+		""" TODO: turn this into something that returns Scene objects (which don't yet exist) """
+		indexes = []
+		for clip in self.active_clips:
+			indexes.append(clip.index)
+		return indexes
+
 	def clips_between(self, index_start, index_finish):
 		""" Returns a list of Clip objects between index_start and index_finish """
 		clips = []
