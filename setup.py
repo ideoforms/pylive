@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 
-from distutils.core import setup
+from setuptools import setup
 
 setup(
 	name = 'pylive',
-	version = '0.1.0',
+	version = '0.1.1',
 	description = 'Python remote control of Ableton Live',
 	author = 'Daniel Jones',
 	author_email = 'dan-pylive@erase.net',
 	url = 'https://github.com/ideoforms/pylive',
 	packages = ['live'],
-	requires = ['pyOSC (>=0.3)'],
+	install_requires = ['pyOSC >= 0.3b0'],
 	keywords = ('sound', 'music', 'ableton', 'osc'),
 	classifiers = [
 		'Topic :: Multimedia :: Sound/Audio',
