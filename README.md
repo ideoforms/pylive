@@ -13,41 +13,41 @@ PyLive is a framework for controlling Ableton Live from a standalone Python scri
 ## Usage
 
 ```python
-	import live, random
+import live, random
 
-	#------------------------------------------------------------------------
-	# Scan the set's contents and set its tempo to 110bpm.
-	#------------------------------------------------------------------------
-	set = live.Set()
-	set.scan(scan_clip_names = True, scan_devices = True)
-	set.tempo = 110.0
+#------------------------------------------------------------------------
+# Scan the set's contents and set its tempo to 110bpm.
+#------------------------------------------------------------------------
+set = live.Set()
+set.scan(scan_clip_names = True, scan_devices = True)
+set.tempo = 110.0
 
-	#------------------------------------------------------------------------
-	# Each Set contains a list of Track objects.
-	#------------------------------------------------------------------------
-	track = set.tracks[0]
-	print "track name %s" % track.name
+#------------------------------------------------------------------------
+# Each Set contains a list of Track objects.
+#------------------------------------------------------------------------
+track = set.tracks[0]
+print "track name %s" % track.name
 
-	#------------------------------------------------------------------------
-	# Each Track contains a list of Clip objects.
-	#------------------------------------------------------------------------
-	clip = track.clips[0]
-	print "clip name %s, length %d beats" % (clip.name, clip.length)
-	clip.play()
+#------------------------------------------------------------------------
+# Each Track contains a list of Clip objects.
+#------------------------------------------------------------------------
+clip = track.clips[0]
+print "clip name %s, length %d beats" % (clip.name, clip.length)
+clip.play()
 
-	#------------------------------------------------------------------------
-	# We can determine our internal timing based on Live's timeline using
-	# Set.wait_for_next_beat(), and trigger clips accordingly.
-	#------------------------------------------------------------------------
-	set.wait_for_next_beat()
-	clip.get_next_clip().play()
+#------------------------------------------------------------------------
+# We can determine our internal timing based on Live's timeline using
+# Set.wait_for_next_beat(), and trigger clips accordingly.
+#------------------------------------------------------------------------
+set.wait_for_next_beat()
+clip.get_next_clip().play()
 
-	#------------------------------------------------------------------------
-	# Now let's modulate the parameters of a Device object.
-	#------------------------------------------------------------------------
-	device = track.devices[0]
-	parameter = random.choice(device.parameters)
-	parameter.value = random.uniform(parameter.minimum, parameter.maximum)
+#------------------------------------------------------------------------
+# Now let's modulate the parameters of a Device object.
+#------------------------------------------------------------------------
+device = track.devices[0]
+parameter = random.choice(device.parameters)
+parameter.value = random.uniform(parameter.minimum, parameter.maximum)
 ```
 
 ## Overview
