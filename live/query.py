@@ -42,18 +42,19 @@ class Query(LoggingObject):
 		live.cmd(path, *args)
 	"""
 
-	def __init__(self):
+	def __init__(self, address = ("localhost", 9000), listen_port = 9001):
 		self.indent = 0
 		self.beat_callback = None
 		self.listening = False
-		self.listen_port = 9001
+		self.listen_port = listen_port
 
 		# handler callbacks for particular messages from Live.
 		# used so that other processes can register callbacks when states change.
 		self.handlers = {}
 
+		self.osc_address = address
 		self.osc_client = OSCClient()
-		self.osc_client.connect(("localhost", 9000))
+		self.osc_client.connect(address)
 		self.osc_server = OSCServer(("localhost", self.listen_port))
 		self.osc_server_thread = None
 		self.osc_read_event = None
