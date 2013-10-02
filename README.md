@@ -13,6 +13,11 @@ PyLive is a framework for controlling Ableton Live from a standalone Python scri
 ## Usage
 
 ```python
+#------------------------------------------------------------------------
+# Basic example of pylive usage: scan a Live set, trigger a clip,
+# and modulate some device parameters.
+#------------------------------------------------------------------------
+
 import live, random
 
 #------------------------------------------------------------------------
