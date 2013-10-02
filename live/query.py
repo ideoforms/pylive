@@ -6,6 +6,16 @@ import threading
 from OSC import *
 from live.object import *
 
+class LiveError(Exception):
+	"""Base class for all Live-related errors
+	"""
+	def __init__(self, message):
+		self.message = message
+
+	def __str__(self):
+		return self.message
+
+
 def singleton(cls):
 	instances = {}
 	def getinstance(*args):
@@ -92,7 +102,10 @@ class Query(LoggingObject):
 		
 		msg = OSCMessage(msg)
 		msg.extend(list(args))
-		self.osc_client.send(msg)
+		try:
+			self.osc_client.send(msg)
+		except OSCClientError:
+			raise LiveError("Couldn't send message to Live (is LiveOSC present and activated?)")
 
 	def query(self, msg, *args, **kwargs):
 		""" Send a Live command and synchronously wait for its response:
@@ -127,7 +140,10 @@ class Query(LoggingObject):
 
 		msg = OSCMessage(msg)
 		msg.extend(list(args))
-		self.osc_client.send(msg)
+		try:
+			self.osc_client.send(msg)
+		except OSCClientError:
+			raise LiveError("Couldn't send message to Live (is LiveOSC present and activated?)")
 
 		rv = self.osc_server_event.wait(self.osc_timeout)
 		if not rv:
