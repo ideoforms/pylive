@@ -2,10 +2,20 @@
 
 from setuptools import setup
 
+#------------------------------------------------------------------------
+# Generate a PyPI-friendly RST file from our markdown README.
+#------------------------------------------------------------------------
+try:
+	import pypandoc
+	long_description = pypandoc.convert('README.md', 'rst')
+except:
+	long_description = None
+
 setup(
 	name = 'pylive',
 	version = '0.1.1',
 	description = 'Python remote control of Ableton Live',
+	long_description = long_description,
 	author = 'Daniel Jones',
 	author_email = 'dan-pylive@erase.net',
 	url = 'https://github.com/ideoforms/pylive',
