@@ -12,7 +12,7 @@ PyLive is a framework for controlling Ableton Live from a standalone Python scri
 
 ## Usage
 
-	```python
+```python
 	import live, random
 
 	#------------------------------------------------------------------------
@@ -48,7 +48,7 @@ PyLive is a framework for controlling Ableton Live from a standalone Python scri
 	device = track.devices[0]
 	parameter = random.choice(device.parameters)
 	parameter.value = random.uniform(parameter.minimum, parameter.maximum)
-	```
+```
 
 ## Overview
 
