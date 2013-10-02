@@ -542,31 +542,27 @@ class Set (live.LoggingObject):
 		#--------------------------------------------------------------------------
 		self._add_handlers()
 
-	def load(self, filename = "set.pickle"):
+	def load(self, filename = "set"):
 		""" Read a saved Set structure from disk. """
+		filename = "%s.pickle" % filename
 		data = pickle.load(file(filename))
 		for key, value in data.items():
 			setattr(self, key, value)
-		print "load: set loaded OK (%d tracks)" % (len(self.tracks))
-		print "*** LOAD ***"
+		self.trace("load: set loaded OK (%d tracks)" % (len(self.tracks)))
 		self.beat_event = threading.Event()
-		# self.live = live.Query()
-		print "self.live is %s" % self.live
 
 	def save(self, filename = "set.pickle"):
 		""" Save the current Set structure to disk.
 		Use to avoid the lengthy scan() process.
 		TODO: Add a __reduce__ function to do this in an idiomatic way. """
+		filename = "%s.pickle" % filename
 		fd = file(filename, "w")
 		data = vars(self)
-		# _live = data["live"]
 		_beat_event = data["beat_event"]
-		# del data["live"]
 		del data["beat_event"]
 		pickle.dump(data, fd)
-		# data["live"] = _live
 		data["beat_event"] = _beat_event
-		print "save: set saved OK (%s)" % filename
+		self.trace("save: set saved OK (%s)" % filename)
 
 	def dump(self):
 		""" Dump the current Set structure to stdout, showing the hierarchy of

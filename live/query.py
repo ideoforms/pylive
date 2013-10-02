@@ -62,6 +62,8 @@ class Query(LoggingObject):
 
 		self.response_address = None
 
+		self.listen()
+
 	def __str__(self):
 		return "live.query"
 
@@ -145,7 +147,7 @@ class Query(LoggingObject):
 		return rv[0]
 
 	def handler(self, address, tags, data, source):
-		print "handler: %s %s" % (address, data)
+		# print "handler: %s %s" % (address, data)
 		#------------------------------------------------------------------------
 		# Execute any callbacks that have been registered for this message
 		#------------------------------------------------------------------------
