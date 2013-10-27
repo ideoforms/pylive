@@ -55,6 +55,7 @@ class Query(LoggingObject):
 	def __init__(self, address = ("localhost", 9000), listen_port = 9001):
 		self.indent = 0
 		self.beat_callback = None
+		self.startup_callback = None
 		self.listening = False
 		self.listen_port = listen_port
 
@@ -85,6 +86,9 @@ class Query(LoggingObject):
 
 	def listen(self):
 		""" Commence listening for OSC messages from LiveOSC. """
+		if self.listening:
+			return
+
 		try:
 			self.trace("started listening")
 			self.osc_server.addMsgHandler("default", self.handler)
@@ -198,6 +202,10 @@ class Query(LoggingObject):
 				#	self.beat_callback(data[0])
 				#------------------------------------------------------------------------
 				self.beat_callback()
+		elif address == "/remix/oscserver/startup":
+			print "STARTUP"
+			if self.startup_callback is not None:
+				self.startup_callback()
 
 	def add_handler(self, address, handler):
 		if not address in self.handlers:

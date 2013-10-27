@@ -3,8 +3,10 @@ import live.group
 import live.track
 import live.device
 
+import os
 import re
 import sys
+import glob
 import time
 import pickle
 import threading
@@ -13,6 +15,7 @@ from live.object import name_cache
 
 # i think we should be ok without this
 # @live.singleton
+
 
 class Set (live.LoggingObject):
 	""" Set represents an entire running Live set. It communicates via a
@@ -47,6 +50,51 @@ class Set (live.LoggingObject):
 		self.max_tracks_per_query = 256
 
 		self.beat_event = threading.Event()
+		self.startup_event = threading.Event()
+
+	def open(self, filename, wait = False):
+		""" Open an Ableton project, either by the path to the Project directory or
+		to an .als file. Will search in the current directory and the contents of
+		the LIVE_ROOT environmental variable.
+
+		Will only work with OS X right now as it presupposes an /Applications/*.app
+		format for the Live app.
+
+		Set wait = True to block until the set is loaded (waits for a LiveOSC trigger) """
+
+		paths = ["."]
+		if "LIVE_ROOT" in os.environ:
+			paths.append(os.environ["LIVE_ROOT"])
+		
+		#------------------------------------------------------------------------
+		# Iterate through each path searching for the project file.
+		#------------------------------------------------------------------------
+		for root in paths:
+			path = os.path.join(root, filename)
+			if os.path.exists(path):
+				break
+			if os.path.exists("%s.als" % path):
+				path = "%s.als" % path
+				break
+			if os.path.exists("%s Project/%s.als" % (path, path)):
+				path = "%s Project/%s.als" % (path, path)
+				break
+
+		if not os.path.exists(path):
+			print "live: Couldn't find project file '%s'. Have you set the LIVE_ROOT environmental variable?" % filename
+			sys.exit(1)
+
+		#------------------------------------------------------------------------
+		# Assume that the alphabetically-last Ableton binary is the one we 
+		# want (ie, greatest version number.)
+		#------------------------------------------------------------------------
+		ableton = sorted(glob.glob("/Applications/Ableton*.app"))[-1]
+		cmd = "open -a '%s' '%s'" % (ableton, path)
+		os.system(cmd)
+
+		if wait:
+			self.live.listen()
+			self.wait_for_startup()
 
 	@property
 	def live(self):
@@ -602,6 +650,20 @@ class Set (live.LoggingObject):
 		# don't want to use .wait() as it prevents response to keyboard input
 		# so ctrl-c will not work.
 		while not self.beat_event.is_set():
+			time.sleep(0.01)
+
+		return
+
+	def startup_callback(self):
+		self.startup_event.set()
+
+	def wait_for_startup(self):
+		self.startup_event.clear()
+		self.live.startup_callback = self.startup_callback
+
+		# don't want to use .wait() as it prevents response to keyboard input
+		# so ctrl-c will not work.
+		while not self.startup_event.is_set():
 			time.sleep(0.01)
 
 		return
