@@ -9,6 +9,7 @@ import sys
 import glob
 import time
 import pickle
+import urllib
 import threading
 
 from live.object import name_cache
@@ -52,7 +53,7 @@ class Set (live.LoggingObject):
 		self.beat_event = threading.Event()
 		self.startup_event = threading.Event()
 
-	def open(self, filename, wait = False):
+	def open(self, filename, wait = True):
 		""" Open an Ableton project, either by the path to the Project directory or
 		to an .als file. Will search in the current directory and the contents of
 		the LIVE_ROOT environmental variable.
@@ -60,7 +61,7 @@ class Set (live.LoggingObject):
 		Will only work with OS X right now as it presupposes an /Applications/*.app
 		format for the Live app.
 
-		Set wait = True to block until the set is loaded (waits for a LiveOSC trigger) """
+		wait = True: block until the set is loaded (waits for a LiveOSC trigger) """
 
 		paths = ["."]
 		if "LIVE_ROOT" in os.environ:
@@ -80,6 +81,12 @@ class Set (live.LoggingObject):
 				path = "%s Project/%s.als" % (path, path)
 				break
 
+		current = self.currently_open()
+		new = os.path.basename(path)
+		if current and current == new:
+			print "live: Project '%s' is already open" % new
+			return
+
 		if not os.path.exists(path):
 			print "live: Couldn't find project file '%s'. Have you set the LIVE_ROOT environmental variable?" % filename
 			sys.exit(1)
@@ -95,6 +102,43 @@ class Set (live.LoggingObject):
 		if wait:
 			self.live.listen()
 			self.wait_for_startup()
+
+	def currently_open(self):
+		""" Retrieve filename of currently-open Ableton Live set
+		based on inspecting Live's last Log.txt, or None if Live not open. """
+
+		#------------------------------------------------------------------------
+		# If Live is not running at all, return None.
+		#------------------------------------------------------------------------
+		is_running = os.system("ps axc -o command  | grep -q ^Live$") == 0
+		if not is_running:
+			print "live: Not currently open"
+			return None
+
+		#------------------------------------------------------------------------
+		# Use Log.txt corresponding to latest Live version. eg:
+		# ~/Library/Preferences/Ableton/Live\ 9.0.6/Log.txt 
+		#------------------------------------------------------------------------
+		root = os.path.expanduser("~/Library/Preferences/Ableton")
+		logfiles = glob.glob("%s/Live */Log.txt" % root)
+		general_regexp = "\.als"
+		open_regexp = "file://.*\.als$"
+
+		if logfiles:
+			logfile = list(sorted(logfiles))[-1]
+			contents = file(logfile).readlines()
+			projects = filter(lambda line: re.search(general_regexp, line), contents)
+			project = projects[-1]
+			#------------------------------------------------------------------------
+			# Some log entries mentioning an .als file are referring to the
+			# default live template, meaning we've currently got an empty document.
+			# Check that this is not the case by matching against a file open RE.
+			#------------------------------------------------------------------------
+			if re.search(open_regexp, project):
+				project = projects[-1].strip()
+				project = os.path.basename(project)
+				project = urllib.unquote(project)
+				return project
 
 	@property
 	def live(self):
