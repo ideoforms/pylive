@@ -2,7 +2,7 @@
 
 ## Introduction
 
-PyLive is a framework for controlling Ableton Live from a standalone Python script, mediated via Open Sound Control.
+PyLive is a framework for querying and controlling Ableton Live from a standalone Python script, mediated via Open Sound Control. It is effectively an interface to the Live Control Surfaces paradigm, which means it can do anything that a hardware control surface can do: querying and modifying properties of tracks, clips and devices. 
 
 ## Requirements
 
