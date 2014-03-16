@@ -651,9 +651,12 @@ class Set (live.LoggingObject):
 		fd = file(filename, "w")
 		data = vars(self)
 		_beat_event = data["beat_event"]
+		_startup_event = data["startup_event"]
 		del data["beat_event"]
+		del data["startup_event"]
 		pickle.dump(data, fd)
 		data["beat_event"] = _beat_event
+		data["_event"] = _startup_event
 		self.trace("save: set saved OK (%s)" % filename)
 
 	def dump(self):
