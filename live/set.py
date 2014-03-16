@@ -643,7 +643,7 @@ class Set (live.LoggingObject):
 		self.trace("load: set loaded OK (%d tracks)" % (len(self.tracks)))
 		self.beat_event = threading.Event()
 
-	def save(self, filename = "set.pickle"):
+	def save(self, filename = "set"):
 		""" Save the current Set structure to disk.
 		Use to avoid the lengthy scan() process.
 		TODO: Add a __reduce__ function to do this in an idiomatic way. """
