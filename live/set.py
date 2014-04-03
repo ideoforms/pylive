@@ -39,6 +39,7 @@ class Set (live.LoggingObject):
 		self.indent = 0
 		self.groups = []
 		self.tracks = []
+		self.scenes = []
 		self.group_re = re.compile("^(\d+)\. (\S.+)")
 		self.scanned = False
 
@@ -494,12 +495,13 @@ class Set (live.LoggingObject):
 	# SCAN
 	#------------------------------------------------------------------------
 
-	def scan(self, group_re = None, scan_devices = False, scan_clip_names = False):
+	def scan(self, group_re = None, scan_scenes = False, scan_devices = False, scan_clip_names = False):
 		""" Interrogates the currently open Ableton Live set for its structure:
 		number of tracks, clips, scenes, etc.
 
 		For speed, certain elements are not scanned by default:
 
+		scan_scenes -- queries scenes
 		scan_devices -- queries tracks for devices and their corresponding parameters
 		scan_clip_names -- queries clips for their human-readable names
 		"""
@@ -626,6 +628,15 @@ class Set (live.LoggingObject):
 							param.maximum = maximum
 							device.parameters.append(param)
 
+		#--------------------------------------------------------------------------
+		# now scan scenes
+		#--------------------------------------------------------------------------
+		scene_count = self.num_scenes
+		scene_names = self.scene_names
+		for index, scene_name in enumerate(scene_names):
+			scene = live.Scene(self, index)
+			scene.name = scene_name
+			self.scenes.append(scene)
 		
 		#--------------------------------------------------------------------------
 		# finally, add handlers to catch any state changes in the set, so we
