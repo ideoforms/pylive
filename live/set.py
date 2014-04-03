@@ -302,9 +302,13 @@ class Set (live.LoggingObject):
 
 	@property
 	def scene_names(self):
-		""" Return a list of all scene names. """
-		rv = self.live.query("/live/name/scene")
-		rv = [ rv[a] for a in range(1, len(rv), 2) ]
+		""" Return a list of all scene names."""
+		#------------------------------------------------------------------------
+		# /live/name/scene breaks over a certain number of scenes but 
+		# sceneblock seems resilient - so use that instead.
+		#------------------------------------------------------------------------
+		scene_count = self.num_scenes
+		rv = self.live.query("/live/name/sceneblock", 0, scene_count)
 		return rv
 	get_scene_names = scene_names
 
@@ -345,6 +349,23 @@ class Set (live.LoggingObject):
 	def set_track_name(self, index, value):
 		""" Set a given track's name. """
 		self.live.cmd("/live/name/track", index, value)
+
+	#------------------------------------------------------------------------
+	# /live/name/clip
+	# /live/name/clipblock
+	#------------------------------------------------------------------------
+
+	def get_clip_names(self, track, offset, count):
+		""" Return a list of a given set of clip names. """
+		return self.live.query("/live/name/clipblock", track, offset, 1, count)
+
+	def get_clip_name(self, track, index):
+		""" Return a specific clip name. """
+		return self.live.query("/live/name/clip", track, index)[2]
+
+	def set_clip_name(self, track, index, name):
+		""" Set a given clip's name. """
+		self.live.cmd("/live/name/clip", track, index, name)
 
 
 	#------------------------------------------------------------------------
@@ -452,9 +473,6 @@ class Set (live.LoggingObject):
 		return self.live.query("/live/track/info", track_index)
 
 	#------------------------------------------------------------------------
-	# /live/devicelist
-
-	#------------------------------------------------------------------------
 	# /live/clip/info
 	# /live/clip/loopend
 	#------------------------------------------------------------------------
@@ -544,10 +562,6 @@ class Set (live.LoggingObject):
 			# expose whether or not a track is a group track!
 			#------------------------------------------------------------------------
 			if match:
-				# Formerly took the group index from the group title so we could have gappy
-				# groups (for V4). Now want to move this into a separate area of code.
-				# group_index = int(match.group(1))
-				# group_name = match.group(2)
 				group_index = len(self.groups)
 				group = live.Group(self, track_index, group_index, track_name)
 				current_group = group
@@ -564,6 +578,8 @@ class Set (live.LoggingObject):
 
 				clip_info = track_info[2:]
 
+				if scan_clip_names:
+					clip_names = self.get_clip_names
 				for n in range(0, len(clip_info), 3):
 					clip_index = n / 3
 					state = clip_info[n + 1]
@@ -594,9 +610,9 @@ class Set (live.LoggingObject):
 						# is nice, but slows things down significantly -- so disable by default.
 						#--------------------------------------------------------------------------
 						if scan_clip_names:
-							name = live.query("/live/name/clip", track.index, clip_index)
-							name = name[2]
-							track.clips[clip_index].name = name
+							clip_name = self.get_clip_name(track.index, clip_index)
+							track.clips[clip_index].name = clip_name
+							self.trace("scan_layout:  - clip %d: %s" % (clip_index, clip_name))
 
 						# loop_start = live.query_one("/live/clip/loopstart", self.index, clip_index)
 						# print "loop start = %d" % loop_start
@@ -689,6 +705,8 @@ class Set (live.LoggingObject):
 				current_group = track.group
 			else:
 				track.dump()
+		for scene in self.scenes:
+			print str(scene)
 
 	def group_named(self, name):
 		""" Returns the Group with the specified name, or None if not found. """
