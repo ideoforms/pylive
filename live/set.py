@@ -17,7 +17,6 @@ from live.object import name_cache
 # i think we should be ok without this
 # @live.singleton
 
-
 class Set (live.LoggingObject):
 	""" Set represents an entire running Live set. It communicates via a
 	live.Query object to the Live instance, which must be running LiveOSC
@@ -404,16 +403,16 @@ class Set (live.LoggingObject):
 		self.live.cmd("/live/pan", track_index, pan)
 
 	#------------------------------------------------------------------------
-	# /live/send
+	# /live/pitch
 	#------------------------------------------------------------------------
 
-	def get_track_send(self, track_index, send_index):
-		""" Return send level of send_index for track_index. """
-		return self.live.query("/live/send", track_index, send_index)[2]
+	def get_clip_pitch(self, track_index, clip_index):
+		""" Return pitch level of pitch_index for track_index. """
+		return self.live.query("/live/pitch", track_index, clip_index)
 
-	def set_track_send(self, track_index, send_index, value):
-		""" Set send level of send_index for track_index. """
-		self.live.cmd("/live/send", track_index, send_index, value)
+	def set_clip_pitch(self, track_index, pitch_index, coarse, fine = 0):
+		""" Set pitch level of pitch_index for track_index. """
+		self.live.cmd("/live/pitch", track_index, pitch_index, coarse, fine)
 
 	#------------------------------------------------------------------------
 	# /live/master/volume

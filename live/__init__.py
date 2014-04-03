@@ -28,6 +28,8 @@ __version__ = "0.1.1"
 __author__ = "Daniel Jones <http://www.erase.net/>"
 __all__ = [ "Query", "Set", "Track", "Group", "Clip", "Device", "Parameter" ]
 
+debug = False
+
 from object import *
 from constants import *
 from set import *

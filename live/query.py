@@ -203,7 +203,6 @@ class Query(LoggingObject):
 				#------------------------------------------------------------------------
 				self.beat_callback()
 		elif address == "/remix/oscserver/startup":
-			print "STARTUP"
 			if self.startup_callback is not None:
 				self.startup_callback()
 

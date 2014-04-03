@@ -73,6 +73,13 @@ class Clip(live.LoggingObject):
 		""" Stop playing clip """
 		self.trace("stopping")
 		self.set.stop_clip(self.track.index, self.index)
+	
+	def get_pitch(self):
+		return self.set.get_clip_pitch(self.track.index, self.index)
+	def set_pitch(self, coarse, fine = 0):
+		self.set.set_clip_pitch(self.track.index, self.index, coarse, fine)
+
+	pitch = property(get_pitch, set_pitch, doc = "Pitch (coarse, fine)")
 
 	def get_next_clip(self, wrap = False, allow_gaps = True):
 		""" Return the next clip in the track, or None if not found.
