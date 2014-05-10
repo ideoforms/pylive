@@ -484,6 +484,15 @@ class Set (live.LoggingObject):
 		self.live.cmd("/live/clip/loopend", track_index, clip_index, loop_end)
 
 	#------------------------------------------------------------------------
+	# /live/clip/mute
+	#------------------------------------------------------------------------
+
+	def set_clip_mute(self, track_index, clip_index, mute = True):
+		self.live.cmd("/live/clip/mute", track_index, clip_index, mute)
+	def get_clip_mute(self, track_index, clip_index):
+		return self.live.query("/live/clip/mute", track_index, clip_index)
+
+	#------------------------------------------------------------------------
 	# /live/devicelist
 	# /live/device
 	# /live/device/range
@@ -562,6 +571,7 @@ class Set (live.LoggingObject):
 			# expose whether or not a track is a group track!
 			#------------------------------------------------------------------------
 			if match:
+				self.trace("scan_layout: - is group")
 				group_index = len(self.groups)
 				group = live.Group(self, track_index, group_index, track_name)
 				current_group = group
@@ -659,6 +669,14 @@ class Set (live.LoggingObject):
 		# remain up-to-date with whether clips are playing, etc...
 		#--------------------------------------------------------------------------
 		self._add_handlers()
+
+	def load_or_scan(self, filename = "set", **kwargs):
+		""" From from file; if file does not exist, scan, then save. """
+		try:
+			self.load(filename)
+		except:
+			self.scan(**kwargs)
+			self.save(filename)
 
 	def load(self, filename = "set"):
 		""" Read a saved Set structure from disk. """
