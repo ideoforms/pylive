@@ -23,6 +23,7 @@ class Group (LoggingObject):
 		self.index = track_index
 		self.indent = 1
 		self.name = name
+		self.group = None
 		self.tracks = []
 		self.clips = []
 
@@ -54,6 +55,11 @@ class Group (LoggingObject):
 	def play_clip(self, clip_index):
 		""" Start playing group clip. """
 		self.set.play_clip(self.track_index, clip_index)
+
+	def stop(self):
+		""" Immediately stop group from playing. """
+		self.playing = False
+		self.set.stop_track(self.track_index)
 
 	@property
 	def active_clips(self):

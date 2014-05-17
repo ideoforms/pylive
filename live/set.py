@@ -37,9 +37,6 @@ class Set (live.LoggingObject):
 
 	def __init__(self, address = ("localhost", 9000)):
 		self.indent = 0
-		self.groups = []
-		self.tracks = []
-		self.scenes = []
 		self.group_re = re.compile("^(\d+)\. (\S.+)")
 		self.scanned = False
 
@@ -52,6 +49,12 @@ class Set (live.LoggingObject):
 
 		self.beat_event = threading.Event()
 		self.startup_event = threading.Event()
+		self.reset()
+
+	def reset(self):
+		self.groups = []
+		self.tracks = []
+		self.scenes = []
 
 	def open(self, filename, wait = True):
 		""" Open an Ableton project, either by the path to the Project directory or
@@ -532,6 +535,7 @@ class Set (live.LoggingObject):
 		scan_devices -- queries tracks for devices and their corresponding parameters
 		scan_clip_names -- queries clips for their human-readable names
 		"""
+		print "group_re = %s" % group_re
 
 		track_count = self.num_tracks
 		if not track_count:
@@ -576,6 +580,12 @@ class Set (live.LoggingObject):
 				group = live.Group(self, track_index, group_index, track_name)
 				current_group = group
 				self.groups.append(group)
+
+				#------------------------------------------------------------------------
+				# we also need to add this group to the tracks list, as live's events
+				# assume that groups are tracks and address their indices accordingly.
+				#------------------------------------------------------------------------
+				self.tracks.append(group)
 
 			else:
 				# TODO: consistence between Group and Track constructors
@@ -674,7 +684,12 @@ class Set (live.LoggingObject):
 		""" From from file; if file does not exist, scan, then save. """
 		try:
 			self.load(filename)
+			if len(self.tracks) != self.num_tracks:
+				print "Loaded %d tracks, but found %d - looks like set has changed" % (len(self.tracks), self.num_tracks)
+				self.reset()
+				raise Exception
 		except:
+
 			self.scan(**kwargs)
 			self.save(filename)
 
@@ -772,6 +787,7 @@ class Set (live.LoggingObject):
 	def _update_clip_state(self, track_index, clip_index, state):
 		if not self.scanned:
 			return
+		print "updating clip state for track %d (count %d)" % (track_index, len(self.tracks))
 		track = self.tracks[track_index]
 
 		# can get a clip_info for clips outside of our clip range

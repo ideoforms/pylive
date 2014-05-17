@@ -1,3 +1,5 @@
+import live
+
 class LoggingObject(object):
 	""" Helper superclass for objects which wish to generate debugging output
 	with hierachical indentation.
@@ -15,15 +17,19 @@ class LoggingObject(object):
 		self.logger = logging.getLogger(__name__)
 		print "created logger: %s" % __name__
 
-	def trace(self, msg = ""):
+	def trace(self, msg = None, *args):
+		if msg:
+			msg = msg % args
 		print "%s[%s] %s" % (" " * 3 * self.indent, self, msg)
 
-	def warn(self, msg = ""):
-		print "[%s] !!! warning: %s !!!" % (self, msg)
+	def warn(self, msg, *args):
+		msg = msg % args
+		print "[%s] [WARN] %s !!!" % (self, msg)
 
-	def debug(self, msg = ""):
-		if self.debug:
-			print "[%s] !!! debug: %s !!!" % (self, msg)
+	def debug(self, msg, *args):
+		msg = msg % args
+		if live.debug:
+			print "[%s] [DEBUG] %s" % (self, msg)
 
 def name_cache(fn):
 	""" Decorator enabling pairs of set_XX/get_XX methods to cache their

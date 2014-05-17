@@ -66,8 +66,12 @@ class Query(LoggingObject):
 		self.osc_address = address
 		self.osc_client = OSCClient()
 		self.osc_client.connect(address)
-		self.osc_server = OSCServer(("localhost", self.listen_port))
-		self.osc_server_thread = None
+		try:
+			self.osc_server = OSCServer(("localhost", self.listen_port))
+			self.osc_server.print_tracebacks = True
+			self.osc_server_thread = None
+		except:
+			"Couldn't connect to Live (is another process already connected?)"
 		self.osc_read_event = None
 		self.osc_timeout = 5
 
@@ -106,6 +110,7 @@ class Query(LoggingObject):
 		
 		msg = OSCMessage(msg)
 		msg.extend(list(args))
+		self.debug("OSC: %s %s", msg, args)
 		try:
 			self.osc_client.send(msg)
 		except OSCClientError:
@@ -144,6 +149,7 @@ class Query(LoggingObject):
 
 		msg = OSCMessage(msg)
 		msg.extend(list(args))
+		self.debug("OSC: %s %s", msg, args)
 		try:
 			self.osc_client.send(msg)
 		except OSCClientError:
@@ -167,7 +173,7 @@ class Query(LoggingObject):
 		return rv[0]
 
 	def handler(self, address, tags, data, source):
-		# print "handler: %s %s" % (address, data)
+		self.debug("OSC: %s %s" % (address, data))
 		#------------------------------------------------------------------------
 		# Execute any callbacks that have been registered for this message
 		#------------------------------------------------------------------------
