@@ -13,7 +13,7 @@ from live import *
 # overview of the set, but takes significantly longer.
 #------------------------------------------------------------------------
 set = Set()
-set.scan(scan_clip_names = True, scan_devices = True)
+set.scan(scan_clip_names = False, scan_devices = False, group_re = "[A-Z].\d{2} -.*")
 
 for track in set.tracks:
 	print str(track)

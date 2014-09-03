@@ -3,7 +3,8 @@ import signal
 import inspect
 import threading
 
-from OSC import *
+import liblo
+# from OSC import *
 from live.object import *
 
 class LiveError(Exception):
@@ -56,7 +57,6 @@ class Query(LoggingObject):
 		self.indent = 0
 		self.beat_callback = None
 		self.startup_callback = None
-		self.listening = False
 		self.listen_port = listen_port
 
 		# handler callbacks for particular messages from Live.
@@ -64,14 +64,11 @@ class Query(LoggingObject):
 		self.handlers = {}
 
 		self.osc_address = address
-		self.osc_client = OSCClient()
-		self.osc_client.connect(address)
-		try:
-			self.osc_server = OSCServer(("localhost", self.listen_port))
-			self.osc_server.print_tracebacks = True
-			self.osc_server_thread = None
-		except:
-			"Couldn't connect to Live (is another process already connected?)"
+		self.osc_target = liblo.Address(address[0], address[1])
+		self.osc_server = liblo.Server(listen_port)
+		self.osc_server.add_method(None, None, self.handler)
+		self.osc_server_thread = None
+
 		self.osc_read_event = None
 		self.osc_timeout = 5
 
@@ -82,38 +79,28 @@ class Query(LoggingObject):
 	def __str__(self):
 		return "live.query"
 
-	def stop(self):
-		""" Terminate this query object and unbind from OSC listening. """
-		if self.listening:
-			self.osc_server.close()
-			self.listening = False
+	def osc_server_read(self):
+		while True:
+			self.osc_server.recv(10)
 
 	def listen(self):
-		""" Commence listening for OSC messages from LiveOSC. """
-		if self.listening:
-			return
+		self.osc_server_thread = threading.Thread(target = self.osc_server_read)
+		self.osc_server_thread.setDaemon(True)
+		self.osc_server_thread.start()
 
-		try:
-			self.trace("started listening")
-			self.osc_server.addMsgHandler("default", self.handler)
-			self.osc_server_thread = threading.Thread(target = self.osc_server.serve_forever)
-			self.osc_server_thread.setDaemon(True)
-			self.osc_server_thread.start()
-			self.listening = True
-		except Exception, e:
-			self.warn("listen failed (couldn't bind to port %d): %s" % (self.listen_port, e))
+	def stop(self):
+		""" Terminate this query object and unbind from OSC listening. """
+		pass
 
 	def cmd(self, msg, *args):
 		""" Send a Live command without expecting a response back:
 
 			live.cmd("/live/tempo", 110.0) """
 		
-		msg = OSCMessage(msg)
-		msg.extend(list(args))
 		self.debug("OSC: %s %s", msg, args)
 		try:
-			self.osc_client.send(msg)
-		except OSCClientError:
+			liblo.send(self.osc_target, msg, *args)
+		except Exception, e:
 			raise LiveError("Couldn't send message to Live (is LiveOSC present and activated?)")
 
 	def query(self, msg, *args, **kwargs):
@@ -129,8 +116,6 @@ class Query(LoggingObject):
 		# eg live.query("/set/freq", 440, 1.0, response_address = "/verify/freq")
 		# http://stackoverflow.com/questions/5940180/python-default-keyword-arguments-after-variable-length-positional-arguments
 		#------------------------------------------------------------------------
-		if not self.listening:
-			self.listen()
 
 		#------------------------------------------------------------------------
 		# some calls produce responses at different addresses
@@ -147,13 +132,7 @@ class Query(LoggingObject):
 
 		self.osc_server_event = threading.Event()
 
-		msg = OSCMessage(msg)
-		msg.extend(list(args))
-		self.debug("OSC: %s %s", msg, args)
-		try:
-			self.osc_client.send(msg)
-		except OSCClientError:
-			raise LiveError("Couldn't send message to Live (is LiveOSC present and activated?)")
+		self.cmd(msg, *args)
 
 		rv = self.osc_server_event.wait(self.osc_timeout)
 		if not rv:
@@ -172,7 +151,7 @@ class Query(LoggingObject):
 			return None
 		return rv[0]
 
-	def handler(self, address, tags, data, source):
+	def handler(self, address, data, types):
 		self.debug("OSC: %s %s" % (address, data))
 		#------------------------------------------------------------------------
 		# Execute any callbacks that have been registered for this message

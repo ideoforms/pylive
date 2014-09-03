@@ -103,7 +103,7 @@ class Set (live.LoggingObject):
 		os.system(cmd)
 
 		if wait:
-			self.live.listen()
+			# self.live.listen()
 			self.wait_for_startup()
 
 	def currently_open(self):
@@ -150,6 +150,15 @@ class Set (live.LoggingObject):
 	def __str__(self):
 		return "live.set"
 
+	@property
+	def is_connected(self):
+		""" Test whether we can connect to Live """
+		try:
+			return bool(self.tempo)
+		except Exception, e:
+			print "exception %s" % e
+			return False
+
 	#------------------------------------------------------------------------
 	# /live/tempo
 	#------------------------------------------------------------------------
@@ -163,6 +172,20 @@ class Set (live.LoggingObject):
 		self.live.cmd("/live/tempo", value)
 
 	tempo = property(get_tempo, set_tempo, doc = "Global tempo")
+	
+	#------------------------------------------------------------------------
+	# /live/quantization
+	#------------------------------------------------------------------------
+
+	@name_cache
+	def get_quantization(self):
+		return self.live.query("/live/quantization")[0]
+
+	@name_cache
+	def set_quantization(self, value):
+		self.live.cmd("/live/quantization", value)
+
+	quantization = property(get_quantization, set_quantization, doc = "Global quantization")
 	
 	#------------------------------------------------------------------------
 	# /live/time
@@ -428,6 +451,18 @@ class Set (live.LoggingObject):
 		self.live.cmd("/live/pan", track_index, pan)
 
 	#------------------------------------------------------------------------
+	# /live/pan
+	#------------------------------------------------------------------------
+
+	def get_track_send(self, track_index, send_index):
+		""" Return the send level of send send_index """
+		return self.live.query("/live/send", track_index, send_index)[1]
+
+	def set_track_send(self, track_index, send_index, value):
+		""" Set send level of send send_index """
+		self.live.cmd("/live/send", track_index, send_index, value)
+
+	#------------------------------------------------------------------------
 	# /live/pitch
 	#------------------------------------------------------------------------
 
@@ -535,7 +570,12 @@ class Set (live.LoggingObject):
 		scan_devices -- queries tracks for devices and their corresponding parameters
 		scan_clip_names -- queries clips for their human-readable names
 		"""
-		print "group_re = %s" % group_re
+
+		#------------------------------------------------------------------------
+		# initialise to empty set of tracks and groups
+		#------------------------------------------------------------------------
+		self.tracks = []
+		self.groups = []
 
 		track_count = self.num_tracks
 		if not track_count:
@@ -709,13 +749,24 @@ class Set (live.LoggingObject):
 		filename = "%s.pickle" % filename
 		fd = file(filename, "w")
 		data = vars(self)
+
+
+		#------------------------------------------------------------------------
+		# put to side stuff that cannot be pickled
+		#------------------------------------------------------------------------
 		_beat_event = data["beat_event"]
 		_startup_event = data["startup_event"]
 		del data["beat_event"]
 		del data["startup_event"]
+
 		pickle.dump(data, fd)
+
+		#------------------------------------------------------------------------
+		# restore the unpickleables
+		#------------------------------------------------------------------------
 		data["beat_event"] = _beat_event
-		data["_event"] = _startup_event
+		data["startup_event"] = _startup_event
+
 		self.trace("save: set saved OK (%s)" % filename)
 
 	def dump(self):
