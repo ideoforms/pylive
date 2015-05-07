@@ -13,14 +13,14 @@ except:
 
 setup(
 	name = 'pylive',
-	version = '0.1.1',
+	version = '0.1.2',
 	description = 'Python remote control of Ableton Live',
 	long_description = long_description,
 	author = 'Daniel Jones',
 	author_email = 'dan-pylive@erase.net',
 	url = 'https://github.com/ideoforms/pylive',
 	packages = ['live'],
-	install_requires = ['pyOSC >= 0.3b0'],
+	install_requires = ['pyliblo >= 0.9.1'],
 	keywords = ('sound', 'music', 'ableton', 'osc'),
 	classifiers = [
 		'Topic :: Multimedia :: Sound/Audio',
