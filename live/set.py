@@ -47,8 +47,18 @@ class Set (live.LoggingObject):
 
 		self.max_tracks_per_query = 256
 
-		self.beat_event = threading.Event()
-		self.startup_event = threading.Event()
+		#--------------------------------------------------------------------------
+		# create mutexes and events for inter-thread handling (to catch on-beat
+		# events, etc)
+		#--------------------------------------------------------------------------
+		self._add_mutexes()
+
+		#--------------------------------------------------------------------------
+		# add handlers to catch any state changes in the set, so we
+		# remain up-to-date with whether clips are playing, etc...
+		#--------------------------------------------------------------------------
+		self._add_handlers()
+
 		self.reset()
 
 	def reset(self):
@@ -656,6 +666,10 @@ class Set (live.LoggingObject):
 						track.clips[clip_index].state = state
 						track.clips[clip_index].indent = 3 if track.group else 2
 
+						#--------------------------------------------------------------------------
+						# if this track is in a group, create a Clip object inside the group
+						# that can be triggered to play group scenes.
+						#--------------------------------------------------------------------------
 						if current_group:
 							while len(current_group.clips) <= clip_index:
 								current_group.clips.append(None)
@@ -673,9 +687,6 @@ class Set (live.LoggingObject):
 							clip_name = self.get_clip_name(track.index, clip_index)
 							track.clips[clip_index].name = clip_name
 							self.trace("scan_layout:  - clip %d: %s" % (clip_index, clip_name))
-
-						# loop_start = live.query_one("/live/clip/loopstart", self.index, clip_index)
-						# print "loop start = %d" % loop_start
 
 				#--------------------------------------------------------------------------
 				# query each track for its device list, and any parameters belonging to
@@ -714,11 +725,6 @@ class Set (live.LoggingObject):
 			scene.name = scene_name
 			self.scenes.append(scene)
 		
-		#--------------------------------------------------------------------------
-		# finally, add handlers to catch any state changes in the set, so we
-		# remain up-to-date with whether clips are playing, etc...
-		#--------------------------------------------------------------------------
-		self._add_handlers()
 
 	def load_or_scan(self, filename = "set", **kwargs):
 		""" From from file; if file does not exist, scan, then save. """
@@ -740,7 +746,8 @@ class Set (live.LoggingObject):
 		for key, value in data.items():
 			setattr(self, key, value)
 		self.trace("load: set loaded OK (%d tracks)" % (len(self.tracks)))
-		self.beat_event = threading.Event()
+
+		self._add_mutexes()
 
 	def save(self, filename = "set"):
 		""" Save the current Set structure to disk.
@@ -748,24 +755,15 @@ class Set (live.LoggingObject):
 		TODO: Add a __reduce__ function to do this in an idiomatic way. """
 		filename = "%s.pickle" % filename
 		fd = file(filename, "w")
+		self._delete_mutexes()
 		data = vars(self)
-
-
-		#------------------------------------------------------------------------
-		# put to side stuff that cannot be pickled
-		#------------------------------------------------------------------------
-		_beat_event = data["beat_event"]
-		_startup_event = data["startup_event"]
-		del data["beat_event"]
-		del data["startup_event"]
 
 		pickle.dump(data, fd)
 
 		#------------------------------------------------------------------------
 		# restore the unpickleables
 		#------------------------------------------------------------------------
-		data["beat_event"] = _beat_event
-		data["startup_event"] = _startup_event
+		self._add_mutexes()
 
 		self.trace("save: set saved OK (%s)" % filename)
 
@@ -776,7 +774,7 @@ class Set (live.LoggingObject):
 			self.trace("dump: currently empty, performing scan")
 			self.scan()
 		self.trace("dump: %d tracks in %d groups" % (len(self.tracks), len(self.groups)))
-		self.trace("tempo = %.1f" % self.tempo)
+		# self.trace("tempo = %.1f" % self.tempo)
 		current_group = None
 
 		#------------------------------------------------------------------------
@@ -790,7 +788,7 @@ class Set (live.LoggingObject):
 			else:
 				track.dump()
 		for scene in self.scenes:
-			print str(scene)
+			scene.dump()
 
 	def group_named(self, name):
 		""" Returns the Group with the specified name, or None if not found. """
@@ -827,6 +825,14 @@ class Set (live.LoggingObject):
 
 		return
 
+	def _add_mutexes(self):
+		self.beat_event = threading.Event()
+		self.startup_event = threading.Event()
+
+	def _delete_mutexes(self):
+		self.beat_event = None
+		self.startup_event = None
+
 	def _add_handlers(self):
 		self.live.add_handler("/live/clip/info", self._update_clip_state)
 		self.live.add_handler("/live/tempo", self._update_tempo)
@@ -838,7 +844,6 @@ class Set (live.LoggingObject):
 	def _update_clip_state(self, track_index, clip_index, state):
 		if not self.scanned:
 			return
-		print "updating clip state for track %d (count %d)" % (track_index, len(self.tracks))
 		track = self.tracks[track_index]
 
 		# can get a clip_info for clips outside of our clip range
@@ -847,4 +852,4 @@ class Set (live.LoggingObject):
 			clip = track.clips[clip_index]
 			if clip:
 				clip.state = state
-		# self.dump()
+		self.dump()
