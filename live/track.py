@@ -31,6 +31,7 @@ class Track(LoggingObject):
 		self.clip_playing = None
 		self.clips = []
 		self.devices = []
+		self.playing = False
 
 	def __str__(self):
 		if self.group:

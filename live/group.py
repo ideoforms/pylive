@@ -54,7 +54,7 @@ class Group (LoggingObject):
 
 	def play_clip(self, clip_index):
 		""" Start playing group clip. """
-		self.set.play_clip(self.track_index, clip_index)
+		self.clips[clip_index].play()
 
 	def stop(self):
 		""" Immediately stop group from playing. """

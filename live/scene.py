@@ -22,12 +22,15 @@ class Scene(live.LoggingObject):
 		self.set = set
 		self.index = index
 		self.name = None
-		self.indent = 2
+		self.indent = 1
 
 	def __str__(self):
 		name = ": %s" % self.name if self.name else ""
 		
 		return "live.scene(%d)%s" % (self.index, name)
+
+	def dump(self):
+		self.trace()
 
 	def play(self):
 		""" Start playing scene. """

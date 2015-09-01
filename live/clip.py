@@ -16,11 +16,11 @@ class Clip(live.LoggingObject):
 	state -- one of CLIP_STATE_EMPTY, CLIP_STATE_STOPPED, CLIP_STATE_PLAYING
 	"""
 
-	def __init__(self, track, index, length):
+	def __init__(self, track, index, length = 4):
 		""" Create a new clip.
 		
 		Arguments:
-		track -- a Track object
+		track -- a Track or Group object
 		index -- index of this clip within the track
 		length -- length of clip, in beats
 		"""
@@ -29,7 +29,7 @@ class Clip(live.LoggingObject):
 		self.length = length
 		self.looplen = length
 		self.indent = 2
-		self.state = None
+		self.state = CLIP_STATUS_STOPPED
 		self.name = None
 
 	def __str__(self):
@@ -68,11 +68,25 @@ class Clip(live.LoggingObject):
 		""" Start playing clip. """
 		self.trace("playing")
 		self.set.play_clip(self.track.index, self.index)
+		self.track.playing = True
+		if type(self.track) is live.Group:
+			for track in self.track.tracks:
+				#------------------------------------------------------------------------
+				# when we trigger a group clip, it triggers each of the corresponding
+				# clips in the tracks it contains. thus need to update the playing
+				# status of each of our tracks, assuming that all clips/stop buttons
+				# are enabled.
+				#------------------------------------------------------------------------
+				if self.index < len(track.clips) and track.clips[self.index] is not None:
+					track.playing = True
+				else:
+					track.playing = False
 
 	def stop(self):
 		""" Stop playing clip """
 		self.trace("stopping")
 		self.set.stop_clip(self.track.index, self.index)
+		self.track.playing = False
 	
 	def get_pitch(self):
 		return self.set.get_clip_pitch(self.track.index, self.index)
