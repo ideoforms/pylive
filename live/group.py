@@ -1,6 +1,7 @@
 from live.object import *
+from live.track import *
 
-class Group (LoggingObject):
+class Group (Track):
 	""" Represents a grouped set of Track objects.
 	Because we can't programmatically query whether a track in Live is an
 	individual or group track, the user must name groups using a special
