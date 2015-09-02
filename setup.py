@@ -13,7 +13,7 @@ except:
 
 setup(
 	name = 'pylive',
-	version = '0.1.4',
+	version = '0.1.5',
 	description = 'Python remote control of Ableton Live',
 	long_description = long_description,
 	author = 'Daniel Jones',
