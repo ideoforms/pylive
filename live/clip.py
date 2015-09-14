@@ -13,7 +13,7 @@ class Clip(live.LoggingObject):
 	index -- index of this clip
 	length -- length of cip, in beats
 	name -- human-readable name
-	state -- one of CLIP_STATE_EMPTY, CLIP_STATE_STOPPED, CLIP_STATE_PLAYING
+	state -- one of CLIP_STATUS_EMPTY, CLIP_STATUS_STOPPED, CLIP_STATUS_PLAYING
 	"""
 
 	def __init__(self, track, index, length = 4):
@@ -34,7 +34,12 @@ class Clip(live.LoggingObject):
 
 	def __str__(self):
 		name = ": %s" % self.name if self.name else ""
-		state_symbols = { CLIP_STATUS_EMPTY : " ", CLIP_STATUS_STOPPED : "-", CLIP_STATUS_PLAYING : ">", CLIP_STATUS_STARTING : "*" }
+		state_symbols = {
+			CLIP_STATUS_EMPTY : " ",
+			CLIP_STATUS_STOPPED : "-",
+			CLIP_STATUS_PLAYING : ">",
+			CLIP_STATUS_STARTING : "*"
+		}
 		state_symbol = state_symbols[self.state]
 		
 		return "live.clip(%d,%d)%s [%s]" % (self.track.index, self.index, name, state_symbol)
