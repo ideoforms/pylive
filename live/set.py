@@ -138,7 +138,8 @@ class Set (live.LoggingObject):
 		open_regexp = "file://.*\.als$"
 
 		if logfiles:
-			logfile = list(sorted(logfiles))[-1]
+			logfiles = list(sorted(logfiles, lambda a, b: cmp(os.path.getmtime(a), os.path.getmtime(b))))
+			logfile = logfiles[-1]
 			contents = file(logfile).readlines()
 			projects = filter(lambda line: re.search(general_regexp, line), contents)
 			project = projects[-1]
@@ -149,8 +150,9 @@ class Set (live.LoggingObject):
 			#------------------------------------------------------------------------
 			if re.search(open_regexp, project):
 				project = projects[-1].strip()
-				project = os.path.basename(project)
 				project = urllib.unquote(project)
+				project = project.replace("file://", "")
+				# project = os.path.basename(project)
 				return project
 
 	@property
@@ -729,6 +731,13 @@ class Set (live.LoggingObject):
 	def load_or_scan(self, filename = "set", **kwargs):
 		""" From from file; if file does not exist, scan, then save. """
 		try:
+			set_file = self.currently_open()
+			set_file_mtime = os.path.getmtime(set_file)
+			cache_file_mtime = os.path.getmtime("%s.pickle" % filename)
+			if cache_file_mtime < set_file_mtime:
+				print "Set file modified since cache, forcing rescan"
+				raise Exception
+
 			self.load(filename)
 			if len(self.tracks) != self.num_tracks:
 				print "Loaded %d tracks, but found %d - looks like set has changed" % (len(self.tracks), self.num_tracks)
