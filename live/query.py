@@ -153,6 +153,7 @@ class Query(LoggingObject):
 
 	def handler(self, address, data, types):
 		self.debug("OSC: %s %s" % (address, data))
+		print("OSC: %s %s" % (address, data))
 		#------------------------------------------------------------------------
 		# Execute any callbacks that have been registered for this message
 		#------------------------------------------------------------------------
@@ -178,15 +179,11 @@ class Query(LoggingObject):
 				# Callbacks may take one argument: the current beat count.
 				# If not specified, call with 0 arguments.
 				#------------------------------------------------------------------------
-				# It might be nice to send the current beat # as a parameter, but we
-				# also want to be able to handle callbacks with no args -- TODO: look
-				# into this.
-				#------------------------------------------------------------------------
-				# argspec = inspect.getargspec(self.beat_callback)
-				# if len(argspec.args) > 0:
-				#	self.beat_callback(data[0])
-				#------------------------------------------------------------------------
-				self.beat_callback()
+				argspec = inspect.getargspec(self.beat_callback)
+				if len(argspec.args) > 0 and argspec.args[-1] != "self":
+					self.beat_callback(data[0])
+				else:
+					self.beat_callback()
 		elif address == "/remix/oscserver/startup":
 			if self.startup_callback is not None:
 				self.startup_callback()
