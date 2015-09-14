@@ -4,7 +4,7 @@ import inspect
 import threading
 
 import liblo
-# from OSC import *
+
 from live.object import *
 
 class LiveError(Exception):
