@@ -28,10 +28,8 @@ class Track(LoggingObject):
 		self.indent = 2 if self.group else 1
 
 		self.clip_init = None
-		self.clip_playing = None
 		self.clips = []
 		self.devices = []
-		self.playing = False
 
 	def __str__(self):
 		if self.group:
@@ -66,8 +64,6 @@ class Track(LoggingObject):
 
 	def play_clip(self, index):
 		""" Plays clip of given index. """
-		self.playing = True
-		self.clip_playing = index
 		clip = self.clips[index]
 		clip.play()
 
@@ -81,8 +77,6 @@ class Track(LoggingObject):
 
 	def stop(self):
 		""" Immediately stop track from playing. """
-		self.playing = False
-		self.clip_playing = None
 		self.set.stop_track(self.index)
 
 	def syncopate(self):
@@ -105,18 +99,17 @@ class Track(LoggingObject):
 		return active_clips
 	get_active_clips = active_clips
 
+	@property
+	def is_playing(self):
+		return bool(self.clip_playing)
+
+	@property
 	def clip_playing(self):
 		""" Return the currently playing Clip, or None. """
 		for clip in self.clips:
-			if clip.state == CLIP_STATE_PLAYING:
+			if clip.state == CLIP_STATUS_PLAYING:
 				return clip
 		return None
-
-	def sync(self):
-		# XXX: why is this needed?
-		info = self.set.get_track_info()
-		print "track %d: info %s" % (self.index, info[0])
-		self.playing = True if info[0] > 1 else False
 
 	def walk(self):
 		""" Move forward or backwards between clips. """

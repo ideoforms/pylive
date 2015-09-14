@@ -56,10 +56,16 @@ class Group (Track):
 	def play_clip(self, clip_index):
 		""" Start playing group clip. """
 		self.clips[clip_index].play()
+	
+	@property
+	def is_playing(self):
+		for track in self.tracks:
+			if track.is_playing:
+				return True
+		return False
 
 	def stop(self):
 		""" Immediately stop group from playing. """
-		self.playing = False
 		self.set.stop_track(self.track_index)
 
 	@property
