@@ -3,6 +3,8 @@ import live.group
 import live.track
 import live.device
 
+from live.constants import *
+
 import os
 import re
 import sys
@@ -756,6 +758,16 @@ class Set (live.LoggingObject):
 			setattr(self, key, value)
 		self.trace("load: set loaded OK (%d tracks)" % (len(self.tracks)))
 
+		#------------------------------------------------------------------------
+		# after loading, set all active clip states to stopped.
+		# otherwise, if we scanned during playback, it will erroneously appear
+		# as if stopped clips are playing.
+		#------------------------------------------------------------------------
+		self._reset_clip_states()
+
+		#------------------------------------------------------------------------
+		# re-add unserialisable mutexes.
+		#------------------------------------------------------------------------
 		self._add_mutexes()
 
 	def save(self, filename = "set"):
@@ -806,41 +818,46 @@ class Set (live.LoggingObject):
 				return group
 		return None
 
-	def beat_callback(self):
-		self.beat_event.set()
-
+	def _next_beat_callback(self):
+		self._next_beat_event.set()
+	
 	def wait_for_next_beat(self):
-		self.beat_event.clear()
-		self.live.beat_callback = self.beat_callback
+		self._next_beat_event.clear()
+		self.live.beat_callback = self._next_beat_callback
 
+		#------------------------------------------------------------------------
 		# don't want to use .wait() as it prevents response to keyboard input
 		# so ctrl-c will not work.
-		while not self.beat_event.is_set():
+		#------------------------------------------------------------------------
+		while not self._next_beat_event.is_set():
 			time.sleep(0.01)
 
 		return
 
+	def set_beat_callback(self, callback):
+		self.live.beat_callback = callback
+
 	def startup_callback(self):
-		self.startup_event.set()
+		self._startup_event.set()
 
 	def wait_for_startup(self):
-		self.startup_event.clear()
+		self._startup_event.clear()
 		self.live.startup_callback = self.startup_callback
 
 		# don't want to use .wait() as it prevents response to keyboard input
 		# so ctrl-c will not work.
-		while not self.startup_event.is_set():
+		while not self._startup_event.is_set():
 			time.sleep(0.01)
 
 		return
 
 	def _add_mutexes(self):
-		self.beat_event = threading.Event()
-		self.startup_event = threading.Event()
+		self._next_beat_event = threading.Event()
+		self._startup_event = threading.Event()
 
 	def _delete_mutexes(self):
-		self.beat_event = None
-		self.startup_event = None
+		self._next_beat_event = None
+		self._startup_event = None
 
 	def _add_handlers(self):
 		self.live.add_handler("/live/clip/info", self._update_clip_state)
@@ -849,10 +866,16 @@ class Set (live.LoggingObject):
 	def _update_tempo(self, tempo):
 		self.set_tempo(tempo, cache_only = True)
 		# self.dump()
+	
+	def _reset_clip_states(self):
+		for track in self.tracks:
+			for clip in track.active_clips:
+				clip.state = CLIP_STATUS_STOPPED
 
 	def _update_clip_state(self, track_index, clip_index, state):
 		if not self.scanned:
 			return
+		print "_update_clip_state: %d, %d, %d" % (track_index, clip_index, state)
 		track = self.tracks[track_index]
 
 		# can get a clip_info for clips outside of our clip range
@@ -861,4 +884,3 @@ class Set (live.LoggingObject):
 			clip = track.clips[clip_index]
 			if clip:
 				clip.state = state
-		self.dump()
