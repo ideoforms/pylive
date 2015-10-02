@@ -100,6 +100,20 @@ class Track(LoggingObject):
 	get_active_clips = active_clips
 
 	@property
+	def is_stopped(self):
+		for clip in self.clips:
+			if clip.state == CLIP_STATUS_PLAYING or clip.state == CLIP_STATUS_STARTING:
+				return False
+		return True
+
+	@property
+	def is_starting(self):
+		for clip in self.clips:
+			if clip.state == CLIP_STATUS_STARTING:
+				return True
+		return False
+
+	@property
 	def is_playing(self):
 		return bool(self.clip_playing)
 
