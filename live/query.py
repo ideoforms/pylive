@@ -72,7 +72,8 @@ class Query(LoggingObject):
 		self.osc_read_event = None
 		self.osc_timeout = 5
 
-		self.response_address = None
+		self.osc_server_events = {}
+		# self.response_address = None
 
 		self.listen()
 
@@ -97,7 +98,7 @@ class Query(LoggingObject):
 
 			live.cmd("/live/tempo", 110.0) """
 		
-		self.debug("OSC: %s %s", msg, args)
+		# self.debug("OSC: %s %s", msg, args)
 		try:
 			liblo.send(self.osc_target, msg, *args)
 		except Exception, e:
@@ -124,17 +125,18 @@ class Query(LoggingObject):
 		#------------------------------------------------------------------------
 		response_address = kwargs.get("response_address", None)
 		if response_address:
-			self.response_address = response_address
+			response_address = response_address
 		else:
-			self.response_address = msg
+			response_address = msg
 
 		self.query_rv = []
 
-		self.osc_server_event = threading.Event()
+		self.osc_server_events[response_address] = threading.Event()
 
 		self.cmd(msg, *args)
 
-		rv = self.osc_server_event.wait(self.osc_timeout)
+		rv = self.osc_server_events[response_address].wait(self.osc_timeout)
+
 		if not rv:
 			print "*** timed out waiting for server response"
 
@@ -153,7 +155,7 @@ class Query(LoggingObject):
 
 	def handler(self, address, data, types):
 		self.debug("OSC: %s %s" % (address, data))
-		print("OSC: %s %s" % (address, data))
+		# print("OSC: %s %s" % (address, data))
 		#------------------------------------------------------------------------
 		# Execute any callbacks that have been registered for this message
 		#------------------------------------------------------------------------
@@ -165,9 +167,10 @@ class Query(LoggingObject):
 		# If this message is awaiting a synchronous return, trigger the
 		# thread event and update our return value. 
 		#------------------------------------------------------------------------
-		if address == self.response_address:
+		if address in self.osc_server_events:
+		# if address == self.response_address:
 			self.query_rv += data
-			self.osc_server_event.set()
+			self.osc_server_events[address].set()
 			return
 
 		if address == "/live/beat":
