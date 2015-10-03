@@ -136,21 +136,20 @@ class Set (live.LoggingObject):
 		#------------------------------------------------------------------------
 		root = os.path.expanduser("~/Library/Preferences/Ableton")
 		logfiles = glob.glob("%s/Live */Log.txt" % root)
-		general_regexp = "\.als"
 		open_regexp = "file://.*\.als$"
 
 		if logfiles:
 			logfiles = list(sorted(logfiles, lambda a, b: cmp(os.path.getmtime(a), os.path.getmtime(b))))
 			logfile = logfiles[-1]
 			contents = file(logfile).readlines()
-			projects = filter(lambda line: re.search(general_regexp, line), contents)
-			project = projects[-1]
+			projects = filter(lambda line: re.search(open_regexp, line), contents)
+
 			#------------------------------------------------------------------------
 			# Some log entries mentioning an .als file are referring to the
 			# default live template, meaning we've currently got an empty document.
 			# Check that this is not the case by matching against a file open RE.
 			#------------------------------------------------------------------------
-			if re.search(open_regexp, project):
+			if projects:
 				project = projects[-1].strip()
 				project = urllib.unquote(project)
 				project = project.replace("file://", "")
@@ -569,6 +568,19 @@ class Set (live.LoggingObject):
 		return self.live.query("/live/device/range", track_index, device_index, parameter_index)
 
 
+	#------------------------------------------------------------------------
+	# RETURNS
+	#------------------------------------------------------------------------
+
+	def get_return_volume(self, return_index):
+		""" Return the volume of the given return indkex (0..1). """
+		return self.live.query("/live/return/volume", return_index)[1]
+
+	def set_return_volume(self, return_index, volume):
+		""" Set the volume of the given return index (0..1). """
+		self.live.cmd("/live/return/volume", return_index, volume)
+
+
 
 	#------------------------------------------------------------------------
 	# SCAN
@@ -734,19 +746,22 @@ class Set (live.LoggingObject):
 		""" From from file; if file does not exist, scan, then save. """
 		try:
 			set_file = self.currently_open()
-			set_file_mtime = os.path.getmtime(set_file)
-			cache_file_mtime = os.path.getmtime("%s.pickle" % filename)
-			if cache_file_mtime < set_file_mtime:
-				print "Set file modified since cache, forcing rescan"
-				raise Exception
+			if set_file:
+				set_file_mtime = os.path.getmtime(set_file)
+				cache_file_mtime = os.path.getmtime("%s.pickle" % filename)
+				if cache_file_mtime < set_file_mtime:
+					print "Set file modified since cache, forcing rescan"
+					raise Exception
+			else:
+				print "Couldn't establish currently open set"
 
 			self.load(filename)
 			if len(self.tracks) != self.num_tracks:
 				print "Loaded %d tracks, but found %d - looks like set has changed" % (len(self.tracks), self.num_tracks)
 				self.reset()
 				raise Exception
-		except:
-
+		except Exception, e:
+			print "exc: %s" % e
 			self.scan(**kwargs)
 			self.save(filename)
 
@@ -811,17 +826,30 @@ class Set (live.LoggingObject):
 		for scene in self.scenes:
 			scene.dump()
 
-	def group_named(self, name):
+	def get_track_named(self, name):
+		""" Returns the Track with the specified name, or None if not found. """
+		for track in self.tracks:
+			if track.name == name:
+				return track
+		return None
+
+	def get_group_named(self, name):
 		""" Returns the Group with the specified name, or None if not found. """
 		for group in self.groups:
 			if group.name == name:
 				return group
 		return None
 
-	def _next_beat_callback(self):
+	def _next_beat_callback(self, beats):
 		self._next_beat_event.set()
 	
 	def wait_for_next_beat(self):
+		#------------------------------------------------------------------------
+		# we need to use events to prevent lockup -- if we call a callback
+		# directly from the Live thread that makes another query to the Live
+		# server, the first event will never become unlocked and we'll block
+		# forever.
+		#------------------------------------------------------------------------
 		self._next_beat_event.clear()
 		self.live.beat_callback = self._next_beat_callback
 
@@ -875,7 +903,6 @@ class Set (live.LoggingObject):
 	def _update_clip_state(self, track_index, clip_index, state):
 		if not self.scanned:
 			return
-		print "_update_clip_state: %d, %d, %d" % (track_index, clip_index, state)
 		track = self.tracks[track_index]
 
 		# can get a clip_info for clips outside of our clip range
