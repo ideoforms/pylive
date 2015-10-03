@@ -220,3 +220,11 @@ class Track(LoggingObject):
 		""" Get the send level of the given send_index (0..1) """
 		return self.set.get_track_send(self.index, send_index)
 
+	#------------------------------------------------------------------------
+	# query devices
+	#------------------------------------------------------------------------
+	def get_device_named(self, name):
+		""" Return the first device with a given name. """
+		for device in self.devices:
+			if device.name == name:
+				return device
