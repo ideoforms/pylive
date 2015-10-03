@@ -101,14 +101,14 @@ class Track(LoggingObject):
 
 	@property
 	def is_stopped(self):
-		for clip in self.clips:
+		for clip in self.active_clips:
 			if clip.state == CLIP_STATUS_PLAYING or clip.state == CLIP_STATUS_STARTING:
 				return False
 		return True
 
 	@property
 	def is_starting(self):
-		for clip in self.clips:
+		for clip in self.active_clips:
 			if clip.state == CLIP_STATUS_STARTING:
 				return True
 		return False
@@ -120,7 +120,7 @@ class Track(LoggingObject):
 	@property
 	def clip_playing(self):
 		""" Return the currently playing Clip, or None. """
-		for clip in self.clips:
+		for clip in self.active_clips:
 			if clip.state == CLIP_STATUS_PLAYING:
 				return clip
 		return None
