@@ -121,7 +121,7 @@ class Clip(live.LoggingObject):
 					break
 			else:
 				clip_range.append(clips[n])
-		for n in reversed(range(0, index)):
+		for n in reversed(list(range(0, index))):
 			if clips[n] is None:
 				if not allow_gaps:
 					break
@@ -150,7 +150,7 @@ class Clip(live.LoggingObject):
 					break
 			else:
 				clip_range.append(clips[n])
-		for n in reversed(range(0, index)):
+		for n in reversed(list(range(0, index))):
 			if clips[n] is None:
 				if not allow_gaps:
 					break

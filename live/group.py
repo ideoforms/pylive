@@ -40,7 +40,7 @@ class Group (Track):
 		for track in self.tracks:
 			for index in track.scene_indexes:
 				indexes[index] = 1
-		indexes = indexes.keys()
+		indexes = list(indexes.keys())
 		indexes = sorted(indexes)
 		return indexes
 
@@ -71,7 +71,7 @@ class Group (Track):
 	@property
 	def active_clips(self):
 		""" Return a dictionary of all non-empty clipslots: { index : Clip, ... } """
-		active_clips = filter(lambda n: n is not None, self.clips)
+		active_clips = [n for n in self.clips if n is not None]
 		return active_clips
 	get_active_clips = active_clips
 

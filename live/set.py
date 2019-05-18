@@ -11,7 +11,7 @@ import sys
 import glob
 import time
 import pickle
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import threading
 
 from live.object import name_cache
@@ -99,11 +99,11 @@ class Set (live.LoggingObject):
 		current = self.currently_open()
 		new = os.path.basename(path)
 		if current and current == new:
-			print "live: Project '%s' is already open" % new
+			print("live: Project '%s' is already open" % new)
 			return
 
 		if not os.path.exists(path):
-			print "live: Couldn't find project file '%s'. Have you set the LIVE_ROOT environmental variable?" % filename
+			print("live: Couldn't find project file '%s'. Have you set the LIVE_ROOT environmental variable?" % filename)
 			sys.exit(1)
 
 		#------------------------------------------------------------------------
@@ -127,7 +127,7 @@ class Set (live.LoggingObject):
 		#------------------------------------------------------------------------
 		is_running = os.system("ps axc -o command  | grep -q ^Live$") == 0
 		if not is_running:
-			print "live: Not currently open"
+			print("live: Not currently open")
 			return None
 
 		#------------------------------------------------------------------------
@@ -142,7 +142,7 @@ class Set (live.LoggingObject):
 			logfiles = list(sorted(logfiles, lambda a, b: cmp(os.path.getmtime(a), os.path.getmtime(b))))
 			logfile = logfiles[-1]
 			contents = file(logfile).readlines()
-			projects = filter(lambda line: re.search(open_regexp, line), contents)
+			projects = [line for line in contents if re.search(open_regexp, line)]
 
 			#------------------------------------------------------------------------
 			# Some log entries mentioning an .als file are referring to the
@@ -151,7 +151,7 @@ class Set (live.LoggingObject):
 			#------------------------------------------------------------------------
 			if projects:
 				project = projects[-1].strip()
-				project = urllib.unquote(project)
+				project = urllib.parse.unquote(project)
 				project = project.replace("file://", "")
 				# project = os.path.basename(project)
 				return project
@@ -168,8 +168,8 @@ class Set (live.LoggingObject):
 		""" Test whether we can connect to Live """
 		try:
 			return bool(self.tempo)
-		except Exception, e:
-			print "exception %s" % e
+		except Exception as e:
+			print("exception %s" % e)
 			return False
 
 	#------------------------------------------------------------------------
@@ -667,7 +667,7 @@ class Set (live.LoggingObject):
 				if scan_clip_names:
 					clip_names = self.get_clip_names
 				for n in range(0, len(clip_info), 3):
-					clip_index = n / 3
+					clip_index = int(n / 3)
 					state = clip_info[n + 1]
 					length = clip_info[n + 2]
 					if state > 0:
@@ -750,18 +750,18 @@ class Set (live.LoggingObject):
 				set_file_mtime = os.path.getmtime(set_file)
 				cache_file_mtime = os.path.getmtime("%s.pickle" % filename)
 				if cache_file_mtime < set_file_mtime:
-					print "Set file modified since cache, forcing rescan"
+					print("Set file modified since cache, forcing rescan")
 					raise Exception
 			else:
-				print "Couldn't establish currently open set"
+				print("Couldn't establish currently open set")
 
 			self.load(filename)
 			if len(self.tracks) != self.num_tracks:
-				print "Loaded %d tracks, but found %d - looks like set has changed" % (len(self.tracks), self.num_tracks)
+				print("Loaded %d tracks, but found %d - looks like set has changed" % (len(self.tracks), self.num_tracks))
 				self.reset()
 				raise Exception
-		except Exception, e:
-			print "exc: %s" % e
+		except Exception as e:
+			print("exc: %s" % e)
 			self.scan(**kwargs)
 			self.save(filename)
 
@@ -769,7 +769,7 @@ class Set (live.LoggingObject):
 		""" Read a saved Set structure from disk. """
 		filename = "%s.pickle" % filename
 		data = pickle.load(file(filename))
-		for key, value in data.items():
+		for key, value in list(data.items()):
 			setattr(self, key, value)
 		self.trace("load: set loaded OK (%d tracks)" % (len(self.tracks)))
 
@@ -874,8 +874,17 @@ class Set (live.LoggingObject):
 
 		# don't want to use .wait() as it prevents response to keyboard input
 		# so ctrl-c will not work.
-		while not self._startup_event.is_set():
-			time.sleep(0.01)
+		try:
+			#------------------------------------------------------------------------
+			# if we can query tempo, the set is running
+			#------------------------------------------------------------------------
+			tempo = self.tempo
+		except IndexError:
+			#------------------------------------------------------------------------
+			# otherwise, wait for set startup
+			#------------------------------------------------------------------------
+			while not self._startup_event.is_set():
+				time.sleep(0.01)
 
 		return
 

@@ -69,10 +69,10 @@ class Track(LoggingObject):
 
 	def play_clip_random(self):
 		""" Plays a random clip. """
-		if len(self.clips.keys()) == 0:
+		if len(list(self.clips.keys())) == 0:
 			self.warn("no clips found on track, returning")
 			return
-		index = random.choice(self.clips.keys())
+		index = random.choice(list(self.clips.keys()))
 		self.play_clip(index)
 
 	def stop(self):
@@ -87,7 +87,7 @@ class Track(LoggingObject):
 
 	def has_clip(self, index):
 		""" Determine whether this track contains a clip at slot index. """
-		return self.clips.has_key(index)
+		return index in self.clips
 
 	def get_clips(self):
 		return self.clips
@@ -95,7 +95,7 @@ class Track(LoggingObject):
 	@property
 	def active_clips(self):
 		""" Return a dictionary of all non-empty clipslots: { index : Clip, ... } """
-		active_clips = filter(lambda n: n is not None, self.clips)
+		active_clips = [n for n in self.clips if n is not None]
 		return active_clips
 	get_active_clips = active_clips
 
@@ -136,9 +136,9 @@ class Track(LoggingObject):
 				return
 		else:
 			options = []
-			if self.clips.has_key(self.clip_playing - 1):
+			if self.clip_playing - 1 in self.clips:
 				options.append(self.clip_playing - 1)
-			if self.clips.has_key(self.clip_playing + 1):
+			if self.clip_playing + 1 in self.clips:
 				options.append(self.clip_playing + 1)
 
 			if len(options) > 0:

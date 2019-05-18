@@ -30,13 +30,13 @@ __all__ = [ "Query", "Set", "Track", "Group", "Clip", "Device", "Parameter" ]
 
 debug = False
 
-from object import *
-from constants import *
-from set import *
-from query import *
-from track import *
-from group import *
-from clip import *
-from scene import *
-from device import *
-from parameter import *
+from .object import *
+from .constants import *
+from .set import *
+from .query import *
+from .track import *
+from .group import *
+from .clip import *
+from .scene import *
+from .device import *
+from .parameter import *
