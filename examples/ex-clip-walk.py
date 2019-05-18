@@ -13,13 +13,22 @@ import live
 import time
 import threading
 import random
+import logging
+
+logging.basicConfig(format="%(asctime)-15s %(message)s")
+logging.getLogger("live").setLevel(logging.INFO)
 
 #------------------------------------------------------------------------
-# Scan the contents of the Live set, and obtain the first track.
+# Scan the contents of the Live set, and start it playing.
 #------------------------------------------------------------------------
 set = live.Set()
 set.scan()
+set.dump()
+set.play()
 
+#------------------------------------------------------------------------
+# Select the first track.
+#------------------------------------------------------------------------
 track = set.tracks[0]
 
 #------------------------------------------------------------------------
@@ -37,7 +46,7 @@ clip = random.choice(track.active_clips)
 #------------------------------------------------------------------------
 while True:
 	set.wait_for_next_beat()
-	print "clip %s" % clip
+	# print("Playing clip: %s" % clip)
 
 	#------------------------------------------------------------------------
 	# wrap = True: Wrap between the last and first clips of the track.

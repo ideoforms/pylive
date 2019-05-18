@@ -16,8 +16,8 @@ set = Set()
 set.scan(scan_clip_names = False, scan_devices = False, group_re = "[A-Z].\d{2} -.*")
 
 for track in set.tracks:
-	print str(track)
+	print(str(track))
 	for clip in track.active_clips:
-		print "- %s" % clip
+		print("- %s" % clip)
 	for device in track.devices:
-		print "- %s" % device
+		print("- %s" % device)

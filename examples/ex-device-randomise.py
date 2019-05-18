@@ -36,7 +36,7 @@ while True:
 		track = random.choice(set.tracks)
 		device = random.choice(track.devices)
 		parameter = random.choice(device.parameters[1:])
-		print "track %s, device %s, parameter %s" % (track, device, parameter)
+		print("track %s, device %s, parameter %s" % (track, device, parameter))
 
 		parameter.randomise()
 
