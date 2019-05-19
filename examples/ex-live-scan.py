@@ -8,16 +8,27 @@
 
 from live import *
 
+import logging
+import coloredlogs
+coloredlogs.install(level=logging.INFO)
+
 #------------------------------------------------------------------------
 # Scanning a set with clip names and devices gives a more comprehensive
 # overview of the set, but takes significantly longer.
 #------------------------------------------------------------------------
 set = Set()
-set.scan(scan_clip_names = False, scan_devices = False, group_re = "[A-Z].\d{2} -.*")
+set.scan(scan_clip_names = False, scan_devices = True)
 
 for track in set.tracks:
-	print(str(track))
-	for clip in track.active_clips:
-		print("- %s" % clip)
-	for device in track.devices:
-		print("- %s" % device)
+	if track.is_group:
+		print(str(track))
+	else:
+		print(" -", str(track))
+		if track.devices:
+			print("    ", "devices:")
+			for device in track.devices:
+				print("     -", device)
+		if track.active_clips:
+			print("    ", "clips:")
+			for clip in track.active_clips:
+				print("     -", clip)
