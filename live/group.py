@@ -23,10 +23,11 @@ class Group (Track):
 		# TODO: rename 'index' to 'track_index' on Track objects too
 		self.index = track_index
 		self.indent = 1
+		self.is_group = True
 		self.name = name
 		self.group = None
-		self.tracks = []
 		self.clips = []
+		self.tracks = []
 
 	def __str__(self):
 		string = "live.group(%d): %s" % (self.group_index, self.name)

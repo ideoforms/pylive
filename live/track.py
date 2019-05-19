@@ -26,6 +26,7 @@ class Track(LoggingObject):
 		self.name = name
 		self.group = group
 		self.indent = 2 if self.group else 1
+		self.is_group = False
 
 		self.clip_init = None
 		self.clips = []
