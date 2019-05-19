@@ -16,8 +16,7 @@ import threading
 
 from live.object import name_cache
 
-# i think we should be ok without this
-# @live.singleton
+GROUP_RE_DEFAULT = re.compile("^(\d+)\. (\S.+)")
 
 class Set (live.LoggingObject):
 	""" Set represents an entire running Live set. It communicates via a
@@ -39,7 +38,6 @@ class Set (live.LoggingObject):
 
 	def __init__(self, address = ("localhost", 9000)):
 		self.indent = 0
-		self.group_re = re.compile("^(\d+)\. (\S.+)")
 		self.scanned = False
 
 		""" Set caching to True to avoid re-querying properties such as tempo each
@@ -139,9 +137,9 @@ class Set (live.LoggingObject):
 		open_regexp = "file://.*\.als$"
 
 		if logfiles:
-			logfiles = list(sorted(logfiles, lambda a, b: cmp(os.path.getmtime(a), os.path.getmtime(b))))
+			logfiles = list(sorted(logfiles, key=lambda a: os.path.getmtime(a)))
 			logfile = logfiles[-1]
-			contents = file(logfile).readlines()
+			contents = open(logfile).readlines()
 			projects = [line for line in contents if re.search(open_regexp, line)]
 
 			#------------------------------------------------------------------------
@@ -609,7 +607,7 @@ class Set (live.LoggingObject):
 			sys.exit()
 
 		if not group_re:
-			group_re = self.group_re
+			group_re = GROUP_RE_DEFAULT
 
 		self.scanned = True
 
@@ -710,6 +708,7 @@ class Set (live.LoggingObject):
 				#--------------------------------------------------------------------------
 				if scan_devices:
 					devices = self.get_device_list(track.index)
+					self.trace("scan_layout: devices %s" % devices)
 					devices = devices[1:]
 					for i in range(0, len(devices), 2):
 						index = devices[i]
@@ -761,14 +760,14 @@ class Set (live.LoggingObject):
 				self.reset()
 				raise Exception
 		except Exception as e:
-			print("exc: %s" % e)
+			print("exception: %s (%s)" % (e, type(e)))
 			self.scan(**kwargs)
 			self.save(filename)
 
 	def load(self, filename = "set"):
 		""" Read a saved Set structure from disk. """
 		filename = "%s.pickle" % filename
-		data = pickle.load(file(filename))
+		data = pickle.load(open(filename))
 		for key, value in list(data.items()):
 			setattr(self, key, value)
 		self.trace("load: set loaded OK (%d tracks)" % (len(self.tracks)))
@@ -790,7 +789,7 @@ class Set (live.LoggingObject):
 		Use to avoid the lengthy scan() process.
 		TODO: Add a __reduce__ function to do this in an idiomatic way. """
 		filename = "%s.pickle" % filename
-		fd = file(filename, "w")
+		fd = open(filename, "w")
 		self._delete_mutexes()
 		data = vars(self)
 
