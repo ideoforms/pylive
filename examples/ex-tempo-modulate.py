@@ -9,6 +9,10 @@
 from live import *
 import time
 import math
+import logging
+
+logging.basicConfig(format="%(asctime)-15s %(message)s")
+logging.getLogger("live").setLevel(logging.INFO)
 
 #------------------------------------------------------------------------
 # Don't need to scan the set for simple set-wide operations.

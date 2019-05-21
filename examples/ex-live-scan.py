@@ -9,8 +9,9 @@
 from live import *
 
 import logging
-import coloredlogs
-coloredlogs.install(level=logging.INFO)
+
+logging.basicConfig(format="%(asctime)-15s %(message)s")
+logging.getLogger("live").setLevel(logging.INFO)
 
 #------------------------------------------------------------------------
 # Scanning a set with clip names and devices gives a more comprehensive

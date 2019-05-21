@@ -8,6 +8,10 @@
 
 import live
 import random
+import logging
+
+logging.basicConfig(format="%(asctime)-15s %(message)s")
+logging.getLogger("live").setLevel(logging.INFO)
 
 set = live.Set()
 
