@@ -5,17 +5,8 @@ import threading
 
 import liblo
 
-from live.object import *
-
-class LiveError(Exception):
-	"""Base class for all Live-related errors
-	"""
-	def __init__(self, message):
-		self.message = message
-
-	def __str__(self):
-		return self.message
-
+from .object import LoggingObject
+from .exceptions import LiveConnectionError
 
 def singleton(cls):
 	instances = {}
@@ -102,7 +93,7 @@ class Query(LoggingObject):
 		try:
 			liblo.send(self.osc_target, msg, *args)
 		except Exception as e:
-			raise LiveError("Couldn't send message to Live (is LiveOSC present and activated?)")
+			raise LiveConnectionError("Couldn't send message to Live (is LiveOSC present and activated?)")
 
 	def query(self, msg, *args, **kwargs):
 		""" Send a Live command and synchronously wait for its response:
@@ -138,7 +129,7 @@ class Query(LoggingObject):
 		rv = self.osc_server_events[response_address].wait(self.osc_timeout)
 
 		if not rv:
-			self.log_warn("Timed out waiting for server response")
+			raise LiveConnectionError("Timed out waiting for response from LiveOSC. Is Live running and LiveOSC installed?")
 
 		return self.query_rv
 
