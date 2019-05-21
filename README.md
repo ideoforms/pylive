@@ -31,8 +31,8 @@ python setup.py install
 # Basic example of pylive usage: scan a Live set, trigger a clip,
 # and modulate some device parameters.
 #------------------------------------------------------------------------
-
-import live, random
+import live
+import random
 
 #------------------------------------------------------------------------
 # Scan the set's contents and set its tempo to 110bpm.
@@ -45,13 +45,13 @@ set.tempo = 110.0
 # Each Set contains a list of Track objects.
 #------------------------------------------------------------------------
 track = set.tracks[0]
-print "track name %s" % track.name
+print("Track name %s" % track.name)
 
 #------------------------------------------------------------------------
 # Each Track contains a list of Clip objects.
 #------------------------------------------------------------------------
 clip = track.clips[0]
-print "clip name %s, length %d beats" % (clip.name, clip.length)
+print("Clip name %s, length %d beats" % (clip.name, clip.length))
 clip.play()
 
 #------------------------------------------------------------------------
