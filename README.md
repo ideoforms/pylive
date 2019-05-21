@@ -6,9 +6,23 @@ PyLive is a framework for querying and controlling Ableton Live from a standalon
 
 ## Requirements
 
-* [Ableton Live 7+](http://www.ableton.com/live) with the [LiveOSC](http://livecontrol.q3f.org/ableton-liveapi/liveosc/) MIDI Remote script
+* [Ableton Live 7+](http://www.ableton.com/live)
+* [LiveOSC (fork)](https://github.com/ideoforms/LiveOSC): My fork of the [LiveOSC](http://livecontrol.q3f.org/ableton-liveapi/liveosc/) MIDI control script, updated to work with Live 9.6 and 10.
 * [Python 2.6+](http://www.python.org)
-* [PyOSC](https://trac.v2.nl/wiki/pyOSC)
+* [pyliblo](http://das.nasophon.de/pyliblo/)
+
+## Installation
+
+From PyPi:
+
+```
+pip install pylive
+```
+
+From git clone:
+```
+python setup.py install
+```
 
 ## Usage
 
@@ -57,7 +71,7 @@ parameter.value = random.uniform(parameter.minimum, parameter.maximum)
 
 ## Overview
 
-To begin interacting with an Ableton Live set, the typical workflow is as follows. Live should normally be running on localhost, with [LiveOSC](http://livecontrol.q3f.org/ableton-liveapi/liveosc/) enabled as a Control Surface.
+To begin interacting with an Ableton Live set, the typical workflow is as follows. Live should normally be running on localhost, with LiveOSC enabled as a Control Surface.
 
 * Create a `live.Set` object.
 * Call `set.scan()`, which queries Live for an index of tracks, clip statuses, and (optionally) clip names and devices
