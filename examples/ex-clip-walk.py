@@ -29,6 +29,8 @@ set.play()
 # Select the first track.
 #------------------------------------------------------------------------
 track = set.tracks[0]
+if len(track.active_clips) == 0:
+	raise LiveException("Please open a Live set with at least one clip in the first track")
 
 #------------------------------------------------------------------------
 # track.clips is a list of all clipslots on the given Track, some of

@@ -26,6 +26,10 @@ except:
 	set.scan(scan_devices = True)
 	set.save("ex-device-randomise")
 
+tracks_with_devices = list(filter(lambda track: len(track.devices), set.tracks))
+if len(tracks_with_devices) == 0:
+	raise LiveException("Please open a Live set with at least one device")
+
 set.play()
 
 while True:
@@ -35,18 +39,9 @@ while True:
 	# Select a random parameter of a random device
 	# (skipping param 0, which is always Device On/Off)
 	#------------------------------------------------------------------------
-	try:
-		track = random.choice(set.tracks)
-		device = random.choice(track.devices)
-		parameter = random.choice(device.parameters[1:])
-		print("track %s, device %s, parameter %s" % (track, device, parameter))
+	track = random.choice(tracks_with_devices)
+	device = random.choice(track.devices)
+	parameter = random.choice(device.parameters[1:])
+	print("Track %s, device %s, parameter %s" % (track, device, parameter))
 
-		parameter.randomise()
-
-	except:
-		#------------------------------------------------------------------------
-		# Might fail if we don't have any tracks, or have a track without
-		# devices, etc.
-		#------------------------------------------------------------------------
-		pass
-
+	parameter.randomise()
