@@ -34,6 +34,7 @@ t = 0.0
 # set.tempo = 120.0
 # set.set_tempo(120.0)
 #------------------------------------------------------------------------
+print("Modulating tempo of Live set...")
 while True:
 	set.tempo = tempo + (range * math.sin(math.pi * 2.0 * t / period))
 	time.sleep(sleep)
