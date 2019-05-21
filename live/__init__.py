@@ -16,10 +16,10 @@ set.scan(scan_clip_names = True)
 set.tempo = 110.0
 
 track = set.tracks[0]
-print "track name %s" % track.name
+print("track name %s" % track.name)
 
 clip = track.clips[0]
-print "clip name %s, length %d beats" % (clip.name, clip.length)
+print("clip name %s, length %d beats" % (clip.name, clip.length))
 clip.play()
 
 """

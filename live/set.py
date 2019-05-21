@@ -3,7 +3,7 @@ import live.group
 import live.track
 import live.device
 
-from live.constants import *
+from live.constants import CLIP_STATUS_STOPPED
 
 import os
 import re

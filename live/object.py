@@ -67,7 +67,6 @@ def name_cache(fn):
 			obj.__cache[variable] = args[0]
 		elif action == "get":
 			if not variable in obj.__cache:
-				# print "getting %s from real object" % variable
 				obj.__cache[variable] = fn(obj, *args)
 			return obj.__cache[variable]
 
