@@ -1,11 +1,10 @@
-#!/usr/local/bin/python
+#!/usr/bin/env python
 
 #------------------------------------------------------------------------
 # pylive: ex-live-scan.py
 #
 # Demonstrates scanning the live set and outputs its structure.
 #------------------------------------------------------------------------
-
 from live import *
 
 import logging

@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/usr/bin/env python
 
 #------------------------------------------------------------------------
 # pylive: ex-clip-walk.py
@@ -8,7 +8,6 @@
 #
 # Requires a Live set with multiple clips in its first track.
 #------------------------------------------------------------------------
-
 import live
 import time
 import threading
@@ -46,7 +45,6 @@ clip = random.choice(track.active_clips)
 #------------------------------------------------------------------------
 while True:
 	set.wait_for_next_beat()
-	# print("Playing clip: %s" % clip)
 
 	#------------------------------------------------------------------------
 	# wrap = True: Wrap between the last and first clips of the track.

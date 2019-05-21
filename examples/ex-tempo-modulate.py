@@ -1,12 +1,12 @@
-#!/usr/local/bin/python
+#!/usr/bin/env python
 
 #------------------------------------------------------------------------
 # pylive: ex-tempo-modulate.py
 #
 # Slowly modulates the tempo of a Live set.
 #------------------------------------------------------------------------
-
 from live import *
+
 import time
 import math
 import logging

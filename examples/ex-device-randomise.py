@@ -1,11 +1,10 @@
-#!/usr/local/bin/python
+#!/usr/bin/env python
 
 #------------------------------------------------------------------------
 # pylive: ex-device-randomise.py
 #
 # Once per beat, randomise a parameter of a random device.
 #------------------------------------------------------------------------
-
 import live
 import random
 import logging
