@@ -767,7 +767,7 @@ class Set (live.LoggingObject):
 	def load(self, filename = "set"):
 		""" Read a saved Set structure from disk. """
 		filename = "%s.pickle" % filename
-		data = pickle.load(open(filename))
+		data = pickle.load(open(filename, "rb"))
 		for key, value in list(data.items()):
 			setattr(self, key, value)
 		self.log_info("load: set loaded OK (%d tracks)" % (len(self.tracks)))
@@ -789,7 +789,7 @@ class Set (live.LoggingObject):
 		Use to avoid the lengthy scan() process.
 		TODO: Add a __reduce__ function to do this in an idiomatic way. """
 		filename = "%s.pickle" % filename
-		fd = open(filename, "w")
+		fd = open(filename, "wb")
 		self._delete_mutexes()
 		data = vars(self)
 
