@@ -20,16 +20,16 @@ class LoggingObject(object):
 		self.logger = logging.getLogger(__name__)
 		print("created logger: %s" % __name__)
 
-	def trace(self, msg = "", *args):
+	def log_info(self, msg = "", *args):
 		if msg:
 			msg = msg % args
 		logger.info("%s[%s] %s", " " * 3 * self.indent, self, msg)
 
-	def warn(self, msg = "", *args):
+	def log_warn(self, msg = "", *args):
 		msg = msg % args
 		logger.warn("[%s] %s", self, msg)
 
-	def debug(self, msg = "", *args):
+	def log_debug(self, msg = "", *args):
 		msg = msg % args
 		logger.debug("[%s] %s", self, msg)
 

@@ -98,7 +98,7 @@ class Query(LoggingObject):
 
 			live.cmd("/live/tempo", 110.0) """
 		
-		self.debug("OSC input: %s %s", msg, args)
+		self.log_debug("OSC input: %s %s", msg, args)
 		try:
 			liblo.send(self.osc_target, msg, *args)
 		except Exception as e:
@@ -138,7 +138,7 @@ class Query(LoggingObject):
 		rv = self.osc_server_events[response_address].wait(self.osc_timeout)
 
 		if not rv:
-			print("*** timed out waiting for server response")
+			self.log_warn("Timed out waiting for server response")
 
 		return self.query_rv
 
@@ -154,7 +154,7 @@ class Query(LoggingObject):
 		return rv[0]
 
 	def handler(self, address, data, types):
-		self.debug("OSC input: %s %s" % (address, data))
+		self.log_debug("OSC input: %s %s" % (address, data))
 		#------------------------------------------------------------------------
 		# Execute any callbacks that have been registered for this message
 		#------------------------------------------------------------------------

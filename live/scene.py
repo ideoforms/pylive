@@ -30,9 +30,9 @@ class Scene(live.LoggingObject):
 		return "live.scene(%d)%s" % (self.index, name)
 
 	def dump(self):
-		self.trace()
+		self.log_info()
 
 	def play(self):
 		""" Start playing scene. """
-		self.trace("playing")
+		self.log_info("playing")
 		self.set.play_scene(self.index)

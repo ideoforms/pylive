@@ -46,7 +46,7 @@ class Clip(live.LoggingObject):
 
 	def dump(self):
 		""" Output a human-readable description of this clip. """
-		self.trace("(len = %d, looplen = %d)" % (self.length, self.looplen))
+		self.log_info("(len = %d, looplen = %d)" % (self.length, self.looplen))
 
 	@property
 	def set(self):
@@ -61,17 +61,17 @@ class Clip(live.LoggingObject):
 			self.looplen += 1
 		else:
 			self.looplen += random.choice([ -1, 1 ])
-		self.trace("syncopating loop length from %d to %d (total length %d)" % (looplen_old, self.looplen, self.length))
+		self.log_info("syncopating loop length from %d to %d (total length %d)" % (looplen_old, self.looplen, self.length))
 		self.set.set_clip_loop_end(self.track.index, self.index, self.looplen)
 
 	def reset(self):
 		if self.looplen != self.length:
-			self.trace("resetting loop length to %d" % self.length)
+			self.log_info("resetting loop length to %d" % self.length)
 			self.set.set_clip_loop_end(self.track.index, self.index, self.looplen)
 
 	def play(self):
 		""" Start playing clip. """
-		self.trace("playing")
+		self.log_info("playing")
 		self.set.play_clip(self.track.index, self.index)
 		self.track.playing = True
 		if type(self.track) is live.Group:
@@ -89,7 +89,7 @@ class Clip(live.LoggingObject):
 
 	def stop(self):
 		""" Stop playing clip """
-		self.trace("stopping")
+		self.log_info("stopping")
 		self.set.stop_clip(self.track.index, self.index)
 		self.track.playing = False
 	

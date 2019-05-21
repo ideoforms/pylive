@@ -44,7 +44,7 @@ class Parameter(live.LoggingObject):
 		return self.device.track
 
 	def dump(self):
-		self.trace()
+		self.log_info()
 
 	def set_value(self, value):
 		self.set.set_device_param(self.device.track.index, self.device.index, self.index, value)

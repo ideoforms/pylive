@@ -25,7 +25,7 @@ class Device(live.LoggingObject):
 		return "live.device(%d,%d): %s (%d parameters)" % (self.track.index, self.index, self.name, len(self.parameters))
 
 	def dump(self):
-		self.trace()
+		self.log_info()
 
 	@property
 	def set(self):

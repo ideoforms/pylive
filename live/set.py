@@ -603,7 +603,7 @@ class Set (live.LoggingObject):
 
 		track_count = self.num_tracks
 		if not track_count:
-			self.warn("couldn't connect to Ableton Live! (obj: %s)" % self.live)
+			self.log_warn("couldn't connect to Ableton Live! (obj: %s)" % self.live)
 			sys.exit()
 
 		if not group_re:
@@ -611,7 +611,7 @@ class Set (live.LoggingObject):
 
 		self.scanned = True
 
-		self.trace("scan_layout: scanning %d tracks" % track_count)
+		self.log_info("scan_layout: scanning %d tracks" % track_count)
 
 		#------------------------------------------------------------------------
 		# some kind of limit seems to prevent us querying over 535ish track
@@ -621,17 +621,17 @@ class Set (live.LoggingObject):
 		track_names = []
 		while track_index < track_count:
 			tracks_remaining = self.max_tracks_per_query if track_count > track_index + self.max_tracks_per_query else track_count - track_index
-			# self.trace("  (querying from %d, count %d)" % (track_index, tracks_remaining))
+			# self.log_info("  (querying from %d, count %d)" % (track_index, tracks_remaining))
 			track_names = track_names + self.get_track_names(track_index, tracks_remaining)
 			track_index += self.max_tracks_per_query
 
-		self.trace("scan_layout: got %d track names" % len(track_names))
+		self.log_info("scan_layout: got %d track names" % len(track_names))
 		assert(track_count == len(track_names))
 		current_group = None
 
 		for track_index in range(track_count):
 			track_name = track_names[track_index]
-			self.trace("scan_layout: track %d (%s)" % (track_index, track_name))
+			self.log_info("scan_layout: track %d (%s)" % (track_index, track_name))
 			match = re.search(group_re, track_name)
 			#------------------------------------------------------------------------
 			# if this track's name matches our Group regular expression, assume
@@ -639,7 +639,7 @@ class Set (live.LoggingObject):
 			# expose whether or not a track is a group track!
 			#------------------------------------------------------------------------
 			if match:
-				self.trace("scan_layout: - is group")
+				self.log_info("scan_layout: - is group")
 				group_index = len(self.groups)
 				group = live.Group(self, track_index, group_index, track_name)
 				current_group = group
@@ -700,7 +700,7 @@ class Set (live.LoggingObject):
 						if scan_clip_names:
 							clip_name = self.get_clip_name(track.index, clip_index)
 							track.clips[clip_index].name = clip_name
-							self.trace("scan_layout:  - clip %d: %s" % (clip_index, clip_name))
+							self.log_info("scan_layout:  - clip %d: %s" % (clip_index, clip_name))
 
 				#--------------------------------------------------------------------------
 				# query each track for its device list, and any parameters belonging to
@@ -708,7 +708,7 @@ class Set (live.LoggingObject):
 				#--------------------------------------------------------------------------
 				if scan_devices:
 					devices = self.get_device_list(track.index)
-					self.trace("scan_layout: devices %s" % devices)
+					self.log_info("scan_layout: devices %s" % devices)
 					devices = devices[1:]
 					for i in range(0, len(devices), 2):
 						index = devices[i]
@@ -770,7 +770,7 @@ class Set (live.LoggingObject):
 		data = pickle.load(open(filename))
 		for key, value in list(data.items()):
 			setattr(self, key, value)
-		self.trace("load: set loaded OK (%d tracks)" % (len(self.tracks)))
+		self.log_info("load: set loaded OK (%d tracks)" % (len(self.tracks)))
 
 		#------------------------------------------------------------------------
 		# after loading, set all active clip states to stopped.
@@ -800,16 +800,16 @@ class Set (live.LoggingObject):
 		#------------------------------------------------------------------------
 		self._add_mutexes()
 
-		self.trace("save: set saved OK (%s)" % filename)
+		self.log_info("save: set saved OK (%s)" % filename)
 
 	def dump(self):
 		""" Dump the current Set structure to stdout, showing the hierarchy of
 		Group, Track, Clip, Device and Parameter objects. """
 		if len(self.tracks) == 0:
-			self.trace("dump: currently empty, performing scan")
+			self.log_info("dump: currently empty, performing scan")
 			self.scan()
-		self.trace("dump: %d tracks in %d groups" % (len(self.tracks), len(self.groups)))
-		# self.trace("tempo = %.1f" % self.tempo)
+		self.log_info("dump: %d tracks in %d groups" % (len(self.tracks), len(self.groups)))
+		# self.log_info("tempo = %.1f" % self.tempo)
 		current_group = None
 
 		#------------------------------------------------------------------------

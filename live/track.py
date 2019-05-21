@@ -39,7 +39,7 @@ class Track(LoggingObject):
 			return "live.track(%d): %s" % (self.index, self.name)
 
 	def dump(self):
-		self.trace()
+		self.log_info()
 		if self.devices:
 			for device in self.devices:
 				device.dump()
@@ -71,7 +71,7 @@ class Track(LoggingObject):
 	def play_clip_random(self):
 		""" Plays a random clip. """
 		if len(list(self.clips.keys())) == 0:
-			self.warn("no clips found on track, returning")
+			self.log_warn("no clips found on track, returning")
 			return
 		index = random.choice(list(self.clips.keys()))
 		self.play_clip(index)
@@ -84,7 +84,7 @@ class Track(LoggingObject):
 		if self.clip_playing is not None:
 			self.clips[self.clip_playing].syncopate()
 		else:
-			self.warn("asked to syncopate but not yet playing!")
+			self.log_warn("asked to syncopate but not yet playing!")
 
 	def has_clip(self, index):
 		""" Determine whether this track contains a clip at slot index. """
@@ -130,10 +130,10 @@ class Track(LoggingObject):
 		""" Move forward or backwards between clips. """
 		if not self.playing:
 			if self.clip_init:
-				self.trace("walking to initial clip %d" % self.clip_init)
+				self.log_info("walking to initial clip %d" % self.clip_init)
 				self.play_clip(self.clip_init)
 			else:
-				self.warn("no clips found on track %d, returning" % self.index)
+				self.log_warn("no clips found on track %d, returning" % self.index)
 				return
 		else:
 			options = []
@@ -144,10 +144,10 @@ class Track(LoggingObject):
 
 			if len(options) > 0:
 				index = random.choice(options)
-				self.trace("walking from clip %d to %d" % (self.clip_playing, index))
+				self.log_info("walking from clip %d to %d" % (self.clip_playing, index))
 				self.play_clip(index)
 			else:
-				self.trace("walking to random clip")
+				self.log_info("walking to random clip")
 				self.play_clip_random()
 
 	def scan_clip_names(self):
@@ -158,7 +158,7 @@ class Track(LoggingObject):
 		for clip in self.active_clips:
 			clip_name = self.set.get_clip_name(self.index, clip.index)
 			clip.name = clip_name
-			self.trace("scan_clip_names: (%d, %d) -> %s" % (self.index, clip.index, clip.name))
+			self.log_info("scan_clip_names: (%d, %d) -> %s" % (self.index, clip.index, clip.name))
 
 	#------------------------------------------------------------------------
 	# get/set: volume

@@ -50,7 +50,7 @@ class Group (Track):
 		self.tracks.append(track)
 
 	def dump(self):
-		self.trace("%d tracks" % len(self.tracks))
+		self.log_info("%d tracks" % len(self.tracks))
 		for track in self.tracks:
 			track.dump()
 
