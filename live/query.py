@@ -172,7 +172,7 @@ class Query(LoggingObject):
 				# Callbacks may take one argument: the current beat count.
 				# If not specified, call with 0 arguments.
 				#------------------------------------------------------------------------
-				argspec = inspect.getargspec(self.beat_callback)
+				argspec = inspect.signature(self.beat_callback)
 				if len(argspec.args) > 0 and argspec.args[-1] != "self":
 					self.beat_callback(data[0])
 				else:

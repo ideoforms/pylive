@@ -25,7 +25,6 @@ class Track(LoggingObject):
 		self.index = index
 		self.name = name
 		self.group = group
-		self.indent = 2 if self.group else 1
 		self.is_group = False
 
 		self.clip_init = None
@@ -34,18 +33,9 @@ class Track(LoggingObject):
 
 	def __str__(self):
 		if self.group:
-			return "live.track(%d,%d): %s" % (self.group.group_index, self.index, self.name)
+			return "Track (%d,%d): %s" % (self.group.group_index, self.index, self.name)
 		else:
-			return "live.track(%d): %s" % (self.index, self.name)
-
-	def dump(self):
-		self.log_info()
-		if self.devices:
-			for device in self.devices:
-				device.dump()
-		active_clips = self.active_clips
-		for clip in active_clips:
-			clip.dump()
+			return "Track (%d): %s" % (self.index, self.name)
 
 	@property
 	def scene_indexes(self):

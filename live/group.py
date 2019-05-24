@@ -30,7 +30,7 @@ class Group (Track):
 		self.tracks = []
 
 	def __str__(self):
-		string = "live.group(%d): %s" % (self.group_index, self.name)
+		string = "Group (%d): %s" % (self.group_index, self.name)
 		if len(self.tracks):
 			string = string + " [tracks %d-%d]" % (self.tracks[0].index, self.tracks[len(self.tracks) - 1].index)
 		return string

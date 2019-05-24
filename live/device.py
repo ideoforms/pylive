@@ -22,10 +22,7 @@ class Device(live.LoggingObject):
 		self.indent = 2
 
 	def __str__(self):
-		return "live.device(%d,%d): %s (%d parameters)" % (self.track.index, self.index, self.name, len(self.parameters))
-
-	def dump(self):
-		self.log_info()
+		return "Device (%d,%d): %s)" % (self.track.index, self.index, self.name)
 
 	@property
 	def set(self):

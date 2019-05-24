@@ -285,7 +285,6 @@ class Set (live.LoggingObject):
 	def play_scene(self, scene_index):
 		self.live.cmd("/live/play/scene", scene_index)
 
-
 	#------------------------------------------------------------------------
 	# /live/stop
 	# /live/stop/clip
@@ -596,6 +595,11 @@ class Set (live.LoggingObject):
 		"""
 
 		#------------------------------------------------------------------------
+		# force stop playback before scanning
+		#------------------------------------------------------------------------
+		self.stop()
+
+		#------------------------------------------------------------------------
 		# initialise to empty set of tracks and groups
 		#------------------------------------------------------------------------
 		self.tracks = []
@@ -760,7 +764,6 @@ class Set (live.LoggingObject):
 				self.reset()
 				raise Exception
 		except Exception as e:
-			print("exception: %s (%s)" % (e, type(e)))
 			self.scan(**kwargs)
 			self.save(filename)
 
@@ -796,7 +799,7 @@ class Set (live.LoggingObject):
 		pickle.dump(data, fd)
 
 		#------------------------------------------------------------------------
-		# restore the unpickleables
+		# Restore the unpickleables
 		#------------------------------------------------------------------------
 		self._add_mutexes()
 
@@ -808,22 +811,33 @@ class Set (live.LoggingObject):
 		if len(self.tracks) == 0:
 			self.log_info("dump: currently empty, performing scan")
 			self.scan()
-		self.log_info("dump: %d tracks in %d groups" % (len(self.tracks), len(self.groups)))
-		# self.log_info("tempo = %.1f" % self.tempo)
+
+		print("────────────────────────────────────────────────────────")
+		print("Live set with %d tracks in %d groups, total %d clips" %
+			(len(self.tracks), len(self.groups), sum(len(track.clips) for track in self.tracks)))
+		print("────────────────────────────────────────────────────────")
 		current_group = None
 
-		#------------------------------------------------------------------------
-		# dump tracks and groups, displaying hierarchically 
-		#------------------------------------------------------------------------
 		for track in self.tracks:
-			if track.group:
-				if (not current_group) or (track.group != current_group):
-					track.group.dump()
-				current_group = track.group
+			if track.is_group:
+				print("────────────────────────────────────────")
+				print(str(track))
+				current_group = track
 			else:
-				track.dump()
+				print(" -", str(track))
+				if track.devices:
+					for device in track.devices:
+						print("    -", device)
+				if track.active_clips:
+					for clip in track.active_clips:
+						print("    -", clip)
+
+		print("────────────────────────────────────────────────────────")
+		print("Scenes")
+		print("────────────────────────────────────────────────────────")
+
 		for scene in self.scenes:
-			scene.dump()
+			print(" - %s" % scene)
 
 	def get_track_named(self, name):
 		""" Returns the Track with the specified name, or None if not found. """
@@ -901,7 +915,6 @@ class Set (live.LoggingObject):
 
 	def _update_tempo(self, tempo):
 		self.set_tempo(tempo, cache_only = True)
-		# self.dump()
 	
 	def _reset_clip_states(self):
 		for track in self.tracks:

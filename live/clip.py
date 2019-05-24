@@ -28,7 +28,6 @@ class Clip(live.LoggingObject):
 		self.index = index
 		self.length = length
 		self.looplen = length
-		self.indent = 2
 		self.state = CLIP_STATUS_STOPPED
 		self.name = None
 
@@ -42,11 +41,7 @@ class Clip(live.LoggingObject):
 		}
 		state_symbol = state_symbols[self.state]
 		
-		return "live.clip(%d,%d)%s [%s]" % (self.track.index, self.index, name, state_symbol)
-
-	def dump(self):
-		""" Output a human-readable description of this clip. """
-		self.log_info("(len = %d, looplen = %d)" % (self.length, self.looplen))
+		return "Clip (%d,%d)%s [%s]" % (self.track.index, self.index, name, state_symbol)
 
 	@property
 	def set(self):
