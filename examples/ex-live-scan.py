@@ -18,17 +18,5 @@ logging.getLogger("live").setLevel(logging.INFO)
 #------------------------------------------------------------------------
 set = Set()
 set.scan(scan_clip_names = False, scan_devices = True)
+set.dump()
 
-for track in set.tracks:
-	if track.is_group:
-		print(str(track))
-	else:
-		print(" -", str(track))
-		if track.devices:
-			print("    ", "devices:")
-			for device in track.devices:
-				print("     -", device)
-		if track.active_clips:
-			print("    ", "clips:")
-			for clip in track.active_clips:
-				print("     -", clip)
