@@ -29,5 +29,6 @@ setup(
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers'
     ],
-    test_suite='tests',
+    setup_requires=['pytest-runner'],
+    tests_require=['pytest']
 )
