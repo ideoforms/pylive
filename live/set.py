@@ -4,6 +4,7 @@ import live.track
 import live.device
 
 from live.constants import CLIP_STATUS_STOPPED
+from live.exceptions import LiveIOError, LiveConnectionError
 
 import os
 import re
@@ -66,7 +67,7 @@ class Set (live.LoggingObject):
 		self.tracks = []
 		self.scenes = []
 
-	def open(self, filename, wait = True):
+	def open(self, filename, wait=True):
 		""" Open an Ableton project, either by the path to the Project directory or
 		to an .als file. Will search in the current directory and the contents of
 		the LIVE_ROOT environmental variable.
@@ -113,21 +114,10 @@ class Set (live.LoggingObject):
 		os.system(cmd)
 
 		if wait:
-			# self.live.listen()
 			self.wait_for_startup()
+		return True
 
-	def currently_open(self):
-		""" Retrieve filename of currently-open Ableton Live set
-		based on inspecting Live's last Log.txt, or None if Live not open. """
-
-		#------------------------------------------------------------------------
-		# If Live is not running at all, return None.
-		#------------------------------------------------------------------------
-		is_running = os.system("ps axc -o command  | grep -q ^Live$") == 0
-		if not is_running:
-			print("live: Not currently open")
-			return None
-
+	def _get_last_opened_set_filename(self):
 		#------------------------------------------------------------------------
 		# Use Log.txt corresponding to latest Live version. eg:
 		# ~/Library/Preferences/Ableton/Live\ 9.0.6/Log.txt 
@@ -151,8 +141,26 @@ class Set (live.LoggingObject):
 				project = projects[-1].strip()
 				project = urllib.parse.unquote(project)
 				project = project.replace("file://", "")
-				# project = os.path.basename(project)
+				#------------------------------------------------------------------------
+				# Create canonical path, flattening (e.g.) double-slashes.
+				#------------------------------------------------------------------------
+				project = os.path.realpath(project)
 				return project
+
+		return None
+
+	def currently_open(self):
+		""" Retrieve filename of currently-open Ableton Live set
+		based on inspecting Live's last Log.txt, or None if Live not open. """
+
+		#------------------------------------------------------------------------
+		# If Live is not running at all, return None.
+		#------------------------------------------------------------------------
+		is_running = os.system("ps axc -o command  | grep -q ^Live$") == 0
+		if is_running:
+			return self._get_last_opened_set_filename()
+		else:
+			return None
 
 	@property
 	def live(self):
@@ -167,7 +175,6 @@ class Set (live.LoggingObject):
 		try:
 			return bool(self.tempo)
 		except Exception as e:
-			print("exception %s" % e)
 			return False
 
 	#------------------------------------------------------------------------
@@ -770,14 +777,18 @@ class Set (live.LoggingObject):
 	def load(self, filename = "set"):
 		""" Read a saved Set structure from disk. """
 		filename = "%s.pickle" % filename
-		data = pickle.load(open(filename, "rb"))
+		try:
+			data = pickle.load(open(filename, "rb"))
+		except pickle.UnpicklingError:
+			raise LiveIOError
+
 		for key, value in list(data.items()):
 			setattr(self, key, value)
-		self.log_info("load: set loaded OK (%d tracks)" % (len(self.tracks)))
+		self.log_info("load: Set loaded OK (%d tracks)" % (len(self.tracks)))
 
 		#------------------------------------------------------------------------
-		# after loading, set all active clip states to stopped.
-		# otherwise, if we scanned during playback, it will erroneously appear
+		# After loading, set all active clip states to stopped.
+		# Otherwise, if we scanned during playback, it will erroneously appear
 		# as if stopped clips are playing.
 		#------------------------------------------------------------------------
 		self._reset_clip_states()
@@ -803,7 +814,7 @@ class Set (live.LoggingObject):
 		#------------------------------------------------------------------------
 		self._add_mutexes()
 
-		self.log_info("save: set saved OK (%s)" % filename)
+		self.log_info("save: Set saved OK (%s)" % filename)
 
 	def dump(self):
 		""" Dump the current Set structure to stdout, showing the hierarchy of
@@ -891,8 +902,8 @@ class Set (live.LoggingObject):
 			#------------------------------------------------------------------------
 			# if we can query tempo, the set is running
 			#------------------------------------------------------------------------
-			tempo = self.tempo
-		except IndexError:
+			tempo = self.live.query("/live/tempo", timeout=0.1)
+		except LiveConnectionError:
 			#------------------------------------------------------------------------
 			# otherwise, wait for set startup
 			#------------------------------------------------------------------------

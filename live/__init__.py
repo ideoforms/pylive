@@ -40,3 +40,4 @@ from .clip import *
 from .scene import *
 from .device import *
 from .parameter import *
+from .exceptions import *
