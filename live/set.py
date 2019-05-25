@@ -17,7 +17,7 @@ import threading
 
 from live.object import name_cache
 
-GROUP_RE_DEFAULT = re.compile("^(\d+)\. (\S.+)")
+GROUP_RE_DEFAULT = re.compile(r"^(\d+)\. (\S.+)")
 
 class Set (live.LoggingObject):
 	""" Set represents an entire running Live set. It communicates via a
@@ -96,14 +96,13 @@ class Set (live.LoggingObject):
 				break
 
 		current = self.currently_open()
-		new = os.path.basename(path)
-		if current and current == new:
-			print("live: Project '%s' is already open" % new)
+		path = os.path.abspath(path)
+		if current and current == path:
+			self.log_info("Project '%s' is already open" % os.path.basename(path))
 			return
 
 		if not os.path.exists(path):
-			print("live: Couldn't find project file '%s'. Have you set the LIVE_ROOT environmental variable?" % filename)
-			sys.exit(1)
+			raise LiveIOError("Couldn't find project file '%s'. Have you set the LIVE_ROOT environmental variable?")
 
 		#------------------------------------------------------------------------
 		# Assume that the alphabetically-last Ableton binary is the one we 
@@ -124,7 +123,7 @@ class Set (live.LoggingObject):
 		#------------------------------------------------------------------------
 		root = os.path.expanduser("~/Library/Preferences/Ableton")
 		logfiles = glob.glob("%s/Live */Log.txt" % root)
-		open_regexp = "file://.*\.als$"
+		open_regexp = r"file://.*\.als$"
 
 		if logfiles:
 			logfiles = list(sorted(logfiles, key=lambda a: os.path.getmtime(a)))
@@ -760,14 +759,14 @@ class Set (live.LoggingObject):
 				set_file_mtime = os.path.getmtime(set_file)
 				cache_file_mtime = os.path.getmtime("%s.pickle" % filename)
 				if cache_file_mtime < set_file_mtime:
-					print("Set file modified since cache, forcing rescan")
+					self.log_info("Set file modified since cache, forcing rescan")
 					raise Exception
 			else:
-				print("Couldn't establish currently open set")
+				self.log_info("Couldn't establish currently open set")
 
 			self.load(filename)
 			if len(self.tracks) != self.num_tracks:
-				print("Loaded %d tracks, but found %d - looks like set has changed" % (len(self.tracks), self.num_tracks))
+				self.log_info("Loaded %d tracks, but found %d - looks like set has changed" % (len(self.tracks), self.num_tracks))
 				self.reset()
 				raise Exception
 		except Exception as e:
