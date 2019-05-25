@@ -6,10 +6,9 @@ PyLive is a framework for querying and controlling Ableton Live from a standalon
 
 ## Requirements
 
-* [Ableton Live 7+](http://www.ableton.com/live)
-* [LiveOSC (fork)](https://github.com/ideoforms/LiveOSC): My fork of the [LiveOSC](http://livecontrol.q3f.org/ableton-liveapi/liveosc/) MIDI control script, updated to work with Live 9.6 and 10.
+* [Ableton Live 9+](http://www.ableton.com/live)
+* [LiveOSC (fork)](https://github.com/ideoforms/LiveOSC): My fork of the [LiveOSC](http://livecontrol.q3f.org/ableton-liveapi/liveosc/) MIDI control script, updated to work with Live 9.6 and 10. Must be installed in Live's `MIDI Remote Scripts` (see [README]((https://github.com/ideoforms/LiveOSC)))
 * [Python 2.6+](http://www.python.org)
-* [pyliblo](http://das.nasophon.de/pyliblo/)
 
 ## Installation
 
