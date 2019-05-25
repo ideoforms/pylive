@@ -9,7 +9,7 @@ LIVE_TMP_SET_NAME = ".tmp_set"
 
 def setup_module():
     set = live.Set()
-    set.open("tests/Tests.als", wait=True)
+    set.open("tests/Tests Project/Tests.als", wait=True)
     set.stop()
 
 def test_set_connected():
