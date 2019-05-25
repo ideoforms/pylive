@@ -23,9 +23,6 @@ def singleton(cls):
 def query(*args, **kwargs):
 	return Query().query(*args, **kwargs)
 
-def query_one(*args, **kwargs):
-	return Query().query_one(*args, **kwargs)
-
 def cmd (*args, **kwargs):
 	Query().cmd(*args, **kwargs)
 
@@ -40,7 +37,6 @@ class Query(LoggingObject):
 	Following this assumption, static helper functions also exist:
 
 		live.query(path, *args)
-		live.query_one(path, *args)
 		live.cmd(path, *args)
 	"""
 
@@ -103,15 +99,16 @@ class Query(LoggingObject):
 		Returns a list of values. """
 
 		#------------------------------------------------------------------------
-		# use **kwargs because we want to be able to specify an optional kw
+		# Use **kwargs because we want to be able to specify an optional kw
 		# arg after variable-length args -- 
 		# eg live.query("/set/freq", 440, 1.0, response_address = "/verify/freq")
+		#
 		# http://stackoverflow.com/questions/5940180/python-default-keyword-arguments-after-variable-length-positional-arguments
 		#------------------------------------------------------------------------
 
 		#------------------------------------------------------------------------
-		# some calls produce responses at different addresses
-		# (eg /live/device -> /live/deviceall). specify a response_address to
+		# Some calls produce responses at different addresses
+		# (eg /live/device -> /live/deviceall). Specify a response_address to
 		# take account of this.
 		#------------------------------------------------------------------------
 		response_address = kwargs.get("response_address", None)
@@ -120,29 +117,29 @@ class Query(LoggingObject):
 		else:
 			response_address = msg
 
-		self.query_rv = []
 
+		#------------------------------------------------------------------------
+		# Create an Event to block the thread until this response has been
+		# triggered.
+		#------------------------------------------------------------------------
 		self.osc_server_events[response_address] = threading.Event()
 
+		#------------------------------------------------------------------------
+		# query_rv will be populated by the callback, storing the return value
+		# of the OSC query.
+		#------------------------------------------------------------------------
+		self.query_rv = []
 		self.cmd(msg, *args)
 
+		#------------------------------------------------------------------------
+		# Wait for a response. 
+		#------------------------------------------------------------------------
 		rv = self.osc_server_events[response_address].wait(self.osc_timeout)
 
 		if not rv:
 			raise LiveConnectionError("Timed out waiting for response from LiveOSC. Is Live running and LiveOSC installed?")
 
 		return self.query_rv
-
-	def query_one(self, msg, *args):
-		""" Send a Live command and synchronously wait for its response:
-
-			return live.query_one("/live/tempo")
-
-		Returns a single scalar value (in this case, a float). """
-		rv = self.query(msg, *args)
-		if not rv:
-			return None
-		return rv[0]
 
 	def handler(self, address, data, types):
 		self.log_debug("OSC input: %s %s" % (address, data))
@@ -158,7 +155,6 @@ class Query(LoggingObject):
 		# thread event and update our return value. 
 		#------------------------------------------------------------------------
 		if address in self.osc_server_events:
-		# if address == self.response_address:
 			self.query_rv += data
 			self.osc_server_events[address].set()
 			return
@@ -177,6 +173,7 @@ class Query(LoggingObject):
 					self.beat_callback(data[0])
 				else:
 					self.beat_callback()
+
 		elif address == "/remix/oscserver/startup":
 			if self.startup_callback is not None:
 				self.startup_callback()
