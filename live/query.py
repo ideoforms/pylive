@@ -117,7 +117,6 @@ class Query(LoggingObject):
 		else:
 			response_address = msg
 
-
 		#------------------------------------------------------------------------
 		# Create an Event to block the thread until this response has been
 		# triggered.
@@ -134,7 +133,8 @@ class Query(LoggingObject):
 		#------------------------------------------------------------------------
 		# Wait for a response. 
 		#------------------------------------------------------------------------
-		rv = self.osc_server_events[response_address].wait(self.osc_timeout)
+		timeout = kwargs.get("timeout", self.osc_timeout)
+		rv = self.osc_server_events[response_address].wait(timeout)
 
 		if not rv:
 			raise LiveConnectionError("Timed out waiting for response from LiveOSC. Is Live running and LiveOSC installed?")
@@ -168,8 +168,8 @@ class Query(LoggingObject):
 				# Callbacks may take one argument: the current beat count.
 				# If not specified, call with 0 arguments.
 				#------------------------------------------------------------------------
-				argspec = inspect.signature(self.beat_callback)
-				if len(argspec.args) > 0 and argspec.args[-1] != "self":
+				signature = inspect.signature(self.beat_callback)
+				if len(signature.parameters) > 0:
 					self.beat_callback(data[0])
 				else:
 					self.beat_callback()
