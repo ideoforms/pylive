@@ -94,6 +94,6 @@ For further help, see `pydoc live`.
 * `Set`: Represents a single Ableton Live set in its entirety. 
 * `Track`: A single Live track object. Contains `Device` and `Clip` objects. May be a member of a `Group`.
 * `Group`: A grouped set of one or more `Track` objects.
-* `Device`: An instrument or audio effect residing within a `Track`. Contains a number of `Parameter`s.
+* `Device`: An instrument or audio effect residing within a `Track`. Contains a number of `Parameter` objects.
 * `Parameter`: An individual control parameter of a `Device`, with a fixed range and variable value.
 
