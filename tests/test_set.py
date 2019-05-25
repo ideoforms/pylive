@@ -2,6 +2,15 @@
 
 import pytest
 import live
+import time
+import os
+
+LIVE_TMP_SET_NAME = ".tmp_set"
+
+def setup_module():
+    set = live.Set()
+    set.open("tests/Tests.als", wait=True)
+    set.stop()
 
 def test_set_connected():
     """ set and query tempo """
@@ -19,7 +28,49 @@ def test_set_tempo(tempo):
 def test_set_quantization(quantization):
     """ set and query tempo """
     set = live.Set()
-    print("about to set q")
     set.quantization = quantization
-    print("about to get q")
     assert quantization == set.quantization
+
+@pytest.mark.parametrize("t", [ 0.0, 1.0, 2.5 ])
+def test_set_time(t):
+    """ set and query tempo """
+    set = live.Set()
+    set.time = t
+    #------------------------------------------------------------------------
+    # Time update does not happen instantly. Wait briefly.
+    #------------------------------------------------------------------------
+    time.sleep(0.2)
+    assert t == set.time
+
+@pytest.mark.timeout(1.0)
+def test_set_wait_for_next_beat():
+    set = live.Set()
+    set.tempo = 120.0
+    set.play()
+    set.wait_for_next_beat()
+    set.stop()
+    assert True
+
+def test_set_load():
+    LIVE_TMP_SET_PATH = "%s.pickle" % LIVE_TMP_SET_NAME
+    if os.path.exists(LIVE_TMP_SET_PATH):
+        os.unlink(LIVE_TMP_SET_PATH)
+    set = live.Set()
+
+    #------------------------------------------------------------------------
+    # Load nonexistent file
+    #------------------------------------------------------------------------
+    with pytest.raises(FileNotFoundError) as excinfo:
+        set.load(LIVE_TMP_SET_NAME)
+    assert excinfo
+
+    #------------------------------------------------------------------------
+    # Load file containing invalid data
+    #------------------------------------------------------------------------
+    with open(LIVE_TMP_SET_PATH, "w") as fd:
+        fd.write("foo")
+    with pytest.raises(live.LiveIOError) as excinfo:
+        set.load(LIVE_TMP_SET_NAME)
+
+    set.save()
+    set.load()
