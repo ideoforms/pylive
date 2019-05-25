@@ -72,5 +72,10 @@ def test_set_load():
     with pytest.raises(live.LiveIOError) as excinfo:
         set.load(LIVE_TMP_SET_NAME)
 
-    set.save()
-    set.load()
+    #------------------------------------------------------------------------
+    # Load valid file
+    #------------------------------------------------------------------------
+    set.save(LIVE_TMP_SET_NAME)
+    set.load(LIVE_TMP_SET_NAME)
+
+    os.unlink(LIVE_TMP_SET_PATH)
