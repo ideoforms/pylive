@@ -6,3 +6,7 @@ class LiveException(Exception):
 class LiveConnectionError(LiveException):
 	""" Error establishing a connection to LiveOSC. """
 	pass
+
+class LiveIOError(LiveException):
+	""" Error accessing a file descriptor. """
+	pass
