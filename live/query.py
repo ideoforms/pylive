@@ -126,6 +126,7 @@ class Query(LoggingObject):
 		# query_rv will be populated by the callback, storing the return value
 		# of the OSC query.
 		#------------------------------------------------------------------------
+		self.query_address = response_address
 		self.query_rv = []
 		self.cmd(msg, *args)
 
@@ -153,7 +154,7 @@ class Query(LoggingObject):
 		# If this message is awaiting a synchronous return, trigger the
 		# thread event and update our return value. 
 		#------------------------------------------------------------------------
-		if address in self.osc_server_events:
+		if address == self.query_address:
 			self.query_rv += data
 			self.osc_server_events[address].set()
 			return

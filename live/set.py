@@ -366,7 +366,7 @@ class Set (live.LoggingObject):
 	# /live/name/trackblock
 	#------------------------------------------------------------------------
 
-	def get_track_names(self, offset = None, count = None):
+	def get_track_names(self, offset=None, count=None):
 		""" Return all track names. If offset and count are given, return names
 		within this range. """
 		if count is None:
