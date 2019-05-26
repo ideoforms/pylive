@@ -8,6 +8,7 @@ import os
 from tests.shared import open_test_set
 
 LIVE_TMP_SET_NAME = ".tmp_set"
+LIVE_TMP_SET_PATH = "%s.pickle" % LIVE_TMP_SET_NAME
 
 def setup_module():
     open_test_set()
@@ -105,7 +106,6 @@ def test_set_scan():
     assert len(set.tracks) == 6
 
 def test_set_load():
-    LIVE_TMP_SET_PATH = "%s.pickle" % LIVE_TMP_SET_NAME
     if os.path.exists(LIVE_TMP_SET_PATH):
         os.unlink(LIVE_TMP_SET_PATH)
     set = live.Set()
