@@ -23,7 +23,7 @@ class LoggingObject(object):
 	def log_info(self, msg = "", *args):
 		if msg:
 			msg = msg % args
-		logger.info("%s[%s] %s", " " * 3 * self.indent, self, msg)
+		logger.info("[%s] %s", self, msg)
 
 	def log_warn(self, msg = "", *args):
 		msg = msg % args

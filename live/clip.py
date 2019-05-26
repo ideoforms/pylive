@@ -56,17 +56,17 @@ class Clip(live.LoggingObject):
 			self.looplen += 1
 		else:
 			self.looplen += random.choice([ -1, 1 ])
-		self.log_info("syncopating loop length from %d to %d (total length %d)" % (looplen_old, self.looplen, self.length))
+		self.log_info("Syncopating loop length from %d to %d (total length %d)" % (looplen_old, self.looplen, self.length))
 		self.set.set_clip_loop_end(self.track.index, self.index, self.looplen)
 
 	def reset(self):
 		if self.looplen != self.length:
-			self.log_info("resetting loop length to %d" % self.length)
+			self.log_info("Resetting loop length to %d" % self.length)
 			self.set.set_clip_loop_end(self.track.index, self.index, self.looplen)
 
 	def play(self):
 		""" Start playing clip. """
-		self.log_info("playing")
+		self.log_info("Playing")
 		self.set.play_clip(self.track.index, self.index)
 		self.track.playing = True
 		if type(self.track) is live.Group:

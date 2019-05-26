@@ -38,7 +38,6 @@ class Set (live.LoggingObject):
 	"""
 
 	def __init__(self, address = ("localhost", 9000)):
-		self.indent = 0
 		self.scanned = False
 
 		""" Set caching to True to avoid re-querying properties such as tempo each
@@ -613,15 +612,12 @@ class Set (live.LoggingObject):
 
 		track_count = self.num_tracks
 		if not track_count:
-			self.log_warn("couldn't connect to Ableton Live! (obj: %s)" % self.live)
-			sys.exit()
+			raise LiveConnectionError("Couldn't connect to Ableton Live! (obj: %s)" % self.live)
 
 		if not group_re:
 			group_re = GROUP_RE_DEFAULT
 
-		self.scanned = True
-
-		self.log_info("scan_layout: scanning %d tracks" % track_count)
+		self.log_info("scan_layout: Scanning %d tracks" % track_count)
 
 		#------------------------------------------------------------------------
 		# some kind of limit seems to prevent us querying over 535ish track
@@ -631,17 +627,17 @@ class Set (live.LoggingObject):
 		track_names = []
 		while track_index < track_count:
 			tracks_remaining = self.max_tracks_per_query if track_count > track_index + self.max_tracks_per_query else track_count - track_index
-			# self.log_info("  (querying from %d, count %d)" % (track_index, tracks_remaining))
+			self.log_debug("  (querying from %d, count %d)" % (track_index, tracks_remaining))
 			track_names = track_names + self.get_track_names(track_index, tracks_remaining)
 			track_index += self.max_tracks_per_query
 
-		self.log_info("scan_layout: got %d track names" % len(track_names))
+		self.log_info("scan_layout: Got %d track names" % len(track_names))
 		assert(track_count == len(track_names))
 		current_group = None
 
 		for track_index in range(track_count):
 			track_name = track_names[track_index]
-			self.log_info("scan_layout: track %d (%s)" % (track_index, track_name))
+			self.log_info("scan_layout: Track %d (%s)" % (track_index, track_name))
 			match = re.search(group_re, track_name)
 			#------------------------------------------------------------------------
 			# if this track's name matches our Group regular expression, assume
@@ -710,7 +706,7 @@ class Set (live.LoggingObject):
 						if scan_clip_names:
 							clip_name = self.get_clip_name(track.index, clip_index)
 							track.clips[clip_index].name = clip_name
-							self.log_info("scan_layout:  - clip %d: %s" % (clip_index, clip_name))
+							self.log_info("scan_layout:  - Clip %d: %s" % (clip_index, clip_name))
 
 				#--------------------------------------------------------------------------
 				# query each track for its device list, and any parameters belonging to
@@ -718,7 +714,7 @@ class Set (live.LoggingObject):
 				#--------------------------------------------------------------------------
 				if scan_devices:
 					devices = self.get_device_list(track.index)
-					self.log_info("scan_layout: devices %s" % devices)
+					self.log_info("scan_layout: Devices %s" % devices)
 					devices = devices[1:]
 					for i in range(0, len(devices), 2):
 						index = devices[i]
@@ -750,8 +746,9 @@ class Set (live.LoggingObject):
 			scene.name = scene_name
 			self.scenes.append(scene)
 		
+		self.scanned = True
 
-	def load_or_scan(self, filename = "set", **kwargs):
+	def load_or_scan(self, filename="set", **kwargs):
 		""" From from file; if file does not exist, scan, then save. """
 		try:
 			set_file = self.currently_open()
@@ -773,7 +770,7 @@ class Set (live.LoggingObject):
 			self.scan(**kwargs)
 			self.save(filename)
 
-	def load(self, filename = "set"):
+	def load(self, filename="set"):
 		""" Read a saved Set structure from disk. """
 		filename = "%s.pickle" % filename
 		try:
@@ -797,7 +794,7 @@ class Set (live.LoggingObject):
 		#------------------------------------------------------------------------
 		self._add_mutexes()
 
-	def save(self, filename = "set"):
+	def save(self, filename="set"):
 		""" Save the current Set structure to disk.
 		Use to avoid the lengthy scan() process.
 		TODO: Add a __reduce__ function to do this in an idiomatic way. """

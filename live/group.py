@@ -15,18 +15,17 @@ class Group (Track):
 	"""
 
 	def __init__(self, set, track_index, group_index, name):
-		self.set = set
+		Track.__init__(self, set, track_index, name)
+
 		self.track_index = track_index
 		self.group_index = group_index
 
 		# needed so that Clip objects can call the 'index' method on Group and Track accordingly
 		# TODO: rename 'index' to 'track_index' on Track objects too
 		self.index = track_index
-		self.indent = 1
 		self.is_group = True
-		self.name = name
 		self.group = None
-		self.clips = []
+
 		self.tracks = []
 
 	def __str__(self):

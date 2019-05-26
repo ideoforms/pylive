@@ -41,7 +41,6 @@ class Query(LoggingObject):
 	"""
 
 	def __init__(self, address = ("localhost", 9000), listen_port = 9001):
-		self.indent = 0
 		self.beat_callback = None
 		self.startup_callback = None
 		self.listen_port = listen_port

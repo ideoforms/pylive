@@ -19,7 +19,6 @@ class Device(live.LoggingObject):
 		self.index = index
 		self.name = name
 		self.parameters = []
-		self.indent = 2
 
 	def __str__(self):
 		return "Device (%d,%d): %s)" % (self.track.index, self.index, self.name)
