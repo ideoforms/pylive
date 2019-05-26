@@ -13,18 +13,7 @@ logging.basicConfig(format="%(asctime)-15s %(message)s")
 logging.getLogger("live").setLevel(logging.INFO)
 
 set = live.Set()
-
-#------------------------------------------------------------------------
-# To avoid having to re-scan the set each time we run this example,
-# we can cache the set's state which can be reloaded in future.
-#
-# Try running this example twice on a non-trivial set.
-#------------------------------------------------------------------------
-try:
-	set.load("ex-device-randomise")
-except:
-	set.scan(scan_devices = True)
-	set.save("ex-device-randomise")
+set.scan(scan_devices = True)
 
 tracks_with_devices = list(filter(lambda track: len(track.devices), set.tracks))
 if len(tracks_with_devices) == 0:
