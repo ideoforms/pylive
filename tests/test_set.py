@@ -156,7 +156,7 @@ def test_set_get_group_named():
     set = live.Set()
     set.scan()
     group = set.get_group_named("1. Group")
-    assert track == set.groups[0]
+    assert group == set.groups[0]
 
 @pytest.mark.timeout(1.0)
 def test_set_wait_for_next_beat():
