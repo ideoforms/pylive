@@ -24,6 +24,11 @@ From git clone:
 python setup.py install
 ```
 
+To check that pylive is communicating successfully with Ableton Live, try running one of the [examples](examples), or run the test suite with:
+```
+python setup.py test
+```
+
 ## Usage
 
 ```python
@@ -96,4 +101,5 @@ For further help, see `pydoc live`.
 * `Group`: A grouped set of one or more `Track` objects.
 * `Device`: An instrument or audio effect residing within a `Track`. Contains a number of `Parameter` objects.
 * `Parameter`: An individual control parameter of a `Device`, with a fixed range and variable value.
+
 
