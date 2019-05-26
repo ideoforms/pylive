@@ -520,7 +520,7 @@ class Set (live.LoggingObject):
 		""" Return track and clip information for the given track.
 		Return value is a tuple of the form:
 
-		(track_index, armed, (clip_index, state, length), ... )
+		(track_index, foldable, armed, (clip_index, state, length), ... )
 		"""
 
 		return self.live.query("/live/track/info", track_index)
@@ -638,13 +638,9 @@ class Set (live.LoggingObject):
 		for track_index in range(track_count):
 			track_name = track_names[track_index]
 			self.log_info("scan_layout: Track %d (%s)" % (track_index, track_name))
-			match = re.search(group_re, track_name)
-			#------------------------------------------------------------------------
-			# if this track's name matches our Group regular expression, assume
-			# it is a Group track. this is sadly necessary because the API does not
-			# expose whether or not a track is a group track!
-			#------------------------------------------------------------------------
-			if match:
+			track_info = self.get_track_info(track_index)
+			is_group = track_info[1]
+			if is_group:
 				self.log_info("scan_layout: - is group")
 				group_index = len(self.groups)
 				group = live.Group(self, track_index, group_index, track_name)
@@ -658,15 +654,12 @@ class Set (live.LoggingObject):
 				self.tracks.append(group)
 
 			else:
-				# TODO: consistence between Group and Track constructors
-				track_info = self.get_track_info(track_index)
-				clips = track_info[2:]
 				track = live.Track(self, track_index, track_name, current_group)
 				if current_group is not None:
 					current_group.add_track(track)
 				self.tracks.append(track)
 
-				clip_info = track_info[2:]
+				clip_info = track_info[3:]
 
 				if scan_clip_names:
 					clip_names = self.get_clip_names
