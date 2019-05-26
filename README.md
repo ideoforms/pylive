@@ -102,4 +102,6 @@ For further help, see `pydoc live`.
 * `Device`: An instrument or audio effect residing within a `Track`. Contains a number of `Parameter` objects.
 * `Parameter`: An individual control parameter of a `Device`, with a fixed range and variable value.
 
+## Limitations
 
+Note that pylive is not intended for sending MIDI note events or control messages to a set. For MIDI controls, use a separate module such as [mido](https://mido.readthedocs.io).
