@@ -23,8 +23,10 @@ From PyPi:
 pip install pylive
 ```
 
-From git clone:
+Via git:
 ```
+git clone https://github.com/ideoforms/pylive.git
+cd pylive
 python setup.py install
 ```
 
