@@ -17,8 +17,6 @@ import threading
 
 from live.object import name_cache
 
-GROUP_RE_DEFAULT = re.compile(r"^(\d+)\. (\S.+)")
-
 class Set (live.LoggingObject):
 	""" Set represents an entire running Live set. It communicates via a
 	live.Query object to the Live instance, which must be running LiveOSC
@@ -588,7 +586,7 @@ class Set (live.LoggingObject):
 	# SCAN
 	#------------------------------------------------------------------------
 
-	def scan(self, group_re = None, scan_scenes = False, scan_devices = False, scan_clip_names = False):
+	def scan(self, scan_scenes = False, scan_devices = False, scan_clip_names = False):
 		""" Interrogates the currently open Ableton Live set for its structure:
 		number of tracks, clips, scenes, etc.
 
@@ -613,9 +611,6 @@ class Set (live.LoggingObject):
 		track_count = self.num_tracks
 		if not track_count:
 			raise LiveConnectionError("Couldn't connect to Ableton Live! (obj: %s)" % self.live)
-
-		if not group_re:
-			group_re = GROUP_RE_DEFAULT
 
 		self.log_info("scan_layout: Scanning %d tracks" % track_count)
 
