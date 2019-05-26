@@ -146,17 +146,27 @@ def test_set_save():
     set.load(LIVE_TMP_SET_NAME)
     assert len(set.tracks) == 6
 
+    os.unlink(LIVE_TMP_SET_PATH)
+
 def test_set_get_track_named():
     set = live.Set()
     set.scan()
+
     track = set.get_track_named("2-Operator")
     assert track == set.tracks[1]
+
+    track = set.get_track_named("Nonexistent")
+    assert track is None
 
 def test_set_get_group_named():
     set = live.Set()
     set.scan()
+
     group = set.get_group_named("1. Group")
     assert group == set.groups[0]
+
+    group = set.get_group_named("Nonexistent")
+    assert group is None
 
 @pytest.mark.timeout(1.0)
 def test_set_wait_for_next_beat():

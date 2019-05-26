@@ -188,7 +188,7 @@ class Track(LoggingObject):
 		self.set.set_track_arm(self.index, value)
 	def get_arm(self):
 		return self.set.get_track_arm(self.index)
-	arm = property(get_arm, set_arm, None, "track armed to record (0.1)")
+	arm = property(get_arm, set_arm, None, "track armed to record (0/1)")
 
 	#------------------------------------------------------------------------
 	# get/set: solo
