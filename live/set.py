@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import live.query
 import live.group
 import live.track
@@ -12,7 +14,6 @@ import sys
 import glob
 import time
 import pickle
-import urllib.request, urllib.parse, urllib.error
 import threading
 
 from live.object import name_cache
@@ -819,13 +820,13 @@ class Set (live.LoggingObject):
 				print(str(track))
 				current_group = track
 			else:
-				print(" -", str(track))
+				print(" - %s" % str(track))
 				if track.devices:
 					for device in track.devices:
-						print("    -", device)
+						print("    - %s" % device)
 				if track.active_clips:
 					for clip in track.active_clips:
-						print("    -", clip)
+						print("    - %s" % clip)
 
 		print("────────────────────────────────────────────────────────")
 		print("Scenes")
