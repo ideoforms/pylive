@@ -58,3 +58,6 @@ target/
 
 # macOS stuff
 .DS_Store
+*.swp
+dev/
+tests/Tests Project/Backup
