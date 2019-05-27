@@ -30,7 +30,7 @@ set.play()
 #------------------------------------------------------------------------
 track = set.tracks[0]
 if len(track.active_clips) == 0:
-	raise LiveException("Please open a Live set with at least one clip in the first track")
+    raise LiveException("Please open a Live set with at least one clip in the first track")
 
 #------------------------------------------------------------------------
 # track.clips is a list of all clipslots on the given Track, some of
@@ -46,16 +46,16 @@ clip = random.choice(track.active_clips)
 # previous Clip once per beat. Switch Live's quantization to "1 beat".
 #------------------------------------------------------------------------
 while True:
-	set.wait_for_next_beat()
+    set.wait_for_next_beat()
 
-	#------------------------------------------------------------------------
-	# wrap = True: Wrap between the last and first clips of the track.
-	# allow_gaps = True: Jump over gaps between populated clips.
-	#------------------------------------------------------------------------
-	if random.uniform(0, 1) < 0.5:
-		clip = clip.get_next_clip(wrap = True, allow_gaps = True)
-	else:
-		clip = clip.get_prev_clip(wrap = True, allow_gaps = True)
+    #------------------------------------------------------------------------
+    # wrap = True: Wrap between the last and first clips of the track.
+    # allow_gaps = True: Jump over gaps between populated clips.
+    #------------------------------------------------------------------------
+    if random.uniform(0, 1) < 0.5:
+        clip = clip.get_next_clip(wrap = True, allow_gaps = True)
+    else:
+        clip = clip.get_prev_clip(wrap = True, allow_gaps = True)
 
-	clip.play()
+    clip.play()
 
