@@ -20,12 +20,18 @@ def live_set():
 
 @pytest.fixture(scope="module")
 def clip(live_set):
+    track = live_set.tracks[1]
+    clip = track.clips[0]
+    return clip
+
+@pytest.fixture(scope="module")
+def audio_clip(live_set):
     track = live_set.tracks[4]
     clip = track.clips[0]
     return clip
 
 def test_clip_properties(clip, live_set):
-    assert clip.track == live_set.tracks[4]
+    assert clip.track == live_set.tracks[1]
     assert clip.set == live_set
     assert clip.index == 0
     assert clip.length == 4
@@ -41,10 +47,21 @@ def test_clip_play_stop(clip):
     time.sleep(0.2)
     assert clip.state == live.CLIP_STATUS_STOPPED
 
-def test_clip_pitch(clip):
-    pitch = clip.pitch
-    assert tuple(pitch) == (0, 0)
+def test_clip_pitch(audio_clip):
+    pitch = audio_clip.pitch
+    assert pitch == (0, 0)
 
-    clip.pitch = [ 1.0, 1.0 ]
-    pitch = clip.pitch
-    assert tuple(pitch) == (1, 1)
+    audio_clip.pitch = (-24, -25)
+    pitch = audio_clip.pitch
+    assert pitch == (-24, -25)
+
+    audio_clip.pitch = (0, 0)
+
+def test_clip_muted(clip):
+    muted = clip.muted
+    assert muted is False
+
+    clip.muted = True
+    assert clip.muted
+
+    clip.muted = False

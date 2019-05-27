@@ -492,10 +492,13 @@ class Set (live.LoggingObject):
 	#------------------------------------------------------------------------
 
 	def get_clip_pitch(self, track_index, clip_index):
-		""" Return pitch level of pitch_index for track_index. """
+		""" Return pitch level of pitch_index for track_index.
+
+		Note that the LiveOSC callback for pitch does not include
+		track/clip numbers, so doesn't need slicing. """
 		return self.live.query("/live/pitch", track_index, clip_index)
 
-	def set_clip_pitch(self, track_index, pitch_index, coarse, fine = 0):
+	def set_clip_pitch(self, track_index, pitch_index, coarse, fine):
 		""" Set pitch level of pitch_index for track_index. """
 		self.live.cmd("/live/pitch", track_index, pitch_index, coarse, fine)
 
@@ -550,10 +553,10 @@ class Set (live.LoggingObject):
 	# /live/clip/mute
 	#------------------------------------------------------------------------
 
-	def set_clip_mute(self, track_index, clip_index, mute = True):
+	def set_clip_mute(self, track_index, clip_index, mute):
 		self.live.cmd("/live/clip/mute", track_index, clip_index, mute)
 	def get_clip_mute(self, track_index, clip_index):
-		return self.live.query("/live/clip/mute", track_index, clip_index)
+		return self.live.query("/live/clip/mute", track_index, clip_index)[2]
 
 	#------------------------------------------------------------------------
 	# /live/devicelist
