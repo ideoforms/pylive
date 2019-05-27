@@ -40,13 +40,15 @@ class Query(LoggingObject):
         live.cmd(path, *args)
     """
 
-    def __init__(self, address = ("localhost", 9000), listen_port = 9001):
+    def __init__(self, address=("localhost", 9000), listen_port=9001):
         self.beat_callback = None
         self.startup_callback = None
         self.listen_port = listen_port
 
-        # handler callbacks for particular messages from Live.
-        # used so that other processes can register callbacks when states change.
+        #------------------------------------------------------------------------
+        # Handler callbacks for particular messages from Live.
+        # Used so that other processes can register callbacks when states change.
+        #------------------------------------------------------------------------
         self.handlers = {}
 
         self.osc_address = address
@@ -65,15 +67,12 @@ class Query(LoggingObject):
 
         self.listen()
 
-    def __str__(self):
-        return "live.query"
-
     def osc_server_read(self):
         while True:
             self.osc_server.recv(10)
 
     def listen(self):
-        self.osc_server_thread = threading.Thread(target = self.osc_server_read)
+        self.osc_server_thread = threading.Thread(target=self.osc_server_read)
         self.osc_server_thread.setDaemon(True)
         self.osc_server_thread.start()
 
