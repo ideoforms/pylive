@@ -171,8 +171,15 @@ class Query(LoggingObject):
 				# Callbacks may take one argument: the current beat count.
 				# If not specified, call with 0 arguments.
 				#------------------------------------------------------------------------
-				signature = inspect.signature(self.beat_callback)
-				if len(signature.parameters) > 0:
+				has_arg = False
+				try:
+					signature = inspect.signature(self.beat_callback)
+					has_arg = len(signature.parameters) > 0
+				except:
+					argspec = inspect.getargspec(self.beat_callback)
+					has_arg = len(argspec.args) > 0 and argspec.args[-1] != "self"
+
+				if has_arg:
 					self.beat_callback(data[0])
 				else:
 					self.beat_callback()

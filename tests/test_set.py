@@ -113,7 +113,7 @@ def test_set_load():
     #------------------------------------------------------------------------
     # Load nonexistent file
     #------------------------------------------------------------------------
-    with pytest.raises(FileNotFoundError) as excinfo:
+    with pytest.raises(IOError) as excinfo:
         set.load(LIVE_TMP_SET_NAME)
     assert excinfo
 

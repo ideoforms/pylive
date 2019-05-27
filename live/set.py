@@ -777,6 +777,9 @@ class Set (live.LoggingObject):
 			data = pickle.load(open(filename, "rb"))
 		except pickle.UnpicklingError:
 			raise LiveIOError
+		except KeyError:
+			# Python 2 throws a KeyError
+			raise LiveIOError
 
 		for key, value in list(data.items()):
 			setattr(self, key, value)
