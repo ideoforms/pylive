@@ -559,6 +559,16 @@ class Set (live.LoggingObject):
 		return self.live.query("/live/clip/mute", track_index, clip_index)[2]
 
 	#------------------------------------------------------------------------
+	# /live/clip/add_note
+	# /live/clip/note
+	#------------------------------------------------------------------------
+
+	def add_clip_note(self, track_index, clip_index, note, position, duration, velocity, mute):
+		self.live.cmd("/live/clip/add_note", track_index, clip_index, note, position, duration, velocity, mute)
+	def get_clip_notes(self, track_index, clip_index):
+		return self.live.query("/live/clip/notes", track_index, clip_index, response_address="/live/clip/note")
+
+	#------------------------------------------------------------------------
 	# /live/devicelist
 	# /live/device
 	# /live/device/range
@@ -568,10 +578,10 @@ class Set (live.LoggingObject):
 		return self.live.query("/live/devicelist", track_index)
 
 	def get_device_parameters(self, track_index, device_index):
-		return self.live.query("/live/device", track_index, device_index, response_address = "/live/device/allparam")
+		return self.live.query("/live/device", track_index, device_index, response_address="/live/device/allparam")
 
 	def get_device_param(self, track_index, device_index, param_index):
-		return self.live.query("/live/device", track_index, device_index, param_index, response_address = "/live/device/param")
+		return self.live.query("/live/device", track_index, device_index, param_index, response_address="/live/device/param")
 
 	def set_device_param(self, track_index, device_index, param_index, value):
 		self.live.cmd("/live/device", track_index, device_index, param_index, value)

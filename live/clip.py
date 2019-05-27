@@ -150,3 +150,21 @@ class Clip(live.LoggingObject):
 		if prev_index >= 0:
 			return clip_range[prev_index]
 		return None
+
+	def add_note(self, note, position, duration, velocity):
+		"""
+		:param note:      (int)    MIDI note index
+		:param position:  (float)  Position, in beats
+		:param duration:  (float)  Duration, in beats
+		:param velocity:  (int)    MIDI note velocity
+		"""
+		self.set.add_clip_note(self.track.index, self.index, note, position, duration, velocity, 0)
+
+	def get_notes(self):
+		""" TODO: get_clip_notes does not always return all of the notes,
+		as it may return before the entire OSC bundle has been processed.
+		Rethink bundle processing so that the event is not triggered
+		until end of bundle. """
+		notes = self.set.get_clip_notes(self.track.index, self.index)
+		notes = [ notes[n+2:n+7] for n in range(0, len(notes), 7) ]
+		return notes
