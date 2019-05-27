@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 
-import live.query
-import live.group
-import live.track
-import live.device
-
-from live.constants import CLIP_STATUS_STOPPED
-from live.exceptions import LiveIOError, LiveConnectionError
+from .constants import CLIP_STATUS_STOPPED
+from .exceptions import LiveIOError, LiveConnectionError
+from .object import LoggingObject, name_cache
+from .query import Query
+from .track import Track
+from .group import Group
+from .clip import Clip
+from .scene import Scene
+from .device import Device
+from .parameter import Parameter
 
 import os
 import re
@@ -22,9 +25,7 @@ except ImportError:
     # Python 2 support
     import urllib
 
-from live.object import name_cache
-
-class Set (live.LoggingObject):
+class Set (LoggingObject):
     """ Set represents an entire running Live set. It communicates via a
     live.Query object to the Live instance, which must be running LiveOSC
     as an active control surface.
@@ -172,10 +173,7 @@ class Set (live.LoggingObject):
 
     @property
     def live(self):
-        return live.Query()
-
-    def __str__(self):
-        return "live.set"
+        return Query()
 
     @property
     def is_connected(self):
@@ -272,6 +270,7 @@ class Set (live.LoggingObject):
     def prev_cue(self):
         """ Jump to the previous cue. """
         self.live.cmd("/live/prev/cue")
+
     def next_cue(self):
         """ Jump to the next cue. """
         self.live.cmd("/live/next/cue")
@@ -663,7 +662,7 @@ class Set (live.LoggingObject):
             if is_group:
                 self.log_info("scan_layout: - is group")
                 group_index = len(self.groups)
-                group = live.Group(self, track_index, group_index, track_name)
+                group = Group(self, track_index, group_index, track_name)
                 current_group = group
                 self.groups.append(group)
 
@@ -674,7 +673,7 @@ class Set (live.LoggingObject):
                 self.tracks.append(group)
 
             else:
-                track = live.Track(self, track_index, track_name, current_group)
+                track = Track(self, track_index, track_name, current_group)
                 if current_group is not None:
                     current_group.tracks.append(track)
                 self.tracks.append(track)
@@ -695,7 +694,7 @@ class Set (live.LoggingObject):
                         while len(track.clips) <= clip_index:
                             track.clips.append(None)
 
-                        track.clips[clip_index] = live.Clip(track, clip_index, length)
+                        track.clips[clip_index] = Clip(track, clip_index, length)
                         track.clips[clip_index].state = state
                         track.clips[clip_index].indent = 3 if track.group else 2
 
@@ -706,7 +705,7 @@ class Set (live.LoggingObject):
                         if current_group:
                             while len(current_group.clips) <= clip_index:
                                 current_group.clips.append(None)
-                            current_group.clips[clip_index] = live.Clip(current_group, clip_index, length)
+                            current_group.clips[clip_index] = Clip(current_group, clip_index, length)
                             current_group.clips[clip_index].state = state
 
                         if not track.clip_init:
@@ -732,7 +731,7 @@ class Set (live.LoggingObject):
                     for i in range(0, len(devices), 2):
                         index = devices[i]
                         name = devices[i + 1]
-                        device = live.Device(track, index, name)
+                        device = Device(track, index, name)
                         track.devices.append(device)
                         parameters = self.get_device_parameters(track.index, device.index)
                         parameters = parameters[2:]
@@ -744,7 +743,7 @@ class Set (live.LoggingObject):
                             name     = parameters[j + 2]
                             minimum  = ranges[j + 1]
                             maximum  = ranges[j + 2]
-                            param = live.Parameter(device, index, name, value)
+                            param = Parameter(device, index, name, value)
                             param.minimum = minimum
                             param.maximum = maximum
                             device.parameters.append(param)
@@ -755,7 +754,7 @@ class Set (live.LoggingObject):
         scene_count = self.num_scenes
         scene_names = self.scene_names
         for index, scene_name in enumerate(scene_names):
-            scene = live.Scene(self, index)
+            scene = Scene(self, index)
             scene.name = scene_name
             self.scenes.append(scene)
         
