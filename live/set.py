@@ -481,7 +481,7 @@ class Set (live.LoggingObject):
 
 	def get_track_send(self, track_index, send_index):
 		""" Return the send level of send send_index """
-		return self.live.query("/live/send", track_index, send_index)[1]
+		return self.live.query("/live/send", track_index, send_index)[2]
 
 	def set_track_send(self, track_index, send_index, value):
 		""" Set send level of send send_index """
