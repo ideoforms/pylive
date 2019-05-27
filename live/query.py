@@ -56,10 +56,9 @@ class Query(LoggingObject):
 		self.osc_server_thread = None
 
 		self.osc_read_event = None
-		self.osc_timeout = 5
+		self.osc_timeout = 3.0
 
 		self.osc_server_events = {}
-		# self.response_address = None
 
 		self.query_address = None
 		self.query_rv = []
@@ -146,6 +145,7 @@ class Query(LoggingObject):
 
 	def handler(self, address, data, types):
 		self.log_debug("OSC input: %s %s" % (address, data))
+
 		#------------------------------------------------------------------------
 		# Execute any callbacks that have been registered for this message
 		#------------------------------------------------------------------------
@@ -176,6 +176,7 @@ class Query(LoggingObject):
 					signature = inspect.signature(self.beat_callback)
 					has_arg = len(signature.parameters) > 0
 				except:
+					# Python 2
 					argspec = inspect.getargspec(self.beat_callback)
 					has_arg = len(argspec.args) > 0 and argspec.args[-1] != "self"
 

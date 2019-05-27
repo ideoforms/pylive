@@ -45,50 +45,15 @@ class Track(LoggingObject):
 			indexes.append(clip.index)
 		return indexes
 
-	def clips_between(self, index_start, index_finish):
-		""" Returns a list of Clip objects between index_start and index_finish """
-		clips = []
-		for n in range(index_start, index_finish):
-			if n in self.clips:
-				clips.append(self.clips[n])
-		return clips
-
-	def play_clip(self, index):
-		""" Plays clip of given index. """
-		clip = self.clips[index]
-		clip.play()
-
-	def play_clip_random(self):
-		""" Plays a random clip. """
-		if len(list(self.clips.keys())) == 0:
-			self.log_warn("no clips found on track, returning")
-			return
-		index = random.choice(list(self.clips.keys()))
-		self.play_clip(index)
-
 	def stop(self):
 		""" Immediately stop track from playing. """
 		self.set.stop_track(self.index)
 
-	def syncopate(self):
-		if self.clip_playing is not None:
-			self.clips[self.clip_playing].syncopate()
-		else:
-			self.log_warn("asked to syncopate but not yet playing!")
-
-	def has_clip(self, index):
-		""" Determine whether this track contains a clip at slot index. """
-		return index in self.clips
-
-	def get_clips(self):
-		return self.clips
-
 	@property
 	def active_clips(self):
-		""" Return a dictionary of all non-empty clipslots: { index : Clip, ... } """
+		""" Return a list of all non-empty clipslots. """
 		active_clips = [n for n in self.clips if n is not None]
 		return active_clips
-	get_active_clips = active_clips
 
 	@property
 	def is_stopped(self):
@@ -117,7 +82,8 @@ class Track(LoggingObject):
 		return None
 
 	def walk(self):
-		""" Move forward or backwards between clips. """
+		""" Move forward or backwards between clips.
+		TODO: Add count param to control forward/backwards/stride. """
 		if not self.playing:
 			if self.clip_init:
 				self.log_info("walking to initial clip %d" % self.clip_init)

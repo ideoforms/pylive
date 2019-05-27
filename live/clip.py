@@ -48,17 +48,6 @@ class Clip(live.LoggingObject):
 		""" Helper method to obtain the Set that this clip resides within. """
 		return self.track.set
 
-	def _syncopate(self):
-		looplen_old = self.looplen
-		if self.looplen == self.length:
-			self.looplen -= 1
-		elif self.looplen == 1:
-			self.looplen += 1
-		else:
-			self.looplen += random.choice([ -1, 1 ])
-		self.log_info("Syncopating loop length from %d to %d (total length %d)" % (looplen_old, self.looplen, self.length))
-		self.set.set_clip_loop_end(self.track.index, self.index, self.looplen)
-
 	def reset(self):
 		if self.looplen != self.length:
 			self.log_info("Resetting loop length to %d" % self.length)
