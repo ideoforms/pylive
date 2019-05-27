@@ -49,10 +49,6 @@ class Group (Track):
 		self.log_info("%d tracks" % len(self.tracks))
 		for track in self.tracks:
 			track.dump()
-
-	def play_clip(self, clip_index):
-		""" Start playing group clip. """
-		self.clips[clip_index].play()
 	
 	@property
 	def is_playing(self):
