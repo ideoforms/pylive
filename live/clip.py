@@ -81,17 +81,15 @@ class Clip(live.LoggingObject):
 		return self.set.get_clip_pitch(self.track.index, self.index)
 	def set_pitch(self, coarse, fine = 0):
 		self.set.set_clip_pitch(self.track.index, self.index, coarse, fine)
-
 	pitch = property(get_pitch, set_pitch, doc = "Pitch (coarse, fine)")
 
 	def get_muted(self):
 		return bool(self.set.get_clip_mute(self.track.index, self.index))
 	def set_muted(self, muted = True):
 		self.set.set_clip_mute(self.track.index, self.index, int(muted))
-
 	muted = property(get_muted, set_muted, doc = "Muted (boolean)")
 
-	def get_next_clip(self, wrap = False, allow_gaps = True):
+	def get_next_clip(self, wrap=False, allow_gaps=True):
 		""" Return the next clip in the track, or None if not found.
 		wrap -- If set, will wrap from (N-1) to 0 and vice versa.
 		allow_gaps -- If unset, requires that clip slots must be contiguous.
@@ -120,7 +118,7 @@ class Clip(live.LoggingObject):
 			return clip_range[next_index]
 		return None
 
-	def get_prev_clip(self, wrap = False, allow_gaps = True):
+	def get_prev_clip(self, wrap=False, allow_gaps=True):
 		""" Return the previous clip in the track, or None if not found.
 		wrap -- If set, will wrap from (N-1) to 0 and vice versa.
 		allow_gaps -- If unset, requires that clip slots must be contiguous.
