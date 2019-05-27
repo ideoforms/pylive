@@ -21,7 +21,7 @@ class Device(live.LoggingObject):
         self.parameters = []
 
     def __str__(self):
-        return "Device (%d,%d): %s)" % (self.track.index, self.index, self.name)
+        return "Device (%d,%d): %s" % (self.track.index, self.index, self.name)
 
     @property
     def set(self):
