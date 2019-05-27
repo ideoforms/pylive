@@ -16,6 +16,12 @@ import time
 import pickle
 import threading
 
+try:
+	import urllib.parse
+except ImportError:
+	# Python 2 support
+	import urllib
+
 from live.object import name_cache
 
 class Set (live.LoggingObject):
@@ -136,7 +142,12 @@ class Set (live.LoggingObject):
 			#------------------------------------------------------------------------
 			if projects:
 				project = projects[-1].strip()
-				project = urllib.parse.unquote(project)
+				try:
+					project = urllib.parse.unquote(project)
+				except AttributeError:
+					# Python 2 support
+					project = urllib.unquote(project)
+
 				project = project.replace("file://", "")
 				#------------------------------------------------------------------------
 				# Create canonical path, flattening (e.g.) double-slashes.
