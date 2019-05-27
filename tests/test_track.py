@@ -60,6 +60,15 @@ def test_track_stop(live_set):
     time.sleep(0.2)
     assert track.is_stopped
 
+def test_track_scan_clip_names(live_set):
+    track = live_set.tracks[1]
+    assert track.clips[0].name is None
+    track.scan_clip_names()
+    assert track.active_clips[0].name == "one"
+    assert track.active_clips[1].name == "two"
+    assert track.active_clips[2].name == "three"
+    assert track.active_clips[3].name == "four"
+
 def test_track_volume(live_set):
     track = live_set.tracks[2]
     assert track.volume == pytest.approx(0.85)
