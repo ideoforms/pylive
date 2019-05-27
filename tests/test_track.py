@@ -1,6 +1,7 @@
 """ Unit tests for PyLive """
 
 import pytest
+import time
 import live
 
 from tests.shared import open_test_set
@@ -16,8 +17,48 @@ def live_set():
 
 def test_track_get_clips(live_set):
     track = live_set.tracks[1]
-    clips = track.clips
-    assert len(clips) == 3
+    assert len(track.clips) == 5
+
+def test_track_get_active_clips(live_set):
+    track = live_set.tracks[1]
+    assert len(track.active_clips) == 4
+
+def test_track_get_devices(live_set):
+    track = live_set.tracks[1]
+    assert len(track.devices) == 1
+
+def test_track_scene_indexes(live_set):
+    track = live_set.tracks[1]
+    scene_indexes = track.scene_indexes
+    assert scene_indexes == [ 0, 1, 2, 4 ]
+
+def test_track_states(live_set):
+    # is_stopped
+    # is_starting
+    # is_playing
+    track = live_set.tracks[1]
+    live_set.quantization = 5
+    assert track.is_stopped
+    live_set.play()
+    time.sleep(0.1)
+    track.clips[0].play()
+    time.sleep(0.2)
+    assert track.is_starting
+    time.sleep(1.0)
+    assert track.is_playing
+    track.stop()
+    time.sleep(1.0)
+    assert track.is_stopped
+
+def test_track_stop(live_set):
+    live_set.quantization = 0
+    track = live_set.tracks[1]
+    track.clips[0].play()
+    time.sleep(0.2)
+    assert track.is_playing
+    track.stop()
+    time.sleep(0.2)
+    assert track.is_stopped
 
 def test_track_volume(live_set):
     track = live_set.tracks[2]

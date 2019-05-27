@@ -38,6 +38,12 @@ class Track(LoggingObject):
 			return "Track (%d): %s" % (self.index, self.name)
 
 	@property
+	def active_clips(self):
+		""" Return a list of all non-empty clipslots. """
+		active_clips = [n for n in self.clips if n is not None]
+		return active_clips
+
+	@property
 	def scene_indexes(self):
 		""" TODO: turn this into something that returns Scene objects (which don't yet exist) """
 		indexes = []
@@ -48,12 +54,6 @@ class Track(LoggingObject):
 	def stop(self):
 		""" Immediately stop track from playing. """
 		self.set.stop_track(self.index)
-
-	@property
-	def active_clips(self):
-		""" Return a list of all non-empty clipslots. """
-		active_clips = [n for n in self.clips if n is not None]
-		return active_clips
 
 	@property
 	def is_stopped(self):

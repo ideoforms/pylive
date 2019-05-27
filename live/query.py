@@ -86,7 +86,7 @@ class Query(LoggingObject):
 
 			live.cmd("/live/tempo", 110.0) """
 		
-		self.log_debug("OSC input: %s %s", msg, args)
+		self.log_debug("OSC output: %s %s", msg, args)
 		try:
 			liblo.send(self.osc_target, msg, *args)
 		except Exception as e:
