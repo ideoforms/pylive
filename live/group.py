@@ -41,10 +41,6 @@ class Group (Track):
         indexes = sorted(indexes)
         return indexes
 
-    def add_track(self, track):
-        """ Append a new track to this group. Should probably only be called by Set.scan(). """
-        self.tracks.append(track)
-
     def dump(self):
         self.log_info("%d tracks" % len(self.tracks))
         for track in self.tracks:
@@ -66,5 +62,3 @@ class Group (Track):
         """ Return a dictionary of all non-empty clipslots: { index : Clip, ... } """
         active_clips = [n for n in self.clips if n is not None]
         return active_clips
-    get_active_clips = active_clips
-

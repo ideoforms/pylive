@@ -676,7 +676,7 @@ class Set (live.LoggingObject):
             else:
                 track = live.Track(self, track_index, track_name, current_group)
                 if current_group is not None:
-                    current_group.add_track(track)
+                    current_group.tracks.append(track)
                 self.tracks.append(track)
 
                 clip_info = track_info[3:]
