@@ -17,6 +17,6 @@ logging.getLogger("live").setLevel(logging.INFO)
 # overview of the set, but takes significantly longer.
 #------------------------------------------------------------------------
 set = Set()
-set.scan(scan_clip_names = False, scan_devices = True)
+set.scan(scan_clip_names=False, scan_devices=True)
 set.dump()
 

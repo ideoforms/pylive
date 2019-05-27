@@ -53,9 +53,9 @@ while True:
     # allow_gaps = True: Jump over gaps between populated clips.
     #------------------------------------------------------------------------
     if random.uniform(0, 1) < 0.5:
-        clip = clip.get_next_clip(wrap = True, allow_gaps = True)
+        clip = clip.get_next_clip(wrap=True, allow_gaps=True)
     else:
-        clip = clip.get_prev_clip(wrap = True, allow_gaps = True)
+        clip = clip.get_prev_clip(wrap=True, allow_gaps=True)
 
     clip.play()
 
