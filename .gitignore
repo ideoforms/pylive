@@ -61,3 +61,4 @@ target/
 *.swp
 dev/
 tests/Tests Project/Backup
+*.pickle
