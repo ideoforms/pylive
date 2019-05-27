@@ -197,7 +197,7 @@ class Set (live.LoggingObject):
     def set_tempo(self, value):
         self.live.cmd("/live/tempo", value)
 
-    tempo = property(get_tempo, set_tempo, doc = "Global tempo")
+    tempo = property(get_tempo, set_tempo, doc="Global tempo")
     
     #------------------------------------------------------------------------
     # /live/quantization
@@ -211,7 +211,7 @@ class Set (live.LoggingObject):
     def set_quantization(self, value):
         self.live.cmd("/live/quantization", value)
 
-    quantization = property(get_quantization, set_quantization, doc = "Global quantization")
+    quantization = property(get_quantization, set_quantization, doc="Global quantization")
     
     #------------------------------------------------------------------------
     # /live/time
@@ -225,7 +225,7 @@ class Set (live.LoggingObject):
         """ Set the current time position in the Arrangement view, in beats. """
         self.live.cmd("/live/time", value)
 
-    time = property(get_time, set_time, doc = "Current time position (beats)")
+    time = property(get_time, set_time, doc="Current time position (beats)")
 
     #------------------------------------------------------------------------
     # /live/overdub
@@ -285,7 +285,7 @@ class Set (live.LoggingObject):
     # /live/play/scene
     #------------------------------------------------------------------------
 
-    def play(self, reset = False):
+    def play(self, reset=False):
         """ Start the song playing. If reset is given, begin at the cue point. """
         if reset:
             # play from start
@@ -513,7 +513,7 @@ class Set (live.LoggingObject):
     def set_master_volume(self, value):
         self.live.cmd("/live/master/volume", value)
 
-    master_volume = property(get_master_volume, set_master_volume, doc = "Master volume (0..1)")
+    master_volume = property(get_master_volume, set_master_volume, doc="Master volume (0..1)")
 
     def get_master_pan(self):
         """ Return the master pan level (-1..1). """
@@ -523,7 +523,7 @@ class Set (live.LoggingObject):
         """ Set the master pan level (-1..1). """
         self.live.cmd("/live/master/pan", value)
 
-    master_pan = property(get_master_pan, set_master_pan, doc = "Master pan level (-1..1)")
+    master_pan = property(get_master_pan, set_master_pan, doc="Master pan level (-1..1)")
 
     #------------------------------------------------------------------------
     # /live/track/info
@@ -611,7 +611,7 @@ class Set (live.LoggingObject):
     # SCAN
     #------------------------------------------------------------------------
 
-    def scan(self, scan_scenes = False, scan_devices = False, scan_clip_names = False):
+    def scan(self, scan_scenes=False, scan_devices=False, scan_clip_names=False):
         """ Interrogates the currently open Ableton Live set for its structure:
         number of tracks, clips, scenes, etc.
 
