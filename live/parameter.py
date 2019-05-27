@@ -27,7 +27,7 @@ class Parameter(live.LoggingObject):
         self.indent = 3
 
     def __str__(self):
-        return "live.parameter(%d,%d,%d): %s (range %.3f-%.3f)" % (self.device.track.index, self.device.index, self.index, self.name, self.minimum, self.maximum)
+        return "Parameter (%d,%d,%d): %s (range %.3f-%.3f)" % (self.device.track.index, self.device.index, self.index, self.name, self.minimum, self.maximum)
 
     def is_integer(self):
         # TODO: fix for enums (such as Quality in Reverb unit). how?
@@ -48,15 +48,13 @@ class Parameter(live.LoggingObject):
 
     def set_value(self, value):
         self.set.set_device_param(self.device.track.index, self.device.index, self.index, value)
-
     def get_value(self):
         return self.device.track.set.get_device_param(self.device.track.index, self.device.index, self.index)
-
     value = property(get_value, set_value)
 
     def randomise(self):
-        """ Set the parameter's value to a uniformly random value within [minimum,
-        maximum] """
+        """ Set the parameter's value to a uniformly random value within
+        [minimum, maximum] """
 
         if self.is_integer():
             value = random.randint(self.minimum, self.maximum)
