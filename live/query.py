@@ -61,6 +61,9 @@ class Query(LoggingObject):
 		self.osc_server_events = {}
 		# self.response_address = None
 
+		self.query_address = None
+		self.query_rv = []
+
 		self.listen()
 
 	def __str__(self):
