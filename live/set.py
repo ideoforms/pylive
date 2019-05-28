@@ -67,6 +67,9 @@ class Set (LoggingObject):
 
         self.reset()
 
+    def __str__(self):
+        return "Set"
+
     def reset(self):
         self.groups = []
         self.tracks = []
