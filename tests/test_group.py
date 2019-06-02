@@ -24,7 +24,7 @@ def test_group_properties(group):
     assert group.is_group
 
 def test_group_get_clips(group):
-    assert len(group.clips) == 5
+    assert len(group.clips) == 256
 
 def test_group_get_active_clips(group):
     assert len(group.active_clips) == 4
