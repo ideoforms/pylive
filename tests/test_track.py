@@ -18,13 +18,24 @@ def track():
     return set.tracks[1]
 
 def test_track_get_clips(track):
-    assert len(track.clips) == 5
+    assert len(track.clips) == 256
+    assert len(list(filter(lambda n: n is not None, track.clips))) == 4
 
 def test_track_get_active_clips(track):
     assert len(track.active_clips) == 4
 
 def test_track_get_devices(track):
     assert len(track.devices) == 1
+
+def test_track_create_clip(track):
+    with pytest.raises(live.LiveInvalidOperationException) as excinfo:
+        track.create_clip(0, 1.0)
+    track.create_clip(5, 1.0)
+
+def test_track_delete_clip(track):
+    with pytest.raises(live.LiveInvalidOperationException) as excinfo:
+        track.delete_clip(6)
+    track.delete_clip(5)
 
 def test_track_scene_indexes(track):
     scene_indexes = track.scene_indexes

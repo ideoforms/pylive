@@ -1,7 +1,7 @@
-from live.constants import *
-from live.object import *
-from live.clip import *
-from live.query import *
+from live.constants import CLIP_STATUS_PLAYING, CLIP_STATUS_STARTING
+from live.object import LoggingObject
+from live.clip import Clip
+from live.exceptions import LiveInvalidOperationException
 
 import re
 import random
@@ -16,7 +16,7 @@ class Track(LoggingObject):
     index -- The numerical index of this Track within the Set
     name -- Human-readable name
     group -- (Optional) reference to containing Group object
-    clips -- Dictionary of contained Clips: { index : Clip }
+    clips -- List of clips. Any empty slots will return None.
     devices -- List of contained Devices
     """
 
@@ -28,7 +28,7 @@ class Track(LoggingObject):
         self.is_group = False
 
         self.clip_init = None
-        self.clips = []
+        self.clips = [ None ] * 256
         self.devices = []
 
     def __str__(self):
@@ -42,6 +42,20 @@ class Track(LoggingObject):
         """ Return a list of all non-empty clipslots. """
         active_clips = [n for n in self.clips if n is not None]
         return active_clips
+
+    def create_clip(self, clip_index, length):
+        if self.clips[clip_index] is not None:
+            raise LiveInvalidOperationException("Clip [%d, %d] already exists" % (self.index, clip_index))
+        else:
+            self.set.create_clip(self.index, clip_index, length)
+            self.clips[clip_index] = Clip(self, clip_index, length)
+
+    def delete_clip(self, clip_index):
+        if self.clips[clip_index] is None:
+            raise LiveInvalidOperationException("Clip [%d, %d] does not exist" % (self.index, clip_index))
+        else:
+            self.set.delete_clip(self.index, clip_index)
+            self.clips[clip_index] = None
 
     @property
     def scene_indexes(self):

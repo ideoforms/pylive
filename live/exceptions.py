@@ -10,3 +10,6 @@ class LiveConnectionError(LiveException):
 class LiveIOError(LiveException):
     """ Error accessing a file descriptor. """
     pass
+
+class LiveInvalidOperationException(LiveException):
+    """ Error performing an operation """

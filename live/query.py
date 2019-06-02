@@ -56,6 +56,7 @@ class Query(LoggingObject):
         self.osc_server = liblo.Server(listen_port)
         self.osc_server.add_method(None, None, self.handler)
         self.osc_server_thread = None
+        self.osc_server.add_bundle_handlers(self.start_bundle_handler, self.end_bundle_handler)
 
         self.osc_read_event = None
         self.osc_timeout = 3.0
@@ -141,6 +142,12 @@ class Query(LoggingObject):
             raise LiveConnectionError("Timed out waiting for response from LiveOSC. Is Live running and LiveOSC installed?")
 
         return self.query_rv
+
+    def start_bundle_handler(self, *args):
+        self.log_info("OSC: start bundle")
+
+    def end_bundle_handler(self, *args):
+        self.log_info("OSC: end bundle")
 
     def handler(self, address, data, types):
         self.log_debug("OSC input: %s %s" % (address, data))

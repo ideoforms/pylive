@@ -561,6 +561,16 @@ class Set (LoggingObject):
         return self.live.query("/live/clip/mute", track_index, clip_index)[2]
 
     #------------------------------------------------------------------------
+    # /live/clip/create
+    # /live/clip/delete
+    #------------------------------------------------------------------------
+
+    def create_clip(self, track_index, clip_index, length):
+        self.live.cmd("/live/clip/create", track_index, clip_index, length)
+    def delete_clip(self, track_index, clip_index):
+        self.live.cmd("/live/clip/delete", track_index, clip_index)
+
+    #------------------------------------------------------------------------
     # /live/clip/add_note
     # /live/clip/note
     #------------------------------------------------------------------------
@@ -690,13 +700,6 @@ class Set (LoggingObject):
                     state = clip_info[n + 1]
                     length = clip_info[n + 2]
                     if state > 0:
-                        #--------------------------------------------------------------------------
-                        # for consistency, we are now using a list (rather than dict) to store
-                        # clips. as clipslots can be empty, populated any leading slots with None.
-                        #--------------------------------------------------------------------------
-                        while len(track.clips) <= clip_index:
-                            track.clips.append(None)
-
                         track.clips[clip_index] = Clip(track, clip_index, length)
                         track.clips[clip_index].state = state
                         track.clips[clip_index].indent = 3 if track.group else 2
