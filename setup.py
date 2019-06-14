@@ -12,7 +12,7 @@ setup(
     author_email = 'dan-pylive@erase.net',
     url = 'https://github.com/ideoforms/pylive',
     packages = ['live'],
-    install_requires = ['pyliblo >= 0.9.1', 'cython'],
+    install_requires = ['cython', 'pyliblo >= 0.9.1'],
     keywords = ('sound', 'music', 'ableton', 'osc'),
     classifiers = [
         'Topic :: Multimedia :: Sound/Audio',
