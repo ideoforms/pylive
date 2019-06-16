@@ -37,6 +37,9 @@ class Track(LoggingObject):
         else:
             return "Track (%d): %s" % (self.index, self.name)
 
+    def __iter__(self):
+        return iter(self.clips)
+
     @property
     def active_clips(self):
         """ Return a list of all non-empty clipslots. """

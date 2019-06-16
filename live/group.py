@@ -31,6 +31,9 @@ class Group (Track):
             string = string + " [tracks %d-%d]" % (self.tracks[0].index, self.tracks[len(self.tracks) - 1].index)
         return string
 
+    def __iter__(self):
+        return iter(self.tracks)
+
     @property
     def scene_indexes(self):
         indexes = {}
