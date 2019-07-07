@@ -694,7 +694,7 @@ class Set (LoggingObject):
                 clip_info = track_info[3:]
 
                 if scan_clip_names:
-                    clip_names = self.get_clip_names
+                    clip_names = self.get_clip_names(track_index, 0, len(clip_info) // 3)
                 for n in range(0, len(clip_info), 3):
                     clip_index = int(n / 3)
                     state = clip_info[n + 1]
@@ -718,16 +718,15 @@ class Set (LoggingObject):
                             track.clip_init = clip_index
     
                         #--------------------------------------------------------------------------
-                        # scan for clip names.
-                        # is nice, but slows things down significantly -- so disable by default.
+                        # Scan for clip names.
+                        # Is nice, but slows things down somewhat -- so disable by default.
                         #--------------------------------------------------------------------------
                         if scan_clip_names:
-                            clip_name = self.get_clip_name(track.index, clip_index)
-                            track.clips[clip_index].name = clip_name
-                            self.log_info("scan_layout:  - Clip %d: %s" % (clip_index, clip_name))
+                            track.clips[clip_index].name = clip_names[clip_index]
+                            self.log_info("scan_layout:  - Clip %d: %s" % (clip_index, track.clips[clip_index].name))
 
                 #--------------------------------------------------------------------------
-                # query each track for its device list, and any parameters belonging to
+                # Query each track for its device list, and any parameters belonging to
                 # each device.
                 #--------------------------------------------------------------------------
                 if scan_devices:
