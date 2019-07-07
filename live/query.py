@@ -144,10 +144,10 @@ class Query(LoggingObject):
         return self.query_rv
 
     def start_bundle_handler(self, *args):
-        self.log_info("OSC: start bundle")
+        self.log_debug("OSC: start bundle")
 
     def end_bundle_handler(self, *args):
-        self.log_info("OSC: end bundle")
+        self.log_debug("OSC: end bundle")
 
     def handler(self, address, data, types):
         self.log_debug("OSC input: %s %s" % (address, data))
