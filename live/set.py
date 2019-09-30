@@ -126,38 +126,28 @@ class Set (LoggingObject):
 
     def _get_last_opened_set_filename(self):
         #------------------------------------------------------------------------
-        # Use Log.txt corresponding to latest Live version. eg:
-        # ~/Library/Preferences/Ableton/Live\ 9.0.6/Log.txt 
+        # Parse Live's CrashRecoveryInfo file to obtain the pathname of
+        # the currently-open set.
         #------------------------------------------------------------------------
         root = os.path.expanduser("~/Library/Preferences/Ableton")
-        logfiles = glob.glob("%s/Live */Log.txt" % root)
-        open_regexp = r"file://.*\.als$"
+        logfiles = glob.glob("%s/Live */CrashRecoveryInfo.cfg" % root)
 
         if logfiles:
             logfiles = list(sorted(logfiles, key=lambda a: os.path.getmtime(a)))
             logfile = logfiles[-1]
-            contents = open(logfile).readlines()
-            projects = [line for line in contents if re.search(open_regexp, line)]
 
-            #------------------------------------------------------------------------
-            # Some log entries mentioning an .als file are referring to the
-            # default live template, meaning we've currently got an empty document.
-            # Check that this is not the case by matching against a file open RE.
-            #------------------------------------------------------------------------
-            if projects:
-                project = projects[-1].strip()
-                try:
-                    project = urllib.parse.unquote(project)
-                except AttributeError:
-                    # Python 2 support
-                    project = urllib.unquote(project)
-
-                project = project.replace("file://", "")
-                #------------------------------------------------------------------------
-                # Create canonical path, flattening (e.g.) double-slashes.
-                #------------------------------------------------------------------------
-                project = os.path.realpath(project)
-                return project
+            with open(logfile, "rb") as fd:
+                data = fd.read()
+                for i in range(len(data) - 4):
+                    #------------------------------------------------------------------------
+                    # Locate the array of bytes which indicates the start of the set
+                    # pathname.
+                    #------------------------------------------------------------------------
+                    if data[i:i+4] == bytes([ 0x44, 0x00, 0x12, 0x00 ]):
+                        data = data[i+5:]
+                        data = data[:data.index(0x00)]
+                        path = "/" + data.decode("utf8")
+                        return path
 
         return None
 
