@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name = 'pylive',
-    version = '0.2.0',
+    version = '0.2.1',
     description = 'Python remote control of Ableton Live',
     long_description = open("README.md", "r").read(),
     long_description_content_type = "text/markdown",
