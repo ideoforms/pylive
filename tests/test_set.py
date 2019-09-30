@@ -177,3 +177,6 @@ def test_set_wait_for_next_beat():
     set.stop()
     assert True
 
+def test_set_currently_open():
+    set = live.Set()
+    assert set.currently_open().endswith("Tests.als")
