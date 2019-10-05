@@ -18,7 +18,7 @@
 - Make playback of Group clips set the correct status of any contained Track/Clip objects
 - Add mutexes for beat/startup events
 
-## [v0.1.1](https://github.com/ideoforms/pylive/releases/tag/v0.1.2) (2015-05-07)
+## [v0.1.2](https://github.com/ideoforms/pylive/releases/tag/v0.1.2) (2015-05-07)
 
 - Switch to using `liblo` for OSC communications
 - Add support for opening Live sets programmatically
