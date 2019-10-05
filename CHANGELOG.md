@@ -1,8 +1,11 @@
-# Change Log
+# Changelog
 
-Recent changes to [PyLive](https://www.github.com/ideoforms/pylive).
+## [v0.2.1](https://github.com/ideoforms/pylive/releases/tag/v0.2.1) (2019-09-30)
 
-## v0.2.0 (2019-05-XX)
+* Fix bug in which `Set.currently_open()` sometimes does not return the correct path
+* Add support in `Track` for creating/deleting clips
+
+## [v0.2.0](https://github.com/ideoforms/pylive/releases/tag/v0.2.0) (2019-05-28)
 
  - Comprehensive tidyup and overhaul, with support for Python 3
  - Add unit test suite with `pytest`
@@ -10,14 +13,24 @@ Recent changes to [PyLive](https://www.github.com/ideoforms/pylive).
  - Add dedicated `LiveException` subclasses
  - `Clip`: Add support for adding and querying notes
 
-## v0.1.4 (2015-09-01)
+## [v0.1.4](https://github.com/ideoforms/pylive/releases/tag/v0.1.4) (2015-09-01)
 
- - Add support for querying clip names
- - Add support for opening Live .als set files, and triggering behaviours on startup with `wait_for_startup`
- - Switch from pyOSC to liblo for improved performance
- - Add `Scene` class
- - `Clip`: Add getters/setters for pitch, muted
+- Make playback of Group clips set the correct status of any contained Track/Clip objects
+- Add mutexes for beat/startup events
 
-## v0.1.1 (2013-10-02)
+## [v0.1.1](https://github.com/ideoforms/pylive/releases/tag/v0.1.2) (2015-05-07)
 
- - Initial public release
+- Switch to using `liblo` for OSC communications
+- Add support for opening Live sets programmatically
+- Add `startup_callback`, triggered on Live startup
+- Add support for getting/setting clip names, mute, quantization
+- Add `Scene` object
+
+
+## [v0.1.1](https://github.com/ideoforms/pylive/releases/tag/v0.1.1) (2013-10-02)
+
+Initial public release.
+
+- Add `Set`, `Track`, `Group`, `Clip`, `Device`
+- Add basic examples
+
