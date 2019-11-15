@@ -336,6 +336,10 @@ class Set (LoggingObject):
     def set_current_scene(self, value):
         """ Set the currently-selected scene index. """
         self.live.cmd("/live/scene", value)
+        
+    def create_scene(self, scene_index):
+        """ Creates a new scene by an index. if -1 the scene is created at the end. """
+        self.live.cmd("/live/scene/create", scene_index)
 
     current_scene = property(get_current_scene, set_current_scene)
 
