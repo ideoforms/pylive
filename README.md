@@ -8,6 +8,8 @@ PyLive is a framework for querying and controlling Ableton Live from a standalon
 
 It can perform most of the operations described in the [LiveOSC OSC API](https://github.com/hanshuebner/LiveOSC/blob/master/OSCAPI.txt).
 
+If you are looking simply to send MIDI messages to Live, this module is not what you want. Instead, try setting up a [virtual MIDI bus](https://help.ableton.com/hc/en-us/articles/209774225-How-to-setup-a-virtual-MIDI-bus) and using [isobar](https://ideoforms.github.io/isobar/) to generate MIDI sequences.
+
 ## Requirements
 
 * [Ableton Live 9+](http://www.ableton.com/live)
