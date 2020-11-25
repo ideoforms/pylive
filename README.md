@@ -28,12 +28,12 @@ Or via git:
 ```
 git clone https://github.com/ideoforms/pylive.git
 cd pylive
-python setup.py install
+python3 setup.py install
 ```
 
 To check that pylive is communicating successfully with Ableton Live, try running one of the [examples](examples), or run the test suite with:
 ```
-python setup.py test
+python3 setup.py test
 ```
 
 ## Usage
