@@ -13,17 +13,18 @@ It can perform most of the operations described in the [LiveOSC OSC API](https:/
 * [Ableton Live 9+](http://www.ableton.com/live)
 * [Python 2.6+](http://www.python.org)
 * [LiveOSC (fork)](https://github.com/ideoforms/LiveOSC): A maintained fork of the [LiveOSC](http://livecontrol.q3f.org/ableton-liveapi/liveosc/) MIDI control script, updated to work with Live 9.6 and 10. Must be installed in Live's `MIDI Remote Scripts` (see [README](https://github.com/ideoforms/LiveOSC))
-* [liblo](http://liblo.sourceforge.net/): Install via Homebrew with `brew install liblo`
+* [liblo](http://liblo.sourceforge.net/): Install via [Homebrew](https://brew.sh/) with `brew install liblo`
 
 ## Installation
 
 From PyPi:
 
 ```
-pip install pylive
+pip3 install Cython # needed for pyliblo
+pip3 install pylive
 ```
 
-Via git:
+Or via git:
 ```
 git clone https://github.com/ideoforms/pylive.git
 cd pylive
