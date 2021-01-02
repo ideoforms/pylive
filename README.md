@@ -15,7 +15,7 @@ If you are looking simply to send MIDI messages to Live, this module is not what
 * [Ableton Live 9+](http://www.ableton.com/live)
 * [Python 2.6+](http://www.python.org)
 * [LiveOSC (fork)](https://github.com/ideoforms/LiveOSC): A maintained fork of the [LiveOSC](http://livecontrol.q3f.org/ableton-liveapi/liveosc/) MIDI control script, updated to work with Live 9.6 and 10. Must be installed in Live's `MIDI Remote Scripts` (see [README](https://github.com/ideoforms/LiveOSC))
-* [liblo](http://liblo.sourceforge.net/): Install via [Homebrew](https://brew.sh/) with `brew install liblo`
+* [liblo](http://liblo.sourceforge.net/): Install via [Homebrew](https://brew.sh/) with `brew install liblo`. See "Alternate installation without liblo" below if you can't install liblo.
 
 ## Installation
 
@@ -36,6 +36,23 @@ python3 setup.py install
 To check that pylive is communicating successfully with Ableton Live, try running one of the [examples](examples), or run the test suite with:
 ```
 python3 setup.py test
+```
+
+### Alternate installation without liblo
+
+In some environments (particularly Windows), liblo can be a pain to get running. In these scenarios, an alternative backend is provided that uses the `pythonosc` backend for OSC communications.
+
+If you want to install without liblo support:
+
+* clone the repo from GitHub
+* remove the `install_requires` line from `setup.py`
+* install pylive with `python3 setup.py install`
+
+You will then need to set an environmental variable specifying the `pythonosc` backend before running scripts using pylive:
+
+```
+export PYLIVE_BACKEND='pythonosc'
+python3 your-script.py
 ```
 
 ## Usage
