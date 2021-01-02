@@ -25,7 +25,7 @@ except ImportError:
     # Python 2 support
     import urllib
 
-class Set (LoggingObject):
+class Set(LoggingObject):
     """ Set represents an entire running Live set. It communicates via a
     live.Query object to the Live instance, which must be running LiveOSC
     as an active control surface.
