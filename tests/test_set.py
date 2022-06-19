@@ -17,19 +17,19 @@ def test_set_connected():
     set = live.Set()
     assert set.is_connected
 
-@pytest.mark.parametrize("tempo", [ 127.5, 80, 200 ])
+@pytest.mark.parametrize("tempo", [127.5, 80, 200])
 def test_set_tempo(tempo):
     set = live.Set()
     set.tempo = tempo
     assert tempo == set.tempo
 
-@pytest.mark.parametrize("quantization", [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 ])
+@pytest.mark.parametrize("quantization", [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13])
 def test_set_quantization(quantization):
     set = live.Set()
     set.quantization = quantization
     assert quantization == set.quantization
 
-@pytest.mark.parametrize("t", [ 0.0, 1.0, 2.5 ])
+@pytest.mark.parametrize("t", [0.0, 1.0, 2.5])
 def test_set_time(t):
     set = live.Set()
     set.time = t
@@ -47,7 +47,7 @@ def test_set_play():
     #------------------------------------------------------------------------
     # Play with reset
     #------------------------------------------------------------------------
-    set.play(reset = True)
+    set.play(reset=True)
     time.sleep(0.1)
     set.stop()
     assert set.time > 0.0
@@ -56,14 +56,14 @@ def test_set_play():
     # Play without reset
     #------------------------------------------------------------------------
     t0 = set.time
-    set.play(reset = False)
+    set.play(reset=False)
     time.sleep(0.1)
     set.stop()
     assert set.time > t0
 
 def test_set_stop():
     set = live.Set()
-    set.play(reset = True)
+    set.play(reset=True)
     time.sleep(0.1)
     set.stop()
     time.sleep(0.1)

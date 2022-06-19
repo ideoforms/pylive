@@ -17,12 +17,6 @@ import time
 import pickle
 import threading
 
-try:
-    import urllib.parse
-except ImportError:
-    # Python 2 support
-    import urllib
-
 class Set(LoggingObject):
     """ Set represents an entire running Live set. It communicates via a
     live.Query object to the Live instance, which must be running LiveOSC
@@ -180,11 +174,11 @@ class Set(LoggingObject):
 
     @name_cache
     def get_tempo(self):
-        return self.live.query("/live/tempo")[0]
+        return self.live.query("/live/song/get/tempo")[0]
 
     @name_cache
     def set_tempo(self, value):
-        self.live.cmd("/live/tempo", value)
+        self.live.cmd("/live/song/set/tempo", value)
 
     tempo = property(get_tempo, set_tempo, doc="Global tempo")
 
@@ -194,11 +188,11 @@ class Set(LoggingObject):
 
     @name_cache
     def get_quantization(self):
-        return self.live.query("/live/quantization")[0]
+        return self.live.query("/live/song/get/clip_trigger_quantization")[0]
 
     @name_cache
     def set_quantization(self, value):
-        self.live.cmd("/live/quantization", value)
+        self.live.cmd("/live/song/set/clip_trigger_quantization", value)
 
     quantization = property(get_quantization, set_quantization, doc="Global quantization")
 
@@ -208,11 +202,11 @@ class Set(LoggingObject):
 
     def get_time(self):
         """ Return the current time position in the Arrangement view, in beats. """
-        return self.live.query("/live/time")[0]
+        return self.live.query("/live/song/get/current_song_time")[0]
 
     def set_time(self, value):
         """ Set the current time position in the Arrangement view, in beats. """
-        self.live.cmd("/live/time", value)
+        self.live.cmd("/live/song/set/current_song_time", value)
 
     time = property(get_time, set_time, doc="Current time position (beats)")
 
@@ -223,11 +217,11 @@ class Set(LoggingObject):
 
     def get_overdub(self):
         """ Return the global overdub setting. """
-        value = self.live.query("/live/state")
+        value = self.live.query("/live/song/get/arrangement_overdub")
         return value[1]
 
     def set_overdub(self, value):
-        self.live.cmd("/live/overdub", value)
+        self.live.cmd("/live/song/set/arrangement_overdub", value)
 
     overdub = property(get_overdub, set_overdub)
 
@@ -279,16 +273,16 @@ class Set(LoggingObject):
         """ Start the song playing. If reset is given, begin at the cue point. """
         if reset:
             # play from start
-            self.live.cmd("/live/play")
+            self.live.cmd("/live/song/start_playing")
         else:
             # continue playing
-            self.live.cmd("/live/play/continue")
+            self.live.cmd("/live/song/continue_playing")
 
     def play_clip(self, track_index, clip_index):
-        self.live.cmd("/live/play/clipslot", track_index, clip_index)
+        self.live.cmd("/live/clip/fire", track_index, clip_index)
 
     def play_scene(self, scene_index):
-        self.live.cmd("/live/play/scene", scene_index)
+        self.live.cmd("/live/scene/fire", scene_index)
 
     #------------------------------------------------------------------------
     # /live/stop
@@ -297,13 +291,13 @@ class Set(LoggingObject):
     #------------------------------------------------------------------------
 
     def stop(self):
-        self.live.cmd("/live/stop")
+        self.live.cmd("/live/song/stop_playing")
 
     def stop_clip(self, track_index, clip_index):
-        self.live.cmd("/live/stop/clip", track_index, clip_index)
+        self.live.cmd("/live/clip/stop", track_index, clip_index)
 
     def stop_track(self, track_index):
-        self.live.cmd("/live/stop/track", track_index)
+        self.live.cmd("/live/track/stop", track_index)
 
     #------------------------------------------------------------------------
     # /live/scenes
@@ -312,7 +306,7 @@ class Set(LoggingObject):
     @property
     def num_scenes(self):
         """ Return the total number of scenes present (even if empty). """
-        return self.live.query("/live/scenes")[0]
+        return self.live.query("/live/song/get/num_scenes")[0]
 
     #------------------------------------------------------------------------
     # /live/tracks
@@ -321,7 +315,7 @@ class Set(LoggingObject):
     @property
     def num_tracks(self):
         """ Return the total number of tracks. """
-        return self.live.query("/live/tracks")[0]
+        return self.live.query("/live/song/get/num_tracks")[0]
 
     #------------------------------------------------------------------------
     # /live/scene
@@ -910,7 +904,7 @@ class Set(LoggingObject):
             #------------------------------------------------------------------------
             # if we can query tempo, the set is running
             #------------------------------------------------------------------------
-            tempo = self.live.query("/live/tempo", timeout=0.1)
+            tempo = self.live.query("/live/song/get/tempo", timeout=0.1)
         except LiveConnectionError:
             #------------------------------------------------------------------------
             # otherwise, wait for set startup
@@ -930,7 +924,7 @@ class Set(LoggingObject):
 
     def _add_handlers(self):
         self.live.add_handler("/live/clip/info", self._update_clip_state)
-        self.live.add_handler("/live/tempo", self._update_tempo)
+        self.live.add_handler("/live/song/get/tempo", self._update_tempo)
 
     def _update_tempo(self, tempo):
         self.set_tempo(tempo, cache_only=True)

@@ -1,8 +1,11 @@
+import time
 import inspect
+import logging
+import argparse
 import threading
 
-from .object import LoggingObject
-from .exceptions import LiveConnectionError
+from live.object import LoggingObject
+from live.exceptions import LiveConnectionError
 
 from pythonosc.dispatcher import Dispatcher
 from pythonosc.osc_server import ThreadingOSCUDPServer
@@ -42,7 +45,7 @@ class Query(LoggingObject):
         live.cmd(path, *args)
     """
 
-    def __init__(self, address=("localhost", 9000), listen_port=9001):
+    def __init__(self, address=("localhost", 11000), listen_port=11001):
         self.beat_callback = None
         self.startup_callback = None
         self.listen_port = listen_port
@@ -54,9 +57,7 @@ class Query(LoggingObject):
         self.handlers = {}
 
         self.osc_address = address
-
-        ip = address[0]
-        self.osc_client = SimpleUDPClient(ip, address[1])
+        self.osc_client = SimpleUDPClient(*address)
 
         self.dispatcher = Dispatcher()
         self.dispatcher.set_default_handler(self.pythonosc_handler_wrapper)
@@ -67,15 +68,12 @@ class Query(LoggingObject):
         # for some reason, maybe most likely something else, there seem to
         # be less frequent apparent "connection" issues with liblo than with
         # pythonosc...
-        self.osc_server = ThreadingOSCUDPServer((ip, listen_port),
-                                                self.dispatcher
-                                                )
+        self.osc_server = ThreadingOSCUDPServer((address[0], listen_port),
+                                                self.dispatcher)
 
         self.osc_server_thread = None
-
         self.osc_read_event = None
         self.osc_timeout = 3.0
-
         self.osc_server_events = {}
 
         self.query_address = None
@@ -193,7 +191,7 @@ class Query(LoggingObject):
             self.osc_server_events[address].set()
             return
 
-        if address == "/live/beat":
+        if address == "/live/song/beat":
             if self.beat_callback is not None:
                 #------------------------------------------------------------------------
                 # Beat callbacks are used if we want to trigger an event on each beat,
@@ -202,20 +200,15 @@ class Query(LoggingObject):
                 # Callbacks may take one argument: the current beat count.
                 # If not specified, call with 0 arguments.
                 #------------------------------------------------------------------------
-                try:
-                    signature = inspect.signature(self.beat_callback)
-                    has_arg = len(signature.parameters) > 0
-                except:
-                    # Python 2
-                    argspec = inspect.getargspec(self.beat_callback)
-                    has_arg = len(argspec.args) > 0 and argspec.args[-1] != "self"
+                signature = inspect.signature(self.beat_callback)
+                has_arg = len(signature.parameters) > 0
 
                 if has_arg:
                     self.beat_callback(data[0])
                 else:
                     self.beat_callback()
 
-        elif address == "/remix/oscserver/startup":
+        elif address == "/live/startup":
             if self.startup_callback is not None:
                 self.startup_callback()
 
@@ -223,3 +216,17 @@ class Query(LoggingObject):
         if not address in self.handlers:
             self.handlers[address] = []
         self.handlers[address].append(handler)
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
+    parser.add_argument("--reload", action="store_true", help="Prompt AbletonOSC to reload code")
+    args = parser.parse_args()
+    logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
+
+    query = Query()
+    if args.reload:
+        query.cmd("/live/reload")
+    print("Awaiting Live events...")
+    while True:
+        time.sleep(0.1)
