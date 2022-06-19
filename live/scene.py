@@ -1,9 +1,4 @@
-from live.constants import *
-
-import live.query
 import live.object
-
-import random
 
 class Scene(live.LoggingObject):
     """ An object representing a single scene in a Live set.
@@ -25,7 +20,7 @@ class Scene(live.LoggingObject):
 
     def __str__(self):
         name = ": %s" % self.name if self.name else ""
-        
+
         return "Scene (%d)%s" % (self.index, name)
 
     def play(self):

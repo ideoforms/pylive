@@ -3,8 +3,6 @@ from live.constants import *
 import live.query
 import live.object
 
-import random
-
 class Clip(live.LoggingObject):
     """ An object representing a single clip in a Live set.
 
@@ -16,7 +14,7 @@ class Clip(live.LoggingObject):
     state -- one of CLIP_STATUS_EMPTY, CLIP_STATUS_STOPPED, CLIP_STATUS_PLAYING
     """
 
-    def __init__(self, track, index, length = 4):
+    def __init__(self, track, index, length=4):
         """ Create a new clip.
         
         Arguments:
@@ -34,13 +32,13 @@ class Clip(live.LoggingObject):
     def __str__(self):
         name = ": %s" % self.name if self.name else ""
         state_symbols = {
-            CLIP_STATUS_EMPTY : " ",
-            CLIP_STATUS_STOPPED : "-",
-            CLIP_STATUS_PLAYING : ">",
-            CLIP_STATUS_STARTING : "*"
+            CLIP_STATUS_EMPTY: " ",
+            CLIP_STATUS_STOPPED: "-",
+            CLIP_STATUS_PLAYING: ">",
+            CLIP_STATUS_STARTING: "*"
         }
         state_symbol = state_symbols[self.state]
-        
+
         return "Clip (%d,%d)%s [%s]" % (self.track.index, self.index, name, state_symbol)
 
     @property
@@ -76,22 +74,26 @@ class Clip(live.LoggingObject):
         self.log_info("stopping")
         self.set.stop_clip(self.track.index, self.index)
         self.track.playing = False
-    
+
     def get_pitch(self):
         return tuple(self.set.get_clip_pitch(self.track.index, self.index))
+
     def set_pitch(self, pitch):
         """ pitch must be a tuple of (coarse, fine), where
         coarse is in range [-48, +48]
         fine   is in range [-50, +50 ]
         """
         self.set.set_clip_pitch(self.track.index, self.index, pitch[0], pitch[1])
-    pitch = property(get_pitch, set_pitch, doc = "Pitch (coarse [-48,48], fine [-50,50])")
+
+    pitch = property(get_pitch, set_pitch, doc="Pitch (coarse [-48,48], fine [-50,50])")
 
     def get_muted(self):
         return bool(self.set.get_clip_mute(self.track.index, self.index))
+
     def set_muted(self, muted=True):
         self.set.set_clip_mute(self.track.index, self.index, int(muted))
-    muted = property(get_muted, set_muted, doc = "Muted (boolean)")
+
+    muted = property(get_muted, set_muted, doc="Muted (boolean)")
 
     def get_next_clip(self, wrap=False, allow_gaps=True):
         """ Return the next clip in the track, or None if not found.
@@ -166,5 +168,5 @@ class Clip(live.LoggingObject):
         Rethink bundle processing so that the event is not triggered
         until end of bundle. """
         notes = self.set.get_clip_notes(self.track.index, self.index)
-        notes = [ notes[n+2:n+7] for n in range(0, len(notes), 7) ]
+        notes = [notes[n + 2:n + 7] for n in range(0, len(notes), 7)]
         return notes

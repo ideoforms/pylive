@@ -12,8 +12,6 @@ from .device import Device
 from .parameter import Parameter
 
 import os
-import re
-import sys
 import glob
 import time
 import pickle
@@ -43,7 +41,7 @@ class Set(LoggingObject):
     overdub -- global overdub setting
     """
 
-    def __init__(self, address = ("localhost", 9000)):
+    def __init__(self):
         self.scanned = False
 
         """ Set caching to True to avoid re-querying properties such as tempo each
@@ -88,7 +86,7 @@ class Set(LoggingObject):
         paths = ["."]
         if "LIVE_ROOT" in os.environ:
             paths.append(os.environ["LIVE_ROOT"])
-        
+
         #------------------------------------------------------------------------
         # Iterate through each path searching for the project file.
         #------------------------------------------------------------------------
@@ -143,8 +141,8 @@ class Set(LoggingObject):
                     # Locate the array of bytes which indicates the start of the set
                     # pathname.
                     #------------------------------------------------------------------------
-                    if data[i:i+4] == bytes([ 0x44, 0x00, 0x12, 0x00 ]):
-                        data = data[i+5:]
+                    if data[i:i + 4] == bytes([0x44, 0x00, 0x12, 0x00]):
+                        data = data[i + 5:]
                         data = data[:data.index(0x00)]
                         path = "/" + data.decode("utf8")
                         return path
@@ -189,7 +187,7 @@ class Set(LoggingObject):
         self.live.cmd("/live/tempo", value)
 
     tempo = property(get_tempo, set_tempo, doc="Global tempo")
-    
+
     #------------------------------------------------------------------------
     # /live/quantization
     #------------------------------------------------------------------------
@@ -203,7 +201,7 @@ class Set(LoggingObject):
         self.live.cmd("/live/quantization", value)
 
     quantization = property(get_quantization, set_quantization, doc="Global quantization")
-    
+
     #------------------------------------------------------------------------
     # /live/time
     #------------------------------------------------------------------------
@@ -336,7 +334,7 @@ class Set(LoggingObject):
     def set_current_scene(self, value):
         """ Set the currently-selected scene index. """
         self.live.cmd("/live/scene", value)
-        
+
     def create_scene(self, scene_index):
         """ Creates a new scene by an index. if -1 the scene is created at the end. """
         self.live.cmd("/live/scene/create", scene_index)
@@ -357,6 +355,7 @@ class Set(LoggingObject):
         scene_count = self.num_scenes
         rv = self.live.query("/live/name/sceneblock", 0, scene_count)
         return rv
+
     get_scene_names = scene_names
 
     def get_scene_name(self, index):
@@ -377,7 +376,7 @@ class Set(LoggingObject):
         within this range. """
         if count is None:
             rv = self.live.query("/live/name/track")
-            rv = [ rv[a] for a in range(1, len(rv), 2) ]
+            rv = [rv[a] for a in range(1, len(rv), 2)]
             return rv
         else:
             # /live/name/trackblock does not return indices, just names.
@@ -413,7 +412,6 @@ class Set(LoggingObject):
     def set_clip_name(self, track, index, name):
         """ Set a given clip's name. """
         self.live.cmd("/live/name/clip", track, index, name)
-
 
     #------------------------------------------------------------------------
     # /live/arm
@@ -551,6 +549,7 @@ class Set(LoggingObject):
 
     def set_clip_mute(self, track_index, clip_index, mute):
         self.live.cmd("/live/clip/mute", track_index, clip_index, mute)
+
     def get_clip_mute(self, track_index, clip_index):
         return self.live.query("/live/clip/mute", track_index, clip_index)[2]
 
@@ -561,6 +560,7 @@ class Set(LoggingObject):
 
     def create_clip(self, track_index, clip_index, length):
         self.live.cmd("/live/clip/create", track_index, clip_index, length)
+
     def delete_clip(self, track_index, clip_index):
         self.live.cmd("/live/clip/delete", track_index, clip_index)
 
@@ -571,6 +571,7 @@ class Set(LoggingObject):
 
     def add_clip_note(self, track_index, clip_index, note, position, duration, velocity, mute):
         self.live.cmd("/live/clip/add_note", track_index, clip_index, note, position, duration, velocity, mute)
+
     def get_clip_notes(self, track_index, clip_index):
         return self.live.query("/live/clip/notes", track_index, clip_index, response_address="/live/clip/note")
 
@@ -598,7 +599,6 @@ class Set(LoggingObject):
     def get_device_parameter_range(self, track_index, device_index, parameter_index):
         return self.live.query("/live/device/range", track_index, device_index, parameter_index)
 
-
     #------------------------------------------------------------------------
     # RETURNS
     #------------------------------------------------------------------------
@@ -610,8 +610,6 @@ class Set(LoggingObject):
     def set_return_volume(self, return_index, volume):
         """ Set the volume of the given return index (0..1). """
         self.live.cmd("/live/return/volume", return_index, volume)
-
-
 
     #------------------------------------------------------------------------
     # SCAN
@@ -658,7 +656,7 @@ class Set(LoggingObject):
             track_index += self.max_tracks_per_query
 
         self.log_info("scan_layout: Got %d track names" % len(track_names))
-        assert(track_count == len(track_names))
+        assert (track_count == len(track_names))
         current_group = None
 
         for track_index in range(track_count):
@@ -710,7 +708,7 @@ class Set(LoggingObject):
 
                         if not track.clip_init:
                             track.clip_init = clip_index
-    
+
                         #--------------------------------------------------------------------------
                         # Scan for clip names.
                         # Is nice, but slows things down somewhat -- so disable by default.
@@ -737,11 +735,11 @@ class Set(LoggingObject):
                         ranges = self.get_device_parameter_ranges(track.index, device.index)
                         ranges = ranges[2:]
                         for j in range(0, len(parameters), 3):
-                            index    = parameters[j + 0]
-                            value    = parameters[j + 1]
-                            name     = parameters[j + 2]
-                            minimum  = ranges[j + 1]
-                            maximum  = ranges[j + 2]
+                            index = parameters[j + 0]
+                            value = parameters[j + 1]
+                            name = parameters[j + 2]
+                            minimum = ranges[j + 1]
+                            maximum = ranges[j + 2]
                             param = Parameter(device, index, name, value)
                             param.minimum = minimum
                             param.maximum = maximum
@@ -756,7 +754,7 @@ class Set(LoggingObject):
             scene = Scene(self, index)
             scene.name = scene_name
             self.scenes.append(scene)
-        
+
         self.scanned = True
 
     def load_or_scan(self, filename="set", **kwargs):
@@ -835,7 +833,7 @@ class Set(LoggingObject):
 
         print("────────────────────────────────────────────────────────")
         print("Live set with %d tracks in %d groups, total %d clips" %
-            (len(self.tracks), len(self.groups), sum(len(track.clips) for track in self.tracks)))
+              (len(self.tracks), len(self.groups), sum(len(track.clips) for track in self.tracks)))
         print("────────────────────────────────────────────────────────")
         current_group = None
 
@@ -876,7 +874,7 @@ class Set(LoggingObject):
 
     def _next_beat_callback(self, beats):
         self._next_beat_event.set()
-    
+
     def wait_for_next_beat(self):
         #------------------------------------------------------------------------
         # we need to use events to prevent lockup -- if we call a callback
@@ -935,8 +933,8 @@ class Set(LoggingObject):
         self.live.add_handler("/live/tempo", self._update_tempo)
 
     def _update_tempo(self, tempo):
-        self.set_tempo(tempo, cache_only = True)
-    
+        self.set_tempo(tempo, cache_only=True)
+
     def _reset_clip_states(self):
         for track in self.tracks:
             for clip in track.active_clips:

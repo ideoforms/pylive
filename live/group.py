@@ -1,7 +1,6 @@
-from live.object import *
 from live.track import *
 
-class Group (Track):
+class Group(Track):
     """ Represents a grouped set of Track objects.
 
     Properties:
@@ -48,7 +47,7 @@ class Group (Track):
         self.log_info("%d tracks" % len(self.tracks))
         for track in self.tracks:
             track.dump()
-    
+
     @property
     def is_playing(self):
         for track in self.tracks:

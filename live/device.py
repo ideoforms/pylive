@@ -1,7 +1,4 @@
-import live.query
 import live.object
-
-import random
 
 class Device(live.LoggingObject):
     """ Represents an instrument or audio effect residing within a Track.

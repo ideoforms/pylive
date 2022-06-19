@@ -10,10 +10,12 @@ from pythonosc.udp_client import SimpleUDPClient
 
 def singleton(cls):
     instances = {}
+
     def getinstance(*args):
         if cls not in instances:
             instances[cls] = cls(*args)
         return instances[cls]
+
     return getinstance
 
 #------------------------------------------------------------------------
@@ -66,8 +68,8 @@ class Query(LoggingObject):
         # be less frequent apparent "connection" issues with liblo than with
         # pythonosc...
         self.osc_server = ThreadingOSCUDPServer((ip, listen_port),
-            self.dispatcher
-        )
+                                                self.dispatcher
+                                                )
 
         self.osc_server_thread = None
 
@@ -96,17 +98,16 @@ class Query(LoggingObject):
         """ Send a Live command without expecting a response back:
 
             live.cmd("/live/tempo", 110.0) """
-        
+
         self.log_debug("OSC output: %s %s", msg, args)
         try:
             self.osc_client.send_message(msg, args)
-    
+
         # TODO TODO need to modify pythonosc client call / handling so it will
         # also raise an error in this case? (probably)
         except Exception as e:
             self.log_debug(f"During cmd({msg}, {args})")
             raise LiveConnectionError("Couldn't send message to Live (is LiveOSC present and activated?)")
-
 
     # TODO maybe compute something like the average latency for a response to
     # arrive for a query (maybe weighted by recency) for debugging whether the
@@ -201,7 +202,6 @@ class Query(LoggingObject):
                 # Callbacks may take one argument: the current beat count.
                 # If not specified, call with 0 arguments.
                 #------------------------------------------------------------------------
-                has_arg = False
                 try:
                     signature = inspect.signature(self.beat_callback)
                     has_arg = len(signature.parameters) > 0
@@ -223,4 +223,3 @@ class Query(LoggingObject):
         if not address in self.handlers:
             self.handlers[address] = []
         self.handlers[address].append(handler)
-
