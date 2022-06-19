@@ -1,55 +1,12 @@
-import time
-import signal
 import inspect
 import threading
-import warnings
-import os
 
 from .object import LoggingObject
 from .exceptions import LiveConnectionError
 
-# TODO could probably refactor this import handling section a bit, to reduce the
-# amount of hardcoded duplicates of the same strings... a loop over packages,
-# in priority order?
-
-# It might be nice to default to 'pythonosc', since then it would allow this
-# package to work right out of the box if installed with the pythonosc option
-# (like `pip install pylive[pythonosc]`), without requiring the user to set this
-# environment variable. Defaulting to 'pythonosc' like this would only affect
-# people using `pylive` with `liblo` if they also happen to have `pythonosc`
-# installed. Since the pythonosc support is still a bit shaky, I don't think
-# it makes sense as a default yet.
-PYLIVE_BACKEND = os.environ.get('PYLIVE_BACKEND', 'liblo')
-
-supported_backends = ['pythonosc', 'liblo']
-if PYLIVE_BACKEND not in supported_backends:
-    warnings.warn('PYLIVE_BACKEND="{}" not in supported backends: {}'.format(
-        PYLIVE_BACKEND, supported_backends
-    ))
-    PYLIVE_BACKEND = 'pythonosc'
-
-OSC_BACKEND = None
-if PYLIVE_BACKEND == 'pythonosc':
-    try:
-        from pythonosc.dispatcher import Dispatcher
-        from pythonosc.osc_server import ThreadingOSCUDPServer
-        from pythonosc.udp_client import SimpleUDPClient
-        OSC_BACKEND = 'pythonosc'
-
-    # TODO test this is always the right error. is it ever ModuleNotFoundError,
-    # and if so, does this match that?
-    except ImportError:
-        warnings.warn('trying PYLIVE_BACKEND=liblo because could not import '
-            'pythonosc'
-        )
-        PYLIVE_BACKEND = 'liblo'
-
-if PYLIVE_BACKEND == 'liblo':
-    import liblo
-    OSC_BACKEND = 'liblo'
-
-assert OSC_BACKEND is not None
-
+from pythonosc.dispatcher import Dispatcher
+from pythonosc.osc_server import ThreadingOSCUDPServer
+from pythonosc.udp_client import SimpleUDPClient
 
 def singleton(cls):
     instances = {}
@@ -95,34 +52,22 @@ class Query(LoggingObject):
         self.handlers = {}
 
         self.osc_address = address
-        if OSC_BACKEND == 'liblo':
-            self.osc_target = liblo.Address(address[0], address[1])
-            self.osc_server = liblo.Server(listen_port)
-            self.osc_server.add_method(None, None, self.handler)
-            self.osc_server.add_bundle_handlers(
-                self.start_bundle_handler, self.end_bundle_handler
-            )
 
-        elif OSC_BACKEND == 'pythonosc':
-            # TODO how to deal w/ bundles? even necessary?
-            # (the handlers seem to be just logging...)
-            # (i think only some of the clip code refers to bundles at all)
+        ip = address[0]
+        self.osc_client = SimpleUDPClient(ip, address[1])
 
-            ip = address[0]
-            self.osc_client = SimpleUDPClient(ip, address[1])
+        self.dispatcher = Dispatcher()
+        self.dispatcher.set_default_handler(self.pythonosc_handler_wrapper)
 
-            self.dispatcher = Dispatcher()
-            self.dispatcher.set_default_handler(self.pythonosc_handler_wrapper)
-
-            # TODO TODO may need to take more care that this, or the other
-            # pythonosc objects, actually close all of their connections before
-            # exit / atexit
-            # for some reason, maybe most likely something else, there seem to
-            # be less frequent apparent "connection" issues with liblo than with
-            # pythonosc...
-            self.osc_server = ThreadingOSCUDPServer((ip, listen_port),
-                self.dispatcher
-            )
+        # TODO TODO may need to take more care that this, or the other
+        # pythonosc objects, actually close all of their connections before
+        # exit / atexit
+        # for some reason, maybe most likely something else, there seem to
+        # be less frequent apparent "connection" issues with liblo than with
+        # pythonosc...
+        self.osc_server = ThreadingOSCUDPServer((ip, listen_port),
+            self.dispatcher
+        )
 
         self.osc_server_thread = None
 
@@ -136,16 +81,8 @@ class Query(LoggingObject):
 
         self.listen()
 
-    def osc_server_read(self):
-        assert OSC_BACKEND == 'liblo'
-        while True:
-            self.osc_server.recv(10)
-
     def listen(self):
-        if OSC_BACKEND == 'liblo':
-            target = self.osc_server_read
-        elif OSC_BACKEND == 'pythonosc':
-            target = self.osc_server.serve_forever
+        target = self.osc_server.serve_forever
 
         self.osc_server_thread = threading.Thread(target=target)
         self.osc_server_thread.setDaemon(True)
@@ -162,16 +99,7 @@ class Query(LoggingObject):
         
         self.log_debug("OSC output: %s %s", msg, args)
         try:
-            if OSC_BACKEND == 'liblo':
-                liblo.send(self.osc_target, msg, *args)
-
-            elif OSC_BACKEND == 'pythonosc':
-                # not clear on whether this unpacking in len(1) case in
-                # necessary, just trying to make it look like examples in docs
-                if len(args) == 1:
-                    args = args[0]
-
-                self.osc_client.send_message(msg, args)
+            self.osc_client.send_message(msg, args)
     
         # TODO TODO need to modify pythonosc client call / handling so it will
         # also raise an error in this case? (probably)
@@ -237,23 +165,11 @@ class Query(LoggingObject):
             # TODO could change error message to not question whether LiveOSC
             # is setup correctly if there has been any successful communication
             # so far...
-            raise LiveConnectionError("Timed out waiting for response from LiveOSC. Is Live running and LiveOSC installed?")
+            raise LiveConnectionError("Timed out waiting for response to query: %s %s. Is Live running and LiveOSC installed?" % (self.query_address, args))
 
         return self.query_rv
 
-    # TODO maybe pythonosc.osc_bundle_builder / osc_message_builder could
-    # replace some of what these are doing (in OSC_BACKEND == 'pythonosc' case)?
-    # (though not clear these are critical...)
-    def start_bundle_handler(self, *args):
-        assert OSC_BACKEND == 'liblo'
-        self.log_debug("OSC: start bundle")
-
-    def end_bundle_handler(self, *args):
-        assert OSC_BACKEND == 'liblo'
-        self.log_debug("OSC: end bundle")
-
     def pythonosc_handler_wrapper(self, address, *args):
-        assert OSC_BACKEND == 'pythonosc'
         # TODO may need to unwrap len(args) == 0 case or something like that
         self.handler(address, args, None)
 
