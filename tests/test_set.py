@@ -1,38 +1,34 @@
-""" Unit tests for PyLive """
+""" Unit tests for pylive """
 
 import pytest
-import live
 import time
 import os
 
-from tests.shared import open_test_set
+import live
+from live import Set
+from . import set
 
 LIVE_TMP_SET_NAME = ".tmp_set"
 LIVE_TMP_SET_PATH = "%s.pickle" % LIVE_TMP_SET_NAME
 
 def setup_module():
-    # open_test_set()
     pass
 
-def test_set_connected():
-    set = live.Set()
+def test_set_connected(set: Set):
     assert set.is_connected
 
 @pytest.mark.parametrize("tempo", [127.5, 80, 200])
-def test_set_tempo(tempo):
-    set = live.Set()
+def test_set_tempo(set: Set, tempo: float):
     set.tempo = tempo
     assert tempo == set.tempo
 
 @pytest.mark.parametrize("quantization", [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13])
-def test_set_quantization(quantization):
-    set = live.Set()
+def test_set_quantization(set: Set, quantization: int):
     set.quantization = quantization
     assert quantization == set.quantization
 
 @pytest.mark.parametrize("t", [0.0, 1.0, 2.5])
-def test_set_time(t):
-    set = live.Set()
+def test_set_time(set: Set, t: float):
     set.time = t
     #------------------------------------------------------------------------
     # Time update does not happen instantly. Wait briefly.
@@ -40,8 +36,7 @@ def test_set_time(t):
     time.sleep(0.1)
     assert t == set.time
 
-def test_set_play():
-    set = live.Set()
+def test_set_play(set: Set):
     set.time = 0.0
     set.quantization = 4
 
@@ -62,8 +57,7 @@ def test_set_play():
     set.stop_playing()
     assert set.current_song_time > t0
 
-def test_set_stop():
-    set = live.Set()
+def test_set_stop(set: Set):
     set.start_playing()
     time.sleep(0.1)
     set.stop_playing()
@@ -72,39 +66,40 @@ def test_set_stop():
     time.sleep(0.1)
     assert set.current_song_time == t0
 
-def test_set_num_tracks():
-    set = live.Set()
+def test_set_num_tracks(set: Set):
+    assert set.num_tracks == 4
+    set.create_midi_track(-1)
+    assert set.num_tracks == 5
+    set.delete_track(4)
     assert set.num_tracks == 4
 
-def test_set_num_scenes():
-    set = live.Set()
+def test_set_num_scenes(set: Set):
+    assert set.num_scenes == 8
+    set.create_scene(-1)
+    assert set.num_scenes == 9
+    set.delete_scene(8)
     assert set.num_scenes == 8
 
 @pytest.mark.skip
-def test_get_master_volume():
-    set = live.Set()
+def test_get_master_volume(set: Set):
     assert set.master_volume == pytest.approx(0.85)
 
 @pytest.mark.skip
-def test_set_master_volume():
-    set = live.Set()
+def test_set_master_volume(set: Set):
     set.master_volume = 0.5
     assert set.master_volume == pytest.approx(0.5)
 
 @pytest.mark.skip
-def test_get_master_pan():
-    set = live.Set()
+def test_get_master_pan(set: Set):
     assert set.master_pan == pytest.approx(0.0)
 
 @pytest.mark.skip
-def test_set_master_pan():
-    set = live.Set()
+def test_set_master_pan(set: Set):
     set.master_pan = 0.1
     assert set.master_pan == pytest.approx(0.1)
 
 @pytest.mark.skip
-def test_set_scan():
-    set = live.Set()
+def test_set_scan(set: Set):
     assert set.scanned == False
     assert len(set.tracks) == 0
     set.scan()
@@ -112,10 +107,9 @@ def test_set_scan():
     assert len(set.tracks) == 6
 
 @pytest.mark.skip
-def test_set_load():
+def test_set_load(set: Set):
     if os.path.exists(LIVE_TMP_SET_PATH):
         os.unlink(LIVE_TMP_SET_PATH)
-    set = live.Set()
 
     #------------------------------------------------------------------------
     # Load nonexistent file
@@ -141,9 +135,7 @@ def test_set_load():
     os.unlink(LIVE_TMP_SET_PATH)
 
 @pytest.mark.skip
-def test_set_save():
-    set = live.Set()
-
+def test_set_save(set: Set):
     set.save(LIVE_TMP_SET_NAME)
     set.load(LIVE_TMP_SET_NAME)
     assert len(set.tracks) == 0
@@ -157,8 +149,7 @@ def test_set_save():
     os.unlink(LIVE_TMP_SET_PATH)
 
 @pytest.mark.skip
-def test_set_get_track_named():
-    set = live.Set()
+def test_set_get_track_named(set: Set):
     set.scan()
 
     track = set.get_track_named("2-Operator")
@@ -168,8 +159,7 @@ def test_set_get_track_named():
     assert track is None
 
 @pytest.mark.skip
-def test_set_get_group_named():
-    set = live.Set()
+def test_set_get_group_named(set: Set):
     set.scan()
 
     group = set.get_group_named("1. Group")
@@ -179,8 +169,7 @@ def test_set_get_group_named():
     assert group is None
 
 @pytest.mark.timeout(1.0)
-def test_set_wait_for_next_beat():
-    set = live.Set()
+def test_set_wait_for_next_beat(set: Set):
     set.tempo = 120.0
     set.start_playing()
     set.wait_for_next_beat()
@@ -188,6 +177,5 @@ def test_set_wait_for_next_beat():
     assert True
 
 @pytest.mark.skip
-def test_set_currently_open():
-    set = live.Set()
+def test_set_currently_open(set: Set):
     assert set.currently_open().endswith("Tests.als")
