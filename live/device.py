@@ -1,6 +1,6 @@
-import live.object
+import logging
 
-class Device(live.LoggingObject):
+class Device:
     """ Represents an instrument or audio effect residing within a Track.
     Contains one one or more Parameters.
 
@@ -16,6 +16,7 @@ class Device(live.LoggingObject):
         self.index = index
         self.name = name
         self.parameters = []
+        self.logger = logging.getLogger(__name__)
 
     def __str__(self):
         return "Device (%d,%d): %s" % (self.track.index, self.index, self.name)

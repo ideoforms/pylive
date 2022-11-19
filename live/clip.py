@@ -1,9 +1,11 @@
-from live.constants import *
+import logging
 
 import live.query
 import live.object
+from live.constants import *
 
-class Clip(live.LoggingObject):
+
+class Clip:
     """ An object representing a single clip in a Live set.
 
     Properties:
@@ -16,11 +18,11 @@ class Clip(live.LoggingObject):
 
     def __init__(self, track, index, length=4):
         """ Create a new clip.
-        
-        Arguments:
-        track -- a Track or Group object
-        index -- index of this clip within the track
-        length -- length of clip, in beats
+
+        Args:
+            track: A Track or Group object
+            index: The index of this clip within the track
+            length: Length of the clip, in beats
         """
         self.track = track
         self.index = index
@@ -28,6 +30,7 @@ class Clip(live.LoggingObject):
         self.looplen = length
         self.state = CLIP_STATUS_STOPPED
         self.name = None
+        self.logger = logging.getLogger(__name__)
 
     def __str__(self):
         name = ": %s" % self.name if self.name else ""
@@ -48,12 +51,12 @@ class Clip(live.LoggingObject):
 
     def reset(self):
         if self.looplen != self.length:
-            self.log_info("Resetting loop length to %d" % self.length)
+            self.logger.info("Resetting loop length to %d" % self.length)
             self.set.set_clip_loop_end(self.track.index, self.index, self.looplen)
 
     def play(self):
         """ Start playing clip. """
-        self.log_info("Playing")
+        self.logger.info("Playing")
         self.set.play_clip(self.track.index, self.index)
         self.track.playing = True
         if type(self.track) is live.Group:
@@ -71,7 +74,7 @@ class Clip(live.LoggingObject):
 
     def stop(self):
         """ Stop playing clip """
-        self.log_info("stopping")
+        self.logger.info("stopping")
         self.set.stop_clip(self.track.index, self.index)
         self.track.playing = False
 
@@ -155,10 +158,13 @@ class Clip(live.LoggingObject):
 
     def add_note(self, note, position, duration, velocity):
         """
-        :param note:      (int)    MIDI note index
-        :param position:  (float)  Position, in beats
-        :param duration:  (float)  Duration, in beats
-        :param velocity:  (int)    MIDI note velocity
+        Add a new note to the clip.
+
+        Args:
+            note: MIDI note index
+            position: Position, in beats
+            duration: Duration, in beats
+            velocity: MIDI note velocity
         """
         self.set.add_clip_note(self.track.index, self.index, note, position, duration, velocity, 0)
 

@@ -1,3 +1,4 @@
+import logging
 from live.track import *
 
 class Group(Track):
@@ -23,6 +24,7 @@ class Group(Track):
         self.group = None
 
         self.tracks = []
+        self.logger = logging.getLogger(__name__)
 
     def __str__(self):
         string = "Group (%d): %s" % (self.group_index, self.name)
@@ -44,7 +46,7 @@ class Group(Track):
         return indexes
 
     def dump(self):
-        self.log_info("%d tracks" % len(self.tracks))
+        self.logger.info("%d tracks" % len(self.tracks))
         for track in self.tracks:
             track.dump()
 

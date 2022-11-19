@@ -2,7 +2,7 @@
 
 from .constants import CLIP_STATUS_STOPPED
 from .exceptions import LiveIOError, LiveConnectionError
-from .object import LoggingObject, name_cache
+from .object import name_cache
 from .query import Query
 from .track import Track
 from .group import Group
@@ -15,9 +15,10 @@ import os
 import glob
 import time
 import pickle
+import logging
 import threading
 
-class Set(LoggingObject):
+class Set:
     """ Set represents an entire running Live set. It communicates via a
     live.Query object to the Live instance, which must be running LiveOSC
     as an active control surface.
@@ -57,6 +58,7 @@ class Set(LoggingObject):
         #--------------------------------------------------------------------------
         self._add_handlers()
 
+        self.logger = logging.getLogger(__name__)
         self.reset()
 
     def __str__(self):
@@ -98,7 +100,7 @@ class Set(LoggingObject):
         current = self.currently_open()
         path = os.path.abspath(path)
         if current and current == path:
-            self.log_info("Project '%s' is already open" % os.path.basename(path))
+            self.logger.info("Project '%s' is already open" % os.path.basename(path))
             return
 
         if not os.path.exists(path):
@@ -496,20 +498,20 @@ class Set(LoggingObject):
     #------------------------------------------------------------------------
 
     def get_master_volume(self):
-        return self.live.query("/live/master/volume")[0]
+        return self.live.query("/live/get/master/volume")[0]
 
     def set_master_volume(self, value):
-        self.live.cmd("/live/master/volume", value)
+        self.live.cmd("/live/set/master/volume", value)
 
     master_volume = property(get_master_volume, set_master_volume, doc="Master volume (0..1)")
 
     def get_master_pan(self):
         """ Return the master pan level (-1..1). """
-        return self.live.query("/live/master/pan")[0]
+        return self.live.query("/live/get/master/pan")[0]
 
     def set_master_pan(self, value):
         """ Set the master pan level (-1..1). """
-        self.live.cmd("/live/master/pan", value)
+        self.live.cmd("/live/set/master/pan", value)
 
     master_pan = property(get_master_pan, set_master_pan, doc="Master pan level (-1..1)")
 
@@ -635,7 +637,7 @@ class Set(LoggingObject):
         if not track_count:
             raise LiveConnectionError("Couldn't connect to Ableton Live! (obj: %s)" % self.live)
 
-        self.log_info("scan_layout: Scanning %d tracks" % track_count)
+        self.logger.info("scan_layout: Scanning %d tracks" % track_count)
 
         #------------------------------------------------------------------------
         # some kind of limit seems to prevent us querying over 535ish track
@@ -645,21 +647,21 @@ class Set(LoggingObject):
         track_names = []
         while track_index < track_count:
             tracks_remaining = self.max_tracks_per_query if track_count > track_index + self.max_tracks_per_query else track_count - track_index
-            self.log_debug("  (querying from %d, count %d)" % (track_index, tracks_remaining))
+            self.logger.debug("  (querying from %d, count %d)" % (track_index, tracks_remaining))
             track_names = track_names + self.get_track_names(track_index, tracks_remaining)
             track_index += self.max_tracks_per_query
 
-        self.log_info("scan_layout: Got %d track names" % len(track_names))
+        self.logger.info("scan_layout: Got %d track names" % len(track_names))
         assert (track_count == len(track_names))
         current_group = None
 
         for track_index in range(track_count):
             track_name = track_names[track_index]
-            self.log_info("scan_layout: Track %d (%s)" % (track_index, track_name))
+            self.logger.info("scan_layout: Track %d (%s)" % (track_index, track_name))
             track_info = self.get_track_info(track_index)
             is_group = track_info[1]
             if is_group:
-                self.log_info("scan_layout: - is group")
+                self.logger.info("scan_layout: - is group")
                 group_index = len(self.groups)
                 group = Group(self, track_index, group_index, track_name)
                 current_group = group
@@ -709,7 +711,7 @@ class Set(LoggingObject):
                         #--------------------------------------------------------------------------
                         if scan_clip_names:
                             track.clips[clip_index].name = clip_names[clip_index]
-                            self.log_info("scan_layout:  - Clip %d: %s" % (clip_index, track.clips[clip_index].name))
+                            self.logger.info("scan_layout:  - Clip %d: %s" % (clip_index, track.clips[clip_index].name))
 
                 #--------------------------------------------------------------------------
                 # Query each track for its device list, and any parameters belonging to
@@ -717,7 +719,7 @@ class Set(LoggingObject):
                 #--------------------------------------------------------------------------
                 if scan_devices:
                     devices = self.get_device_list(track.index)
-                    self.log_info("scan_layout: Devices %s" % devices)
+                    self.logger.info("scan_layout: Devices %s" % devices)
                     devices = devices[1:]
                     for i in range(0, len(devices), 2):
                         index = devices[i]
@@ -759,14 +761,14 @@ class Set(LoggingObject):
                 set_file_mtime = os.path.getmtime(set_file)
                 cache_file_mtime = os.path.getmtime("%s.pickle" % filename)
                 if cache_file_mtime < set_file_mtime:
-                    self.log_info("Set file modified since cache, forcing rescan")
+                    self.logger.info("Set file modified since cache, forcing rescan")
                     raise Exception
             else:
-                self.log_info("Couldn't establish currently open set")
+                self.logger.info("Couldn't establish currently open set")
 
             self.load(filename)
             if len(self.tracks) != self.num_tracks:
-                self.log_info("Loaded %d tracks, but found %d - looks like set has changed" % (len(self.tracks), self.num_tracks))
+                self.logger.info("Loaded %d tracks, but found %d - looks like set has changed" % (len(self.tracks), self.num_tracks))
                 self.reset()
                 raise Exception
         except Exception as e:
@@ -786,7 +788,7 @@ class Set(LoggingObject):
 
         for key, value in list(data.items()):
             setattr(self, key, value)
-        self.log_info("load: Set loaded OK (%d tracks)" % (len(self.tracks)))
+        self.logger.info("load: Set loaded OK (%d tracks)" % (len(self.tracks)))
 
         #------------------------------------------------------------------------
         # After loading, set all active clip states to stopped.
@@ -816,13 +818,13 @@ class Set(LoggingObject):
         #------------------------------------------------------------------------
         self._add_mutexes()
 
-        self.log_info("save: Set saved OK (%s)" % filename)
+        self.logger.info("save: Set saved OK (%s)" % filename)
 
     def dump(self):
         """ Dump the current Set structure to stdout, showing the hierarchy of
         Group, Track, Clip, Device and Parameter objects. """
         if len(self.tracks) == 0:
-            self.log_info("dump: currently empty, performing scan")
+            self.logger.info("dump: currently empty, performing scan")
             self.scan()
 
         print("────────────────────────────────────────────────────────")

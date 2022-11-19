@@ -1,8 +1,7 @@
-import live.object
-
+import logging
 import random
 
-class Parameter(live.LoggingObject):
+class Parameter:
     """ Represents a parameter of a Live device (either an instrument or
     effects unit.
 
@@ -24,6 +23,7 @@ class Parameter(live.LoggingObject):
         self.minimum = 0.0
         self.maximum = 1.0
         self.indent = 3
+        self.logger = logging.getLogger(__name__)
 
     def __str__(self):
         return "Parameter (%d,%d,%d): %s (range %.3f-%.3f)" % (self.device.track.index, self.device.index, self.index, self.name, self.minimum, self.maximum)
@@ -43,7 +43,7 @@ class Parameter(live.LoggingObject):
         return self.device.track
 
     def dump(self):
-        self.log_info()
+        self.logger.info()
 
     def set_value(self, value):
         self.set.set_device_param(self.device.track.index, self.device.index, self.index, value)

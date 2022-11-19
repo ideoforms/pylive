@@ -2,36 +2,6 @@ import logging
 
 logger = logging.getLogger("live")
 
-class LoggingObject:
-    """ Helper superclass for objects which wish to generate debugging output
-    with hierachical indentation.
-
-    Three levels of output are available:
-
-    object.trace()
-    object.warn()
-    object.debug() """
-
-    def __init__(self):
-        self.indent = 0
-        self.log_level = 0
-
-        self.logger = logging.getLogger(__name__)
-        print("created logger: %s" % __name__)
-
-    def log_info(self, msg="", *args):
-        if msg:
-            msg = msg % args
-        logger.info("[%s] %s", self, msg)
-
-    def log_warn(self, msg="", *args):
-        msg = msg % args
-        logger.warn("[%s] %s", self, msg)
-
-    def log_debug(self, msg="", *args):
-        msg = msg % args
-        logger.debug("[%s] %s", self, msg)
-
 def name_cache(fn):
     """ Decorator enabling pairs of set_XX/get_XX methods to cache their
     values, to avoid repeatedly querying the Live set for values which we know

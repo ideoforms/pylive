@@ -1,10 +1,8 @@
-import time
 import inspect
 import logging
 import argparse
 import threading
 
-from live.object import LoggingObject
 from live.exceptions import LiveConnectionError
 
 from pythonosc.dispatcher import Dispatcher
@@ -32,7 +30,7 @@ def cmd(*args, **kwargs):
     Query().cmd(*args, **kwargs)
 
 @singleton
-class Query(LoggingObject):
+class Query:
     """ Object responsible for passing OSC queries to the LiveOSC server,
     parsing and proxying responses.
 
@@ -49,6 +47,7 @@ class Query(LoggingObject):
         self.beat_callback = None
         self.startup_callback = None
         self.listen_port = listen_port
+        self.logger = logging.getLogger(__name__)
 
         #------------------------------------------------------------------------
         # Handler callbacks for particular messages from Live.
@@ -80,7 +79,7 @@ class Query(LoggingObject):
         self.query_rv = []
 
         self.listen()
-
+        
     def listen(self):
         target = self.osc_server.serve_forever
 
@@ -97,14 +96,14 @@ class Query(LoggingObject):
 
             live.cmd("/live/tempo", 110.0) """
 
-        self.log_debug("OSC output: %s %s", msg, args)
+        self.logger.debug("OSC output: %s %s", msg, args)
         try:
             self.osc_client.send_message(msg, args)
 
         # TODO TODO need to modify pythonosc client call / handling so it will
         # also raise an error in this case? (probably)
         except Exception as e:
-            self.log_debug(f"During cmd({msg}, {args})")
+            self.logger.debug(f"During cmd({msg}, {args})")
             raise LiveConnectionError("Couldn't send message to Live (is LiveOSC present and activated?)")
 
     # TODO maybe compute something like the average latency for a response to
@@ -160,7 +159,7 @@ class Query(LoggingObject):
         rv = self.osc_server_events[response_address].wait(timeout)
 
         if not rv:
-            self.log_debug(f"Timeout during query({msg}, {args}, {kwargs})")
+            self.logger.debug(f"Timeout during query({msg}, {args}, {kwargs})")
             # TODO could change error message to not question whether LiveOSC
             # is setup correctly if there has been any successful communication
             # so far...
@@ -173,7 +172,7 @@ class Query(LoggingObject):
         self.handler(address, args, None)
 
     def handler(self, address, data, types):
-        self.log_debug("OSC input: %s %s" % (address, data))
+        self.logger.debug("OSC input: %s %s" % (address, data))
 
         #------------------------------------------------------------------------
         # Execute any callbacks that have been registered for this message
@@ -229,4 +228,5 @@ if __name__ == "__main__":
         query.cmd("/live/reload")
     print("Awaiting Live events...")
     while True:
-        time.sleep(0.1)
+        cmd = input()
+        query.cmd(cmd)

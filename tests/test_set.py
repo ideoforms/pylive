@@ -11,7 +11,8 @@ LIVE_TMP_SET_NAME = ".tmp_set"
 LIVE_TMP_SET_PATH = "%s.pickle" % LIVE_TMP_SET_NAME
 
 def setup_module():
-    open_test_set()
+    # open_test_set()
+    pass
 
 def test_set_connected():
     set = live.Set()

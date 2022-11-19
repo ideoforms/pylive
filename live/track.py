@@ -1,11 +1,11 @@
 from live.constants import CLIP_STATUS_PLAYING, CLIP_STATUS_STARTING
-from live.object import LoggingObject
 from live.clip import Clip
 from live.exceptions import LiveInvalidOperationException
 
 import random
+import logging
 
-class Track(LoggingObject):
+class Track:
     """ Represents a single Track, either audio or MIDI.
     Resides within a Set, and contains one or more Device and Clip objects.
     May be contained within a Group.
@@ -29,6 +29,7 @@ class Track(LoggingObject):
         self.clip_init = None
         self.clips = [None] * 256
         self.devices = []
+        self.logger = logging.getLogger(__name__)
 
     def __str__(self):
         if self.group:
@@ -102,10 +103,10 @@ class Track(LoggingObject):
         TODO: Add count param to control forward/backwards/stride. """
         if not self.playing:
             if self.clip_init:
-                self.log_info("walking to initial clip %d" % self.clip_init)
+                self.logger.info("walking to initial clip %d" % self.clip_init)
                 self.play_clip(self.clip_init)
             else:
-                self.log_warn("no clips found on track %d, returning" % self.index)
+                self.logger.warning("no clips found on track %d, returning" % self.index)
                 return
         else:
             options = []
@@ -116,10 +117,10 @@ class Track(LoggingObject):
 
             if len(options) > 0:
                 index = random.choice(options)
-                self.log_info("walking from clip %d to %d" % (self.clip_playing, index))
+                self.logger.info("walking from clip %d to %d" % (self.clip_playing, index))
                 self.play_clip(index)
             else:
-                self.log_info("walking to random clip")
+                self.logger.info("walking to random clip")
                 self.play_clip_random()
 
     def scan_clip_names(self):
@@ -130,7 +131,7 @@ class Track(LoggingObject):
         for clip in self.active_clips:
             clip_name = self.set.get_clip_name(self.index, clip.index)
             clip.name = clip_name
-            self.log_info("scan_clip_names: (%d, %d) -> %s" % (self.index, clip.index, clip.name))
+            self.logger.info("scan_clip_names: (%d, %d) -> %s" % (self.index, clip.index, clip.name))
 
     #------------------------------------------------------------------------
     # get/set: volume

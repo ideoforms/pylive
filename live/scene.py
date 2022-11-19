@@ -1,6 +1,6 @@
-import live.object
+import logging
 
-class Scene(live.LoggingObject):
+class Scene:
     """ An object representing a single scene in a Live set.
 
     Properties:
@@ -17,6 +17,7 @@ class Scene(live.LoggingObject):
         self.set = set
         self.index = index
         self.name = None
+        self.logger = logging.getLogger(__name__)
 
     def __str__(self):
         name = ": %s" % self.name if self.name else ""
@@ -25,5 +26,5 @@ class Scene(live.LoggingObject):
 
     def play(self):
         """ Start playing scene. """
-        self.log_info("playing")
+        self.logger.info("playing")
         self.set.play_scene(self.index)
