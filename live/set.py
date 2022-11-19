@@ -7,16 +7,17 @@ import pickle
 import logging
 import threading
 import subprocess
+from typing import Optional
 
-from .constants import CLIP_STATUS_STOPPED
-from .exceptions import LiveIOError, LiveConnectionError
+from .clip import Clip
 from .query import Query
 from .track import Track
 from .group import Group
-from .clip import Clip
 from .scene import Scene
 from .device import Device
 from .parameter import Parameter
+from .constants import CLIP_STATUS_STOPPED
+from .exceptions import LiveIOError, LiveConnectionError
 
 def make_getter(class_identifier, prop):
     # TODO: Replacement for name_cache
@@ -134,7 +135,7 @@ class Set:
             self.wait_for_startup()
         return True
 
-    def _get_last_opened_set_filename(self):
+    def _get_last_opened_set_filename(self) -> Optional[str]:
         #------------------------------------------------------------------------
         # Parse Live's CrashRecoveryInfo file to obtain the pathname of
         # the currently-open set.
@@ -161,7 +162,7 @@ class Set:
 
         return None
 
-    def currently_open(self):
+    def currently_open(self) -> Optional[str]:
         """ Retrieve filename of currently-open Ableton Live set
         based on inspecting Live's last Log.txt, or None if Live not open. """
 
@@ -175,11 +176,11 @@ class Set:
             return None
 
     @property
-    def live(self):
+    def live(self) -> Query:
         return Query()
 
     @property
-    def is_connected(self):
+    def is_connected(self) -> bool:
         """ Test whether we can connect to Live """
         try:
             return bool(self.tempo)
@@ -214,16 +215,16 @@ class Set:
     # Start/stop playback
     #--------------------------------------------------------------------------------
 
-    def start_playing(self):
+    def start_playing(self) -> None:
         self.live.cmd("/live/song/start_playing")
 
-    def continue_playing(self):
+    def continue_playing(self) -> None:
         self.live.cmd("/live/song/continue_playing")
 
-    def stop_playing(self):
+    def stop_playing(self) -> None:
         self.live.cmd("/live/song/stop_playing")
 
-    def stop_all_clips(self):
+    def stop_all_clips(self) -> None:
         self.live.cmd("/live/song/stop_all_clips")
 
     is_playing = property(make_getter("song", "is_playing"),
@@ -238,13 +239,13 @@ class Set:
     can_redo = property(make_getter("song", "can_redo"),
                         doc="Whether a redo operation is possible")
 
-    def undo(self):
+    def undo(self) -> None:
         """
         Undo the last operation.
         """
         self.live.cmd("/live/undo")
 
-    def redo(self):
+    def redo(self) -> None:
         """
         Redo the last undone operation.
         """
@@ -257,45 +258,70 @@ class Set:
     num_tracks = property(make_getter("song", "num_tracks"),
                           doc="Number of tracks")
 
-    def create_audio_track(self, track_index: int):
+    def create_audio_track(self, track_index: int) -> None:
         """
         Creates a new audio track by index.
+
+        Args:
+            track_index: The index of the track to create. If -1, creates after the last existing track.
         """
         self.live.cmd("/live/song/create_audio_track", track_index)
 
-    def create_midi_track(self, track_index: int):
+    def create_midi_track(self, track_index: int) -> None:
         """
         Creates a new MIDI track by index.
+
+        Args:
+            track_index: The index of the track to create. If -1, creates after the last existing track.
         """
         self.live.cmd("/live/song/create_midi_track", track_index)
 
-    def duplicate_track(self, track_index: int):
+    def duplicate_track(self, track_index: int) -> None:
         """
         Duplicate a track.
+
+        Args:
+            track_index: The index of the track to delete.
         """
         self.live.cmd("/live/song/duplicate_track", track_index)
 
-    def delete_track(self, track_index: int):
+    def delete_track(self, track_index: int) -> None:
         """
         Delete track by index.
+
+        Args:
+            track_index: The index of the track to delete.
         """
         self.live.cmd("/live/song/delete_track", track_index)
 
-    def delete_return_track(self, track_index: int):
+    def delete_return_track(self, track_index: int) -> None:
         """
         Delete return track by index.
+
+        Args:
+            track_index: The index of the return track to delete.
         """
         self.live.cmd("/live/song/delete_return_track", track_index)
 
-    def get_track_named(self, name):
-        """ Returns the Track with the specified name, or None if not found. """
+    def get_track_named(self, name: str) -> Optional[Track]:
+        """
+        Returns the Track with the specified name, or None if not found.
+
+        Args:
+            name: The name of the track to locate.
+        """
         for track in self.tracks:
             if track.name == name:
                 return track
         return None
 
-    def get_group_named(self, name):
-        """ Returns the Group with the specified name, or None if not found. """
+    def get_group_named(self, name: str) -> Optional[Group]:
+        """
+        Returns the Group with the specified name, or None if not found.
+
+        Args:
+            name: The name of the group to locate.
+        """
         for group in self.groups:
             if group.name == name:
                 return group
@@ -308,15 +334,21 @@ class Set:
     num_scenes = property(make_getter("song", "num_scenes"),
                           doc="Number of scenes")
 
-    def create_scene(self, scene_index: int):
+    def create_scene(self, scene_index: int) -> None:
         """
-        Creates a new scene by an index. If -1, the scene is created at the end.
+        Creates a new scene by an index.
+
+        Args:
+            scene_index: The index of the scene to create. If -1, the scene is created after the last scene.
         """
         self.live.cmd("/live/song/create_scene", scene_index)
 
-    def delete_scene(self, scene_index: int):
+    def delete_scene(self, scene_index: int) -> None:
         """
         Delete the scene at the specified index.
+
+        Args:
+            scene_index: The index of the scene to delete.
         """
         self.live.cmd("/live/song/delete_scene", scene_index)
 
@@ -336,11 +368,15 @@ class Set:
     # TODO: Refactor cues
     #--------------------------------------------------------------------------------
     def prev_cue(self):
-        """ Jump to the previous cue. """
+        """
+        Jump to the previous cue.
+        """
         self.live.cmd("/live/prev/cue")
 
     def next_cue(self):
-        """ Jump to the next cue. """
+        """
+        Jump to the next cue.
+        """
         self.live.cmd("/live/next/cue")
 
     #------------------------------------------------------------------------
