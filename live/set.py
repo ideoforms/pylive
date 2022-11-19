@@ -1,8 +1,15 @@
 # -*- coding: utf-8 -*-
 
+import os
+import glob
+import time
+import pickle
+import logging
+import threading
+import subprocess
+
 from .constants import CLIP_STATUS_STOPPED
 from .exceptions import LiveIOError, LiveConnectionError
-from .object import name_cache
 from .query import Query
 from .track import Track
 from .group import Group
@@ -11,12 +18,18 @@ from .scene import Scene
 from .device import Device
 from .parameter import Parameter
 
-import os
-import glob
-import time
-import pickle
-import logging
-import threading
+def make_getter(class_identifier, prop):
+    # TODO: Replacement for name_cache
+    def fn(self):
+        return self.live.query("/live/%s/get/%s" % (class_identifier, prop))[0]
+
+    return fn
+
+def make_setter(class_identifier, prop):
+    def fn(self, value):
+        self.live.cmd("/live/%s/set/%s" % (class_identifier, prop), value)
+
+    return fn
 
 class Set:
     """
@@ -29,14 +42,12 @@ class Set:
 
     A Set object is initially unpopulated, and must interrogate the Live set
     for its contents by calling the scan() method.
-
-    Properties:
-    tempo -- tempo in BPM
-    time -- time position, in beats
-    overdub -- global overdub setting
     """
 
     def __init__(self):
+        #--------------------------------------------------------------------------
+        # Indicates whether the set has been synchronised with Live
+        #--------------------------------------------------------------------------
         self.scanned = False
 
         #--------------------------------------------------------------------------
@@ -46,21 +57,22 @@ class Set:
         #--------------------------------------------------------------------------
         self.caching = False
 
+        #--------------------------------------------------------------------------
+        # For batch queries, limit the max number of tracks to query.
+        #--------------------------------------------------------------------------
         self.max_tracks_per_query = 256
 
         #--------------------------------------------------------------------------
-        # create mutexes and events for inter-thread handling (to catch on-beat
+        # Create mutexes and events for inter-thread handling (to catch on-beat
         # events, etc)
         #--------------------------------------------------------------------------
         self._add_mutexes()
 
-        #--------------------------------------------------------------------------
-        # add handlers to catch any state changes in the set, so we
-        # remain up-to-date with whether clips are playing, etc...
-        #--------------------------------------------------------------------------
-        self._add_handlers()
-
         self.logger = logging.getLogger(__name__)
+
+        self.groups: list[Group] = []
+        self.tracks: list[Track] = []
+        self.scenes: list[Scene] = []
         self.reset()
 
     def __str__(self):
@@ -71,7 +83,7 @@ class Set:
         self.tracks = []
         self.scenes = []
 
-    def open(self, filename, wait=True):
+    def open(self, filename: str, wait_for_startup: bool = True):
         """
         Open an Ableton project, either by the path to the Project directory or
         to an .als file. Will search in the current directory and the contents of
@@ -90,6 +102,7 @@ class Set:
         #------------------------------------------------------------------------
         # Iterate through each path searching for the project file.
         #------------------------------------------------------------------------
+        path = None
         for root in paths:
             path = os.path.join(root, filename)
             if os.path.exists(path):
@@ -115,10 +128,9 @@ class Set:
         # want (ie, greatest version number.)
         #------------------------------------------------------------------------
         ableton = sorted(glob.glob("/Applications/Ableton*.app"))[-1]
-        cmd = "open -a '%s' '%s'" % (ableton, path)
-        os.system(cmd)
+        subprocess.call(["open", "-a", ableton, path])
 
-        if wait:
+        if wait_for_startup:
             self.wait_for_startup()
         return True
 
@@ -175,89 +187,154 @@ class Set:
             return False
 
     #------------------------------------------------------------------------
-    # /live/tempo
+    # Properties
     #------------------------------------------------------------------------
 
-    @name_cache
-    def get_tempo(self):
-        return self.live.query("/live/song/get/tempo")[0]
+    tempo = property(make_getter("song", "tempo"),
+                     make_setter("song", "tempo"),
+                     doc="Global tempo")
 
-    @name_cache
-    def set_tempo(self, value):
-        self.live.cmd("/live/song/set/tempo", value)
+    metronome = property(make_getter("song", "metronome"),
+                         make_setter("song", "metronome"),
+                         doc="Global metronome")
 
-    tempo = property(get_tempo, set_tempo, doc="Global tempo")
+    clip_trigger_quantization = property(make_getter("song", "clip_trigger_quantization"),
+                                         make_setter("song", "clip_trigger_quantization"),
+                                         doc="Global quantization")
 
-    #------------------------------------------------------------------------
-    # /live/quantization
-    #------------------------------------------------------------------------
+    current_song_time = property(make_getter("song", "current_song_time"),
+                                 make_setter("song", "current_song_time"),
+                                 doc="Current song time (in beats)")
 
-    @name_cache
-    def get_quantization(self):
-        return self.live.query("/live/song/get/clip_trigger_quantization")[0]
+    arrangement_overdub = property(make_getter("song", "arrangement_overdub"),
+                                   make_setter("song", "arrangement_overdub"),
+                                   doc="Arrangement overdub")
 
-    @name_cache
-    def set_quantization(self, value):
-        self.live.cmd("/live/song/set/clip_trigger_quantization", value)
+    #--------------------------------------------------------------------------------
+    # Start/stop playback
+    #--------------------------------------------------------------------------------
 
-    quantization = property(get_quantization, set_quantization, doc="Global quantization")
+    def start_playing(self):
+        self.live.cmd("/live/song/start_playing")
 
-    #------------------------------------------------------------------------
-    # /live/time
-    #------------------------------------------------------------------------
+    def continue_playing(self):
+        self.live.cmd("/live/song/continue_playing")
 
-    def get_time(self):
-        """ Return the current time position in the Arrangement view, in beats. """
-        return self.live.query("/live/song/get/current_song_time")[0]
+    def stop_playing(self):
+        self.live.cmd("/live/song/stop_playing")
 
-    def set_time(self, value):
-        """ Set the current time position in the Arrangement view, in beats. """
-        self.live.cmd("/live/song/set/current_song_time", value)
+    def stop_all_clips(self):
+        self.live.cmd("/live/song/stop_all_clips")
 
-    time = property(get_time, set_time, doc="Current time position (beats)")
+    is_playing = property(make_getter("song", "is_playing"),
+                          doc="Whether the song is playing")
 
-    #------------------------------------------------------------------------
-    # /live/overdub
-    # (uses /live/state to query)
-    #------------------------------------------------------------------------
+    #--------------------------------------------------------------------------------
+    # Undo/redo
+    #--------------------------------------------------------------------------------
 
-    def get_overdub(self):
-        """ Return the global overdub setting. """
-        value = self.live.query("/live/song/get/arrangement_overdub")
-        return value[1]
-
-    def set_overdub(self, value):
-        self.live.cmd("/live/song/set/arrangement_overdub", value)
-
-    overdub = property(get_overdub, set_overdub)
-
-    #------------------------------------------------------------------------
-    # /live/state
-    #------------------------------------------------------------------------
-
-    @property
-    def state(self):
-        """ Return the global state tuple: (tempo, overdub) """
-        return self.live.query("/live/state")
-
-    #------------------------------------------------------------------------
-    # /live/undo
-    # /live/redo
-    #------------------------------------------------------------------------
+    can_undo = property(make_getter("song", "can_undo"),
+                        doc="Whether an undo operation is possible")
+    can_redo = property(make_getter("song", "can_redo"),
+                        doc="Whether a redo operation is possible")
 
     def undo(self):
-        """ Undo the last operation. """
+        """
+        Undo the last operation.
+        """
         self.live.cmd("/live/undo")
 
     def redo(self):
-        """ Redo the last undone operation. """
+        """
+        Redo the last undone operation.
+        """
         self.live.cmd("/live/redo")
 
+    #--------------------------------------------------------------------------------
+    # Tracks
+    #--------------------------------------------------------------------------------
+
+    num_tracks = property(make_getter("song", "num_tracks"),
+                          doc="Number of tracks")
+
+    def create_audio_track(self, track_index: int):
+        """
+        Creates a new audio track by index.
+        """
+        self.live.cmd("/live/song/create_audio_track", track_index)
+
+    def create_midi_track(self, track_index: int):
+        """
+        Creates a new MIDI track by index.
+        """
+        self.live.cmd("/live/song/create_midi_track", track_index)
+
+    def duplicate_track(self, track_index: int):
+        """
+        Duplicate a track.
+        """
+        self.live.cmd("/live/song/duplicate_track", track_index)
+
+    def delete_track(self, track_index: int):
+        """
+        Delete track by index.
+        """
+        self.live.cmd("/live/song/delete_track", track_index)
+
+    def delete_return_track(self, track_index: int):
+        """
+        Delete return track by index.
+        """
+        self.live.cmd("/live/song/delete_return_track", track_index)
+
+    def get_track_named(self, name):
+        """ Returns the Track with the specified name, or None if not found. """
+        for track in self.tracks:
+            if track.name == name:
+                return track
+        return None
+
+    def get_group_named(self, name):
+        """ Returns the Group with the specified name, or None if not found. """
+        for group in self.groups:
+            if group.name == name:
+                return group
+        return None
+
+    #--------------------------------------------------------------------------------
+    # Scenes
+    #--------------------------------------------------------------------------------
+
+    num_scenes = property(make_getter("song", "num_scenes"),
+                          doc="Number of scenes")
+
+    def create_scene(self, scene_index: int):
+        """
+        Creates a new scene by an index. If -1, the scene is created at the end.
+        """
+        self.live.cmd("/live/song/create_scene", scene_index)
+
+    def delete_scene(self, scene_index: int):
+        """
+        Delete the scene at the specified index.
+        """
+        self.live.cmd("/live/song/delete_scene", scene_index)
+
     #------------------------------------------------------------------------
-    # /live/prev/cue
-    # /live/next/cue
+    # TODO: Master volume
     #------------------------------------------------------------------------
 
+    master_volume = property(make_getter("song", "master_volume"),
+                             make_setter("song", "master_volume"),
+                             doc="Master volume (0..1)")
+    master_pan = property(make_getter("song", "master_pan"),
+                          make_setter("song", "master_pan"),
+                          doc="Master pan (-1..1)")
+
+    #--------------------------------------------------------------------------------
+    # Cues
+    # TODO: Refactor cues
+    #--------------------------------------------------------------------------------
     def prev_cue(self):
         """ Jump to the previous cue. """
         self.live.cmd("/live/prev/cue")
@@ -267,356 +344,12 @@ class Set:
         self.live.cmd("/live/next/cue")
 
     #------------------------------------------------------------------------
-    # /live/play
-    # /live/play/continue
-    # /live/play/selection
-    # /live/play/clip
-    # /live/play/clipslot
-    # /live/play/scene
-    #------------------------------------------------------------------------
-
-    def play(self, reset=False):
-        """ Start the song playing. If reset is given, begin at the cue point. """
-        if reset:
-            # play from start
-            self.live.cmd("/live/song/start_playing")
-        else:
-            # continue playing
-            self.live.cmd("/live/song/continue_playing")
-
-    def play_clip(self, track_index, clip_index):
-        self.live.cmd("/live/clip/fire", track_index, clip_index)
-
-    def play_scene(self, scene_index):
-        self.live.cmd("/live/scene/fire", scene_index)
-
-    #------------------------------------------------------------------------
-    # /live/stop
-    # /live/stop/clip
-    # /live/stop/track
-    #------------------------------------------------------------------------
-
-    def stop(self):
-        self.live.cmd("/live/song/stop_playing")
-
-    def stop_clip(self, track_index, clip_index):
-        self.live.cmd("/live/clip/stop", track_index, clip_index)
-
-    def stop_track(self, track_index):
-        self.live.cmd("/live/track/stop", track_index)
-
-    #------------------------------------------------------------------------
-    # /live/scenes
-    #------------------------------------------------------------------------
-
-    @property
-    def num_scenes(self):
-        """ Return the total number of scenes present (even if empty). """
-        return self.live.query("/live/song/get/num_scenes")[0]
-
-    #------------------------------------------------------------------------
-    # /live/tracks
-    #------------------------------------------------------------------------
-
-    @property
-    def num_tracks(self):
-        """ Return the total number of tracks. """
-        return self.live.query("/live/song/get/num_tracks")[0]
-
-    #------------------------------------------------------------------------
-    # /live/scene
-    #------------------------------------------------------------------------
-
-    def get_current_scene(self):
-        """ Return the index of the currently-selected scene index. """
-        return self.live.query("/live/scene")[0]
-
-    def set_current_scene(self, value):
-        """ Set the currently-selected scene index. """
-        self.live.cmd("/live/scene", value)
-
-    def create_scene(self, scene_index):
-        """ Creates a new scene by an index. if -1 the scene is created at the end. """
-        self.live.cmd("/live/scene/create", scene_index)
-
-    current_scene = property(get_current_scene, set_current_scene)
-
-    #------------------------------------------------------------------------
-    # /live/name/scene
-    #------------------------------------------------------------------------
-
-    @property
-    def scene_names(self):
-        """ Return a list of all scene names."""
-        #------------------------------------------------------------------------
-        # /live/name/scene breaks over a certain number of scenes but 
-        # sceneblock seems resilient - so use that instead.
-        #------------------------------------------------------------------------
-        scene_count = self.num_scenes
-        rv = self.live.query("/live/name/sceneblock", 0, scene_count)
-        return rv
-
-    get_scene_names = scene_names
-
-    def get_scene_name(self, index):
-        """ Return the name of the scene given by index. """
-        return self.live.query("/live/name/scene", index)
-
-    def set_scene_name(self, index, name):
-        """ Set the name of a scene. """
-        self.live.cmd("/live/name/scene", index, name)
-
-    #------------------------------------------------------------------------
-    # /live/name/track
-    # /live/name/trackblock
-    #------------------------------------------------------------------------
-
-    def get_track_names(self, offset=None, count=None):
-        """ Return all track names. If offset and count are given, return names
-        within this range. """
-        if count is None:
-            rv = self.live.query("/live/name/track")
-            rv = [rv[a] for a in range(1, len(rv), 2)]
-            return rv
-        else:
-            # /live/name/trackblock does not return indices, just names.
-            rv = self.live.query("/live/name/trackblock", offset, count)
-            return rv
-
-    @property
-    def track_names(self):
-        """ Return a list of all track names. """
-        return self.get_track_names()
-
-    def get_track_name(self, index):
-        """ Return a given track's name. """
-        return self.live.query("/live/name/track", index)
-
-    def set_track_name(self, index, value):
-        """ Set a given track's name. """
-        self.live.cmd("/live/name/track", index, value)
-
-    #------------------------------------------------------------------------
-    # /live/name/clip
-    # /live/name/clipblock
-    #------------------------------------------------------------------------
-
-    def get_clip_names(self, track, offset, count):
-        """ Return a list of a given set of clip names. """
-        return self.live.query("/live/name/clipblock", track, offset, 1, count)
-
-    def get_clip_name(self, track, index):
-        """ Return a specific clip name. """
-        return self.live.query("/live/name/clip", track, index)[2]
-
-    def set_clip_name(self, track, index, name):
-        """ Set a given clip's name. """
-        self.live.cmd("/live/name/clip", track, index, name)
-
-    #------------------------------------------------------------------------
-    # /live/arm
-    #------------------------------------------------------------------------
-
-    def get_track_arm(self, track_index):
-        """ Return the armed status of the given track index. """
-        return self.live.query("/live/arm", track_index)[1]
-
-    def set_track_arm(self, track_index, arm):
-        """ Set the armed status of the given track index. """
-        self.live.cmd("/live/arm", track_index, arm)
-
-    #------------------------------------------------------------------------
-    # /live/mute
-    #------------------------------------------------------------------------
-
-    def get_track_mute(self, track_index):
-        return self.live.query("/live/mute", track_index)[1]
-
-    def set_track_mute(self, track_index, mute):
-        self.live.cmd("/live/mute", track_index, mute)
-
-    #------------------------------------------------------------------------
-    # /live/solo
-    #------------------------------------------------------------------------
-
-    def get_track_solo(self, track_index):
-        return self.live.query("/live/solo", track_index)[1]
-
-    def set_track_solo(self, track_index, solo):
-        self.live.cmd("/live/solo", track_index, solo)
-
-    #------------------------------------------------------------------------
-    # /live/volume
-    #------------------------------------------------------------------------
-
-    def get_track_volume(self, track_index):
-        """ Return the volume of the given track index (0..1). """
-        return self.live.query("/live/volume", track_index)[1]
-
-    def set_track_volume(self, track_index, volume):
-        """ Set the volume of the given track index (0..1). """
-        self.live.cmd("/live/volume", track_index, volume)
-
-    #------------------------------------------------------------------------
-    # /live/pan
-    #------------------------------------------------------------------------
-
-    def get_track_pan(self, track_index):
-        """ Return the pan level of the given track index (-1..1). """
-        return self.live.query("/live/pan", track_index)[1]
-
-    def set_track_pan(self, track_index, pan):
-        """ Set the pan level of the given track index (-1..1). """
-        self.live.cmd("/live/pan", track_index, pan)
-
-    #------------------------------------------------------------------------
-    # /live/pan
-    #------------------------------------------------------------------------
-
-    def get_track_send(self, track_index, send_index):
-        """ Return the send level of send send_index """
-        return self.live.query("/live/send", track_index, send_index)[2]
-
-    def set_track_send(self, track_index, send_index, value):
-        """ Set send level of send send_index """
-        self.live.cmd("/live/send", track_index, send_index, value)
-
-    #------------------------------------------------------------------------
-    # /live/pitch
-    #------------------------------------------------------------------------
-
-    def get_clip_pitch(self, track_index, clip_index):
-        """ Return pitch level of pitch_index for track_index.
-
-        Note that the LiveOSC callback for pitch does not include
-        track/clip numbers, so doesn't need slicing. """
-        return self.live.query("/live/pitch", track_index, clip_index)
-
-    def set_clip_pitch(self, track_index, pitch_index, coarse, fine):
-        """ Set pitch level of pitch_index for track_index. """
-        self.live.cmd("/live/pitch", track_index, pitch_index, coarse, fine)
-
-    #------------------------------------------------------------------------
-    # /live/master/volume
-    # /live/master/pan
-    #------------------------------------------------------------------------
-
-    def get_master_volume(self):
-        return self.live.query("/live/get/master/volume")[0]
-
-    def set_master_volume(self, value):
-        self.live.cmd("/live/set/master/volume", value)
-
-    master_volume = property(get_master_volume, set_master_volume, doc="Master volume (0..1)")
-
-    def get_master_pan(self):
-        """ Return the master pan level (-1..1). """
-        return self.live.query("/live/get/master/pan")[0]
-
-    def set_master_pan(self, value):
-        """ Set the master pan level (-1..1). """
-        self.live.cmd("/live/set/master/pan", value)
-
-    master_pan = property(get_master_pan, set_master_pan, doc="Master pan level (-1..1)")
-
-    #------------------------------------------------------------------------
-    # /live/track/info
-    #------------------------------------------------------------------------
-
-    def get_track_info(self, track_index):
-        """ Return track and clip information for the given track.
-        Return value is a tuple of the form:
-
-        (track_index, foldable, armed, (clip_index, state, length), ... )
-        """
-
-        return self.live.query("/live/track/info", track_index)
-
-    #------------------------------------------------------------------------
-    # /live/clip/info
-    # /live/clip/loopend
-    #------------------------------------------------------------------------
-
-    def get_clip_info(self, track_index, clip_index):
-        return self.live.query("/live/clip/info", track_index, clip_index)
-
-    def set_clip_loop_end(self, track_index, clip_index, loop_end):
-        self.live.cmd("/live/clip/loopend", track_index, clip_index, loop_end)
-
-    #------------------------------------------------------------------------
-    # /live/clip/mute
-    #------------------------------------------------------------------------
-
-    def set_clip_mute(self, track_index, clip_index, mute):
-        self.live.cmd("/live/clip/mute", track_index, clip_index, mute)
-
-    def get_clip_mute(self, track_index, clip_index):
-        return self.live.query("/live/clip/mute", track_index, clip_index)[2]
-
-    #------------------------------------------------------------------------
-    # /live/clip/create
-    # /live/clip/delete
-    #------------------------------------------------------------------------
-
-    def create_clip(self, track_index, clip_index, length):
-        self.live.cmd("/live/clip/create", track_index, clip_index, length)
-
-    def delete_clip(self, track_index, clip_index):
-        self.live.cmd("/live/clip/delete", track_index, clip_index)
-
-    #------------------------------------------------------------------------
-    # /live/clip/add_note
-    # /live/clip/note
-    #------------------------------------------------------------------------
-
-    def add_clip_note(self, track_index, clip_index, note, position, duration, velocity, mute):
-        self.live.cmd("/live/clip/add_note", track_index, clip_index, note, position, duration, velocity, mute)
-
-    def get_clip_notes(self, track_index, clip_index):
-        return self.live.query("/live/clip/notes", track_index, clip_index, response_address="/live/clip/note")
-
-    #------------------------------------------------------------------------
-    # /live/devicelist
-    # /live/device
-    # /live/device/range
-    #------------------------------------------------------------------------
-
-    def get_device_list(self, track_index):
-        return self.live.query("/live/devicelist", track_index)
-
-    def get_device_parameters(self, track_index, device_index):
-        return self.live.query("/live/device", track_index, device_index, response_address="/live/device/allparam")
-
-    def get_device_param(self, track_index, device_index, param_index):
-        return self.live.query("/live/device", track_index, device_index, param_index, response_address="/live/device/param")
-
-    def set_device_param(self, track_index, device_index, param_index, value):
-        self.live.cmd("/live/device", track_index, device_index, param_index, value)
-
-    def get_device_parameter_ranges(self, track_index, device_index):
-        return self.live.query("/live/device/range", track_index, device_index)
-
-    def get_device_parameter_range(self, track_index, device_index, parameter_index):
-        return self.live.query("/live/device/range", track_index, device_index, parameter_index)
-
-    #------------------------------------------------------------------------
-    # RETURNS
-    #------------------------------------------------------------------------
-
-    def get_return_volume(self, return_index):
-        """ Return the volume of the given return indkex (0..1). """
-        return self.live.query("/live/return/volume", return_index)[1]
-
-    def set_return_volume(self, return_index, volume):
-        """ Set the volume of the given return index (0..1). """
-        self.live.cmd("/live/return/volume", return_index, volume)
-
-    #------------------------------------------------------------------------
     # SCAN
     #------------------------------------------------------------------------
 
-    def scan(self, scan_scenes=False, scan_devices=False, scan_clip_names=False):
-        """ Interrogates the currently open Ableton Live set for its structure:
+    def scan(self, scan_scenes: bool = False, scan_devices: bool = False, scan_clip_names: bool = False):
+        """
+        Interrogates the currently open Ableton Live set for its structure:
         number of tracks, clips, scenes, etc.
 
         For speed, certain elements are not scanned by default:
@@ -748,7 +481,6 @@ class Set:
         #--------------------------------------------------------------------------
         # now scan scenes
         #--------------------------------------------------------------------------
-        scene_count = self.num_scenes
         scene_names = self.scene_names
         for index, scene_name in enumerate(scene_names):
             scene = Scene(self, index)
@@ -779,8 +511,10 @@ class Set:
             self.scan(**kwargs)
             self.save(filename)
 
-    def load(self, filename="set"):
-        """ Read a saved Set structure from disk. """
+    def load(self, filename: str = "set"):
+        """
+        Read a saved Set structure from disk.
+        """
         filename = "%s.pickle" % filename
         try:
             data = pickle.load(open(filename, "rb"))
@@ -806,7 +540,7 @@ class Set:
         #------------------------------------------------------------------------
         self._add_mutexes()
 
-    def save(self, filename="set"):
+    def save(self, filename: str = "set"):
         """ Save the current Set structure to disk.
         Use to avoid the lengthy scan() process.
         TODO: Add a __reduce__ function to do this in an idiomatic way. """
@@ -825,8 +559,10 @@ class Set:
         self.logger.info("save: Set saved OK (%s)" % filename)
 
     def dump(self):
-        """ Dump the current Set structure to stdout, showing the hierarchy of
-        Group, Track, Clip, Device and Parameter objects. """
+        """
+        Dump the current Set structure to stdout, showing the hierarchy of
+        Group, Track, Clip, Device and Parameter objects.
+        """
         if len(self.tracks) == 0:
             self.logger.info("dump: currently empty, performing scan")
             self.scan()
@@ -835,13 +571,11 @@ class Set:
         print("Live set with %d tracks in %d groups, total %d clips" %
               (len(self.tracks), len(self.groups), sum(len(track.clips) for track in self.tracks)))
         print("────────────────────────────────────────────────────────")
-        current_group = None
 
         for track in self.tracks:
             if track.is_group:
                 print("────────────────────────────────────────")
                 print(str(track))
-                current_group = track
             else:
                 print(" - %s" % str(track))
                 if track.devices:
@@ -857,20 +591,6 @@ class Set:
 
         for scene in self.scenes:
             print(" - %s" % scene)
-
-    def get_track_named(self, name):
-        """ Returns the Track with the specified name, or None if not found. """
-        for track in self.tracks:
-            if track.name == name:
-                return track
-        return None
-
-    def get_group_named(self, name):
-        """ Returns the Group with the specified name, or None if not found. """
-        for group in self.groups:
-            if group.name == name:
-                return group
-        return None
 
     def _next_beat_callback(self, beats):
         self._next_beat_event.set()
@@ -928,12 +648,9 @@ class Set:
         self._next_beat_event = None
         self._startup_event = None
 
-    def _add_handlers(self):
-        self.live.add_handler("/live/clip/info", self._update_clip_state)
-        self.live.add_handler("/live/song/get/tempo", self._update_tempo)
-
     def _update_tempo(self, tempo):
-        self.set_tempo(tempo, cache_only=True)
+        pass
+        # self.set_tempo(tempo, cache_only=True)
 
     def _reset_clip_states(self):
         for track in self.tracks:

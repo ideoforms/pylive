@@ -44,7 +44,7 @@ class Query:
         live.cmd(path, *args)
     """
 
-    def __init__(self, address=("localhost", 11000), listen_port=11001):
+    def __init__(self, address=("127.0.0.1", 11000), listen_port=11001):
         self.beat_callback = None
         self.startup_callback = None
         self.listen_port = listen_port
@@ -74,7 +74,7 @@ class Query:
         self.query_rv = []
 
         self.listen()
-        
+
     def listen(self):
         target = self.osc_server.serve_forever
 
@@ -93,13 +93,12 @@ class Query:
 
         self.logger.debug("OSC output: %s %s", msg, args)
         try:
-            print("send %s, %s" % (msg, args))
             self.osc_client.send_message(msg, args)
 
         except Exception as e:
             raise LiveConnectionError("Couldn't send message to Live (is LiveOSC present and activated?)")
 
-    def query(self, msg, *args, timeout=None):
+    def query(self, msg: str, *args, timeout: float = None):
         """
         Send a Live command and synchronously wait for its response:
 
