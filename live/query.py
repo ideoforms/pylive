@@ -31,7 +31,8 @@ def cmd(*args, **kwargs):
 
 @singleton
 class Query:
-    """ Object responsible for passing OSC queries to the LiveOSC server,
+    """
+    Object responsible for passing OSC queries to the LiveOSC server,
     parsing and proxying responses.
 
     This object is a singleton, under the assumption that only one Live instance
@@ -59,14 +60,8 @@ class Query:
         self.osc_client = SimpleUDPClient(*address)
 
         self.dispatcher = Dispatcher()
-        self.dispatcher.set_default_handler(self.pythonosc_handler_wrapper)
+        self.dispatcher.set_default_handler(self.osc_handler)
 
-        # TODO TODO may need to take more care that this, or the other
-        # pythonosc objects, actually close all of their connections before
-        # exit / atexit
-        # for some reason, maybe most likely something else, there seem to
-        # be less frequent apparent "connection" issues with liblo than with
-        # pythonosc...
         self.osc_server = ThreadingOSCUDPServer((address[0], listen_port),
                                                 self.dispatcher)
 
@@ -98,77 +93,49 @@ class Query:
 
         self.logger.debug("OSC output: %s %s", msg, args)
         try:
+            print("send %s, %s" % (msg, args))
             self.osc_client.send_message(msg, args)
 
-        # TODO TODO need to modify pythonosc client call / handling so it will
-        # also raise an error in this case? (probably)
         except Exception as e:
-            self.logger.debug(f"During cmd({msg}, {args})")
             raise LiveConnectionError("Couldn't send message to Live (is LiveOSC present and activated?)")
 
-    # TODO maybe compute something like the average latency for a response to
-    # arrive for a query (maybe weighted by recency) for debugging whether the
-    # timeout is reasonable?
-    # TODO + number of commands already processed / sent maybe + maybe log
-    # whether particular commands always fail?
+    def query(self, msg, *args, timeout=None):
+        """
+        Send a Live command and synchronously wait for its response:
 
-    def query(self, msg, *args, **kwargs):
-        """ Send a Live command and synchronously wait for its response:
+        return live.query("/live/tempo")
 
-            return live.query("/live/tempo")
-
-        Returns a list of values. """
-
-        #------------------------------------------------------------------------
-        # Use **kwargs because we want to be able to specify an optional kw
-        # arg after variable-length args -- 
-        # eg live.query("/set/freq", 440, 1.0, response_address = "/verify/freq")
-        #
-        # http://stackoverflow.com/questions/5940180/python-default-keyword-arguments-after-variable-length-positional-arguments
-        #------------------------------------------------------------------------
-
-        #------------------------------------------------------------------------
-        # Some calls produce responses at different addresses
-        # (eg /live/device -> /live/deviceall). Specify a response_address to
-        # take account of this.
-        #------------------------------------------------------------------------
-        response_address = kwargs.get("response_address", None)
-        if response_address:
-            response_address = response_address
-        else:
-            response_address = msg
+        Returns a list of values.
+        """
 
         #------------------------------------------------------------------------
         # Create an Event to block the thread until this response has been
         # triggered.
         #------------------------------------------------------------------------
-        self.osc_server_events[response_address] = threading.Event()
+        self.osc_server_events[msg] = threading.Event()
 
         #------------------------------------------------------------------------
         # query_rv will be populated by the callback, storing the return value
         # of the OSC query.
         #------------------------------------------------------------------------
-        self.query_address = response_address
+        self.query_address = msg
         self.query_rv = []
         self.cmd(msg, *args)
 
         #------------------------------------------------------------------------
         # Wait for a response. 
         #------------------------------------------------------------------------
-        timeout = kwargs.get("timeout", self.osc_timeout)
-        rv = self.osc_server_events[response_address].wait(timeout)
+        if timeout is None:
+            timeout = self.osc_timeout
+        rv = self.osc_server_events[msg].wait(timeout)
 
         if not rv:
-            self.logger.debug(f"Timeout during query({msg}, {args}, {kwargs})")
-            # TODO could change error message to not question whether LiveOSC
-            # is setup correctly if there has been any successful communication
-            # so far...
+            self.logger.debug("Timeout during query ({msg}, {args}, {kwargs})")
             raise LiveConnectionError("Timed out waiting for response to query: %s %s. Is Live running and LiveOSC installed?" % (self.query_address, args))
 
         return self.query_rv
 
-    def pythonosc_handler_wrapper(self, address, *args):
-        # TODO may need to unwrap len(args) == 0 case or something like that
+    def osc_handler(self, address, *args):
         self.handler(address, args, None)
 
     def handler(self, address, data, types):

@@ -19,9 +19,9 @@ import logging
 import threading
 
 class Set:
-    """ Set represents an entire running Live set. It communicates via a
-    live.Query object to the Live instance, which must be running LiveOSC
-    as an active control surface.
+    """
+    Set represents an entire Live set. It communicates via OSC to Live,
+    which must be running AbletonOSC as an active control surface.
 
     A Set contains a number of Track objects, which may optionally have a
     parent Group. Each Track object contains one or more Clip objects, and
@@ -39,9 +39,11 @@ class Set:
     def __init__(self):
         self.scanned = False
 
-        """ Set caching to True to avoid re-querying properties such as tempo each
-        time they are requested. Increases efficiency in cases where no other
-        processes are going to modify Live's state. """
+        #--------------------------------------------------------------------------
+        # Set caching to True to avoid re-querying properties such as tempo each
+        # time they are requested. Increases efficiency in cases where no other
+        # processes are going to modify Live's state.
+        #--------------------------------------------------------------------------
         self.caching = False
 
         self.max_tracks_per_query = 256
@@ -70,14 +72,16 @@ class Set:
         self.scenes = []
 
     def open(self, filename, wait=True):
-        """ Open an Ableton project, either by the path to the Project directory or
+        """
+        Open an Ableton project, either by the path to the Project directory or
         to an .als file. Will search in the current directory and the contents of
         the LIVE_ROOT environmental variable.
 
         Will only work with OS X right now as it presupposes an /Applications/*.app
         format for the Live app.
 
-        wait = True: block until the set is loaded (waits for a LiveOSC trigger) """
+        wait = True: block until the set is loaded (waits for a LiveOSC trigger)
+        """
 
         paths = ["."]
         if "LIVE_ROOT" in os.environ:

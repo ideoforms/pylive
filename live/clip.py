@@ -4,7 +4,6 @@ import live.query
 import live.object
 from live.constants import *
 
-
 class Clip:
     """ An object representing a single clip in a Live set.
 

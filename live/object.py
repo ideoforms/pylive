@@ -3,7 +3,8 @@ import logging
 logger = logging.getLogger("live")
 
 def name_cache(fn):
-    """ Decorator enabling pairs of set_XX/get_XX methods to cache their
+    """
+    Decorator enabling pairs of set_XX/get_XX methods to cache their
     values, to avoid repeatedly querying the Live set for values which we know
     haven't changed.
 
