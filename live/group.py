@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 import logging
-from live.track import *
+
+from live.track import Track
 
 class Group(Track):
     """ Represents a grouped set of Track objects.
@@ -11,8 +14,8 @@ class Group(Track):
     tracks -- List of Track objects contained within this group
     """
 
-    def __init__(self, set, track_index, group_index, name):
-        Track.__init__(self, set, track_index, name)
+    def __init__(self, set: "Set", track_index: int, group_index: int, name: str, group: Group):
+        Track.__init__(self, set, track_index, name, group)
 
         self.track_index = track_index
         self.group_index = group_index

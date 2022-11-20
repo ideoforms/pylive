@@ -5,30 +5,25 @@ import live.object
 from live.constants import *
 
 class Clip:
-    """ An object representing a single clip in a Live set.
-
-    Properties:
-    track -- Track object this clip resides within.
-    index -- index of this clip
-    length -- length of cip, in beats
-    name -- human-readable name
-    state -- one of CLIP_STATUS_EMPTY, CLIP_STATUS_STOPPED, CLIP_STATUS_PLAYING
+    """
+    An object representing a single clip in a Live set.
     """
 
-    def __init__(self, track, index, length=4):
+    def __init__(self, track, index: int, name: str, length: float = 4):
         """ Create a new clip.
 
         Args:
             track: A Track or Group object
             index: The index of this clip within the track
+            name: The human-readable name of the clip
             length: Length of the clip, in beats
         """
         self.track = track
         self.index = index
+        self.name = name
         self.length = length
         self.looplen = length
         self.state = CLIP_STATUS_STOPPED
-        self.name = None
         self.logger = logging.getLogger(__name__)
 
     def __str__(self):

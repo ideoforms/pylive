@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from live.constants import CLIP_STATUS_PLAYING, CLIP_STATUS_STARTING
 from live.clip import Clip
 from live.exceptions import LiveInvalidOperationException
@@ -6,26 +8,26 @@ import random
 import logging
 
 class Track:
-    """ Represents a single Track, either audio or MIDI.
+    """
+    Represents a single Track, either audio or MIDI.
     Resides within a Set, and contains one or more Device and Clip objects.
     May be contained within a Group.
-
-    Properties:
-    set -- The containing Set object
-    index -- The numerical index of this Track within the Set
-    name -- Human-readable name
-    group -- (Optional) reference to containing Group object
-    clips -- List of clips. Any empty slots will return None.
-    devices -- List of contained Devices
     """
 
-    def __init__(self, set, index, name, group=None):
+    def __init__(self, set: "Set", index: int, name: str, group: "Group" = None):
+        """
+        Args:
+            set: The containing Set object
+            index: The numerical index of this Track within the Set
+            name: Human-readable name
+            group: (Optional) reference to containing Group object
+        """
         self.set = set
         self.index = index
         self.name = name
         self.group = group
-        self.is_group = False
 
+        self.is_group = False
         self.clip_init = None
         self.clips = [None] * 256
         self.devices = []
@@ -42,11 +44,13 @@ class Track:
 
     @property
     def active_clips(self):
-        """ Return a list of all non-empty clipslots. """
+        """
+        Return a list of all non-empty clipslots.
+        """
         active_clips = [n for n in self.clips if n is not None]
         return active_clips
 
-    def create_clip(self, clip_index, length):
+    def create_clip(self, clip_index: int, length: float):
         if self.clips[clip_index] is not None:
             raise LiveInvalidOperationException("Clip [%d, %d] already exists" % (self.index, clip_index))
         else:
