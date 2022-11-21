@@ -2,20 +2,19 @@ import logging
 import random
 
 class Parameter:
-    """ Represents a parameter of a Live device (either an instrument or
-    effects unit.
-
-    Properties:
-    device -- the Device object that this Parameter belongs to
-    index -- numerical index
-    name -- name, as specified by the device 
-    value -- current value, within a parameter-specific range
-
-    minimum -- minimum value (float or int)
-    maximum -- maximum value (float or int)
+    """
+    Represents a parameter of a Live device (either an instrument or
+    effects unit.)
     """
 
     def __init__(self, device, index, name, value):
+        """
+        Args:
+            device: the Device object that this Parameter belongs to
+            index: numerical index
+            name: name, as specified by the device
+            value: current value, within a parameter-specific range
+        """
         self.device = device
         self.index = index
         self.name = name
@@ -52,8 +51,10 @@ class Parameter:
     value = property(get_value, set_value)
 
     def randomise(self):
-        """ Set the parameter's value to a uniformly random value within
-        [minimum, maximum] """
+        """
+        Set the parameter's value to a uniformly random value within
+        [minimum, maximum]
+        """
 
         if self.is_integer():
             value = random.randint(self.minimum, self.maximum)

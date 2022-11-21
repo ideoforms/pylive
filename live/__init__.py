@@ -25,18 +25,11 @@ clip.play()
 """
 
 __author__ = "Daniel Jones <http://www.erase.net/>"
-__all__ = [ "Query", "Set", "Track", "Group", "Clip", "Device", "Parameter", "Scene" ]
-
-debug = False
+__all__ = ["Query", "Set", "Track", "Group", "Clip", "Device", "Parameter", "Scene"]
 
 from .object import *
 from .constants import *
-from .set import *
+from .classes import *
 from .query import *
-from .track import *
-from .group import *
-from .clip import *
-from .scene import *
-from .device import *
-from .parameter import *
+
 from .exceptions import *

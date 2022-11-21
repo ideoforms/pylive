@@ -11,12 +11,12 @@ import subprocess
 from typing import Optional
 
 from .clip import Clip
-from .query import Query
 from .track import Track
 from .group import Group
 from .scene import Scene
-from .constants import CLIP_STATUS_STOPPED
-from .exceptions import LiveIOError, LiveConnectionError
+from ..query import Query
+from ..constants import CLIP_STATUS_STOPPED
+from ..exceptions import LiveIOError, LiveConnectionError
 
 def make_getter(class_identifier, prop):
     # TODO: Replacement for name_cache

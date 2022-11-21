@@ -6,7 +6,7 @@
 #------------------------------------------------------------------------
 import pytest
 
-from live.set import Set
+from live import Set
 
 @pytest.fixture
 def set() -> Set:

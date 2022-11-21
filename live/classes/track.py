@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from live.constants import CLIP_STATUS_PLAYING, CLIP_STATUS_STARTING
-from live.exceptions import LiveInvalidOperationException
-from live.clip import Clip
+from ..constants import CLIP_STATUS_PLAYING, CLIP_STATUS_STARTING
+from ..exceptions import LiveInvalidOperationException
+from .clip import Clip
 
 import logging
 
@@ -69,6 +69,17 @@ class Track:
         """
         self.live.cmd("/live/track/stop_all_clips", (self.index,))
 
+    #------------------------------------------------------------------------
+    # Query devices
+    #------------------------------------------------------------------------
+    def get_device_named(self, name: str):
+        """
+        Return the first device with a given name.
+        """
+        for device in self.devices:
+            if device.name == name:
+                return device
+
     @property
     def is_stopped(self):
         for clip in self.active_clips:
@@ -96,12 +107,3 @@ class Track:
             if clip.state == CLIP_STATUS_PLAYING:
                 return clip
         return None
-
-    #------------------------------------------------------------------------
-    # query devices
-    #------------------------------------------------------------------------
-    def get_device_named(self, name):
-        """ Return the first device with a given name. """
-        for device in self.devices:
-            if device.name == name:
-                return device

@@ -13,7 +13,7 @@ def setup_module():
 @pytest.fixture(scope="module")
 def track():
     set = live.Set()
-    set.scan(scan_devices = True)
+    set.scan(scan_devices=True)
     set.tracks[1].stop()
     time.sleep(0.1)
     return set.tracks[1]
@@ -40,7 +40,7 @@ def test_track_delete_clip(track):
 
 def test_track_scene_indexes(track):
     scene_indexes = track.scene_indexes
-    assert scene_indexes == [ 0, 1, 2, 4 ]
+    assert scene_indexes == [0, 1, 2, 4]
 
 def test_track_states(track):
     # is_stopped
