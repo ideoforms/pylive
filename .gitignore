@@ -63,3 +63,4 @@ dev/
 tests/Tests Project/Backup
 *.pickle
 .idea
+.vscode
