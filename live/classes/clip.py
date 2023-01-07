@@ -3,6 +3,7 @@ import logging
 import live.query
 import live.object
 from live.constants import *
+from live.query import Query
 
 class Clip:
     """
@@ -24,6 +25,7 @@ class Clip:
         self.length = length
         self.state = CLIP_STATUS_STOPPED
         self.logger = logging.getLogger(__name__)
+        self.live = Query()
 
     def __str__(self):
         name = ": %s" % self.name if self.name else ""

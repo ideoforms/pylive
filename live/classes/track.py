@@ -2,9 +2,23 @@ from __future__ import annotations
 
 from ..constants import CLIP_STATUS_PLAYING, CLIP_STATUS_STARTING
 from ..exceptions import LiveInvalidOperationException
+from ..query import Query
 from .clip import Clip
 
 import logging
+
+def make_getter(class_identifier, prop):
+    # TODO: Replacement for name_cache
+    def fn(self):
+        return self.live.query("/live/%s/get/%s" % (class_identifier, prop), (self.index,))[1]
+
+    return fn
+
+def make_setter(class_identifier, prop):
+    def fn(self, value):
+        self.live.cmd("/live/%s/set/%s" % (class_identifier, prop), (self.index, value))
+
+    return fn
 
 class Track:
     """
@@ -31,6 +45,7 @@ class Track:
         self.clips = [None] * 256
         self.devices = []
         self.logger = logging.getLogger(__name__)
+        self.live = Query()
 
     def __str__(self):
         if self.group:
@@ -53,20 +68,21 @@ class Track:
         if self.clips[clip_index] is not None:
             raise LiveInvalidOperationException("Clip [%d, %d] already exists" % (self.index, clip_index))
         else:
-            self.set.create_clip(self.index, clip_index, length)
+            self.live.cmd("/live/clip_slot/create_clip", (self.index, clip_index, length))
             self.clips[clip_index] = Clip(self, clip_index, length)
 
     def delete_clip(self, clip_index):
         if self.clips[clip_index] is None:
             raise LiveInvalidOperationException("Clip [%d, %d] does not exist" % (self.index, clip_index))
         else:
-            self.set.delete_clip(self.index, clip_index)
+            self.live.cmd("/live/clip_slot/delete_clip", (self.index, clip_index))
             self.clips[clip_index] = None
 
     def stop(self):
         """
         Immediately stop track from playing.
         """
+        print("Index: %s" % self.index)
         self.live.cmd("/live/track/stop_all_clips", (self.index,))
 
     #------------------------------------------------------------------------
@@ -89,21 +105,47 @@ class Track:
 
     @property
     def is_starting(self):
-        for clip in self.active_clips:
-            if clip.state == CLIP_STATUS_STARTING:
-                return True
-        return False
+        return self.fired_slot_index >= 0
 
     @property
     def is_playing(self):
-        return bool(self.clip_playing)
+        return self.playing_slot_index >= 0
 
     @property
     def clip_playing(self):
         """
         Return the currently playing Clip, or None.
         """
-        for clip in self.active_clips:
-            if clip.state == CLIP_STATUS_PLAYING:
-                return clip
-        return None
+        playing_slot_index = self.playing_slot_index
+        if playing_slot_index >= 0:
+            return self.clips[playing_slot_index]
+        else:
+            return None
+
+    volume = property(fget=make_getter("track", "volume"),
+                      fset=make_setter("track", "volume"),
+                      doc="Volume (0..1)")
+    panning = property(fget=make_getter("track", "panning"),
+                       fset=make_setter("track", "panning"),
+                       doc="Pan (0..1)")
+    mute = property(fget=make_getter("track", "mute"),
+                    fset=make_setter("track", "mute"),
+                    doc="Mute state (0/1)")
+    arm = property(fget=make_getter("track", "arm"),
+                   fset=make_setter("track", "arm"),
+                   doc="Arm state (0/1)")
+    solo = property(fget=make_getter("track", "solo"),
+                    fset=make_setter("track", "solo"),
+                    doc="Solo state (0/1)")
+    playing_slot_index = property(fget=make_getter("track", "playing_slot_index"),
+                                  fset=make_setter("track", "playing_slot_index"),
+                                  doc="Playing slot index")
+    fired_slot_index = property(fget=make_getter("track", "fired_slot_index"),
+                                fset=make_setter("track", "fired_slot_index"),
+                                doc="Fired slot index")
+
+    def get_send(self, send_index: int):
+        return self.live.query("/live/track/get/send", (self.index, send_index))[1]
+
+    def set_send(self, send_index: int, value: float):
+        self.live.cmd("/live/track/set/send", (self.index, send_index, value))

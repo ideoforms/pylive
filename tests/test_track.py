@@ -13,7 +13,7 @@ def setup_module():
 @pytest.fixture(scope="module")
 def track():
     set = live.Set()
-    set.scan(scan_devices=True)
+    set.scan()
     set.tracks[1].stop()
     time.sleep(0.1)
     return set.tracks[1]
@@ -46,9 +46,9 @@ def test_track_states(track):
     # is_stopped
     # is_starting
     # is_playing
-    track.set.quantization = 5
+    track.set.clip_trigger_quantization = 5
     assert track.is_stopped
-    track.set.play()
+    track.set.start_playing()
     time.sleep(0.1)
     track.clips[0].play()
     time.sleep(0.2)
@@ -58,7 +58,7 @@ def test_track_states(track):
     track.stop()
     time.sleep(1.0)
     assert track.is_stopped
-    track.set.stop()
+    track.set.stop_playing()
 
 def test_track_stop(track):
     track.set.quantization = 0
@@ -71,8 +71,6 @@ def test_track_stop(track):
     assert track.is_stopped
 
 def test_track_scan_clip_names(track):
-    assert track.clips[0].name is None
-    track.scan_clip_names()
     assert track.active_clips[0].name == "one"
     assert track.active_clips[1].name == "two"
     assert track.active_clips[2].name == "three"
@@ -84,11 +82,11 @@ def test_track_volume(track):
     assert track.volume == 0.0
     track.volume = 0.85
 
-def test_track_pan(track):
-    assert track.pan == 0
-    track.pan = 1
-    assert track.pan == 1
-    track.pan = 0
+def test_track_panning(track):
+    assert track.panning == 0
+    track.panning = 1
+    assert track.panning == 1
+    track.panning = 0
 
 def test_track_mute(track):
     assert track.mute == 0

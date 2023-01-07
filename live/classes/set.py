@@ -14,9 +14,11 @@ from .clip import Clip
 from .track import Track
 from .group import Group
 from .scene import Scene
+from .device import Device
 from ..query import Query
 from ..constants import CLIP_STATUS_STOPPED
 from ..exceptions import LiveIOError, LiveConnectionError
+
 
 def make_getter(class_identifier, prop):
     # TODO: Replacement for name_cache
@@ -27,7 +29,7 @@ def make_getter(class_identifier, prop):
 
 def make_setter(class_identifier, prop):
     def fn(self, value):
-        self.live.cmd("/live/%s/set/%s" % (class_identifier, prop), value)
+        self.live.cmd("/live/%s/set/%s" % (class_identifier, prop), (value,))
 
     return fn
 
@@ -69,6 +71,7 @@ class Set:
         self._add_mutexes()
 
         self.logger = logging.getLogger(__name__)
+        self.live = Query()
 
         self.groups: list[Group] = []
         self.tracks: list[Track] = []
@@ -120,7 +123,7 @@ class Set:
         #--------------------------------------------------------------------------------
         # Scan tracks
         #--------------------------------------------------------------------------------
-        rv = self.live.query("/live/song/get/track_data", 0, num_tracks, "track.name", "track.is_foldable", "track.group_track")
+        rv = self.live.query("/live/song/get/track_data", (0, num_tracks, "track.name", "track.is_foldable", "track.group_track"))
         for track_index in range(num_tracks):
             track_offset = track_index * 3
             track_name, track_is_group, track_group_track = rv[track_offset:track_offset + 3]
@@ -143,7 +146,7 @@ class Set:
             track_index_min = track_block_index * tracks_per_block
             track_index_max = min(track_index_min + tracks_per_block, num_tracks)
             tracks_in_block = track_index_max - track_index_min
-            rv = self.live.query("/live/song/get/track_data", track_index_min, track_index_max, "clip.name", "clip.length")
+            rv = self.live.query("/live/song/get/track_data", (track_index_min, track_index_max, "clip.name", "clip.length"))
             for track_index_in_block in range(tracks_in_block):
                 track_index = track_index_min + track_index_in_block
                 track = self.tracks[track_index]
@@ -154,6 +157,15 @@ class Set:
                     if clip_name is not None:
                         clip = Clip(track, clip_index, clip_name, clip_length)
                         track.clips[clip_index] = clip
+
+        for track_index in range(num_tracks):
+            track = self.tracks[track_index]
+            rv = self.live.query("/live/song/get/track_data", (track_index, track_index + 1, "track.num_devices", "device.name"))
+            device_count = rv[0]
+            for device_index in range(device_count):
+                device_name = rv[device_index + 1]
+                device = Device(track, device_index, device_name)
+                track.devices.append(device)
 
         self.scanned = True
 
@@ -239,7 +251,7 @@ class Set:
 
         print("────────────────────────────────────────────────────────")
         print("Live set with %d tracks in %d groups, total %d clips" %
-              (len(self.tracks), len(self.groups), sum(len(track.clips) for track in self.tracks)))
+              (len(self.tracks), len(self.groups), sum(len(track.active_clips) for track in self.tracks)))
         print("────────────────────────────────────────────────────────")
 
         for track in self.tracks:
@@ -431,10 +443,6 @@ class Set:
             return None
 
     @property
-    def live(self) -> Query:
-        return Query()
-
-    @property
     def is_connected(self) -> bool:
         """ Test whether we can connect to Live """
         try:
@@ -446,24 +454,24 @@ class Set:
     # Properties
     #------------------------------------------------------------------------
 
-    tempo = property(make_getter("song", "tempo"),
-                     make_setter("song", "tempo"),
+    tempo = property(fget=make_getter("song", "tempo"),
+                     fset=make_setter("song", "tempo"),
                      doc="Global tempo, in beats per minute (float)")
 
-    metronome = property(make_getter("song", "metronome"),
-                         make_setter("song", "metronome"),
+    metronome = property(fget=make_getter("song", "metronome"),
+                         fset=make_setter("song", "metronome"),
                          doc="Global metronome setting, on/off (float)")
 
-    clip_trigger_quantization = property(make_getter("song", "clip_trigger_quantization"),
-                                         make_setter("song", "clip_trigger_quantization"),
+    clip_trigger_quantization = property(fget=make_getter("song", "clip_trigger_quantization"),
+                                         fset=make_setter("song", "clip_trigger_quantization"),
                                          doc="Global quantization")
 
-    current_song_time = property(make_getter("song", "current_song_time"),
-                                 make_setter("song", "current_song_time"),
+    current_song_time = property(fget=make_getter("song", "current_song_time"),
+                                 fset=make_setter("song", "current_song_time"),
                                  doc="Current song time (in beats)")
 
-    arrangement_overdub = property(make_getter("song", "arrangement_overdub"),
-                                   make_setter("song", "arrangement_overdub"),
+    arrangement_overdub = property(fget=make_getter("song", "arrangement_overdub"),
+                                   fset=make_setter("song", "arrangement_overdub"),
                                    doc="Arrangement overdub")
 
     #--------------------------------------------------------------------------------
@@ -489,9 +497,9 @@ class Set:
     # Undo/redo
     #--------------------------------------------------------------------------------
 
-    can_undo = property(make_getter("song", "can_undo"),
+    can_undo = property(fget=make_getter("song", "can_undo"),
                         doc="Whether an undo operation is possible")
-    can_redo = property(make_getter("song", "can_redo"),
+    can_redo = property(fget=make_getter("song", "can_redo"),
                         doc="Whether a redo operation is possible")
 
     def undo(self) -> None:
@@ -510,7 +518,7 @@ class Set:
     # Tracks
     #--------------------------------------------------------------------------------
 
-    num_tracks = property(make_getter("song", "num_tracks"),
+    num_tracks = property(fget=make_getter("song", "num_tracks"),
                           doc="Number of tracks")
 
     def create_audio_track(self, track_index: int) -> None:
@@ -611,11 +619,11 @@ class Set:
     # TODO: Master volume
     #------------------------------------------------------------------------
 
-    master_volume = property(make_getter("song", "master_volume"),
-                             make_setter("song", "master_volume"),
+    master_volume = property(fget=make_getter("song", "master_volume"),
+                             fset=make_setter("song", "master_volume"),
                              doc="Master volume (0..1)")
-    master_pan = property(make_getter("song", "master_pan"),
-                          make_setter("song", "master_pan"),
+    master_pan = property(fget=make_getter("song", "master_pan"),
+                          fset=make_setter("song", "master_pan"),
                           doc="Master pan (-1..1)")
 
     #--------------------------------------------------------------------------------

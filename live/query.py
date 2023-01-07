@@ -86,7 +86,7 @@ class Query:
         """ Terminate this query object and unbind from OSC listening. """
         pass
 
-    def cmd(self, msg, *args):
+    def cmd(self, msg: str, args: tuple = ()):
         """ Send a Live command without expecting a response back:
 
             live.cmd("/live/tempo", 110.0) """
@@ -96,9 +96,9 @@ class Query:
             self.osc_client.send_message(msg, args)
 
         except Exception as e:
-            raise LiveConnectionError("Couldn't send message to Live (is LiveOSC present and activated?)")
+            raise LiveConnectionError("Couldn't send message to Live (is AbletonOSC present and activated?): %s" % e)
 
-    def query(self, msg: str, *args, timeout: float = None):
+    def query(self, msg: str, args: tuple = (), timeout: float = None):
         """
         Send a Live command and synchronously wait for its response:
 
@@ -119,7 +119,7 @@ class Query:
         #------------------------------------------------------------------------
         self.query_address = msg
         self.query_rv = []
-        self.cmd(msg, *args)
+        self.cmd(msg, args)
 
         #------------------------------------------------------------------------
         # Wait for a response. 

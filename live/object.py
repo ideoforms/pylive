@@ -41,3 +41,4 @@ def name_cache(fn):
             return obj.__cache[variable]
 
     return cached_fn
+
