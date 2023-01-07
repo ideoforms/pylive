@@ -174,6 +174,8 @@ class Set:
             rv = self.live.query("/live/song/get/track_data", (track_index_min, track_index_max, "track.num_devices", "device.name"))
             rv_index = 0
             for track_index_in_block in range(tracks_in_block):
+                track_index = track_index_min + track_index_in_block
+                track = self.tracks[track_index]
                 device_count = rv[rv_index]
                 rv_index += 1
                 for device_index in range(device_count):
