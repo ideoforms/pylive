@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name = 'pylive',
@@ -11,7 +11,7 @@ setup(
     author = 'Daniel Jones',
     author_email = 'dan-pylive@erase.net',
     url = 'https://github.com/ideoforms/pylive',
-    packages = ['live'],
+    packages = find_packages(),
     install_requires = ['python-osc'],
     keywords = ('sound', 'music', 'ableton', 'osc'),
     classifiers = [

@@ -131,7 +131,7 @@ class Set:
             track_index_max = min(track_index_min + tracks_per_block, num_tracks)
             tracks_in_block = track_index_max - track_index_min
 
-            print(" - Scanning tracks %d-%d" % (track_index_min, track_index_max))
+            self.logger.debug(" - Scanning tracks %d-%d" % (track_index_min, track_index_max))
             rv = self.live.query("/live/song/get/track_data", (track_index_min, track_index_max, "track.name", "track.is_foldable", "track.group_track"))
             for track_index_in_block in range(tracks_in_block):
                 track_index = track_index_min + track_index_in_block
@@ -152,7 +152,7 @@ class Set:
             #--------------------------------------------------------------------------------
             # Scan clips
             #--------------------------------------------------------------------------------
-            print(" - Scanning clips in tracks %d-%d" % (track_index_min, track_index_max))
+            self.logger.debug(" - Scanning tracks %d-%d: clips" % (track_index_min, track_index_max))
             rv = self.live.query("/live/song/get/track_data", (track_index_min, track_index_max, "clip.name", "clip.length"))
             for track_index_in_block in range(tracks_in_block):
                 track_index = track_index_min + track_index_in_block
@@ -170,7 +170,7 @@ class Set:
             #--------------------------------------------------------------------------------
             # Scan devices
             #--------------------------------------------------------------------------------
-            print(" - Scanning devices in tracks %d-%d" % (track_index_min, track_index_max))
+            self.logger.debug(" - Scanning tracks %d-%d: devices" % (track_index_min, track_index_max))
             rv = self.live.query("/live/song/get/track_data", (track_index_min, track_index_max, "track.num_devices", "device.name"))
             rv_index = 0
             for track_index_in_block in range(tracks_in_block):
