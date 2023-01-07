@@ -8,16 +8,13 @@ from .clip import Clip
 import logging
 
 def make_getter(class_identifier, prop):
-    # TODO: Replacement for name_cache
     def fn(self):
         return self.live.query("/live/%s/get/%s" % (class_identifier, prop), (self.index,))[1]
-
     return fn
 
 def make_setter(class_identifier, prop):
     def fn(self, value):
         self.live.cmd("/live/%s/set/%s" % (class_identifier, prop), (self.index, value))
-
     return fn
 
 class Track:

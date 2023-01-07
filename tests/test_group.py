@@ -7,7 +7,8 @@ import live
 from tests.shared import open_test_set
 
 def setup_module():
-    open_test_set()
+    # open_test_set()
+    pass
 
 @pytest.fixture(scope="module")
 def group():

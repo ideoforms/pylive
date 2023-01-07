@@ -33,34 +33,17 @@ class Group(Track):
     def __iter__(self):
         return iter(self.tracks)
 
-    @property
-    def scene_indexes(self):
-        indexes = {}
-        for track in self.tracks:
-            for index in track.scene_indexes:
-                indexes[index] = 1
-        indexes = list(indexes.keys())
-        indexes = sorted(indexes)
-        return indexes
-
     def dump(self):
         self.logger.info("%d tracks" % len(self.tracks))
         for track in self.tracks:
             track.dump()
 
     @property
-    def is_playing(self):
-        for track in self.tracks:
-            if track.is_playing:
-                return True
-        return False
-
-    def stop(self):
-        """ Immediately stop group from playing. """
-        self.set.stop_track(self.track_index)
-
-    @property
     def active_clips(self):
         """ Return a dictionary of all non-empty clipslots: { index : Clip, ... } """
         active_clips = [n for n in self.clips if n is not None]
         return active_clips
+
+    @property
+    def is_playing(self):
+        return any(track.is_playing for track in self.tracks)

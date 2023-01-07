@@ -67,11 +67,11 @@ def test_set_stop(set: Set):
     assert set.current_song_time == t0
 
 def test_set_num_tracks(set: Set):
-    assert set.num_tracks == 4
+    assert set.num_tracks == 6
     set.create_midi_track(-1)
-    assert set.num_tracks == 5
+    assert set.num_tracks == 7
     set.delete_track(4)
-    assert set.num_tracks == 4
+    assert set.num_tracks == 6
 
 def test_set_num_scenes(set: Set):
     assert set.num_scenes == 8

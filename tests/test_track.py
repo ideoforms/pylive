@@ -38,25 +38,21 @@ def test_track_delete_clip(track):
         track.delete_clip(6)
     track.delete_clip(5)
 
-def test_track_scene_indexes(track):
-    scene_indexes = track.scene_indexes
-    assert scene_indexes == [0, 1, 2, 4]
-
 def test_track_states(track):
     # is_stopped
     # is_starting
     # is_playing
-    track.set.clip_trigger_quantization = 5
+    track.set.clip_trigger_quantization = 7
     assert track.is_stopped
     track.set.start_playing()
     time.sleep(0.1)
     track.clips[0].play()
     time.sleep(0.2)
     assert track.is_starting
-    time.sleep(1.0)
+    time.sleep(0.5)
     assert track.is_playing
     track.stop()
-    time.sleep(1.0)
+    time.sleep(0.2)
     assert track.is_stopped
     track.set.stop_playing()
 

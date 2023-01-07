@@ -136,6 +136,8 @@ class Set:
             else:
                 track = Track(self, track_index, track_name, track_group)
                 self.tracks.append(track)
+                if track_group:
+                    track_group.tracks.append(track)
 
         #--------------------------------------------------------------------------------
         # Scan clips
@@ -157,6 +159,8 @@ class Set:
                     if clip_name is not None:
                         clip = Clip(track, clip_index, clip_name, clip_length)
                         track.clips[clip_index] = clip
+                        if track.group is not None and track.group.clips[clip_index] is None:
+                            track.group.clips[clip_index] = Clip(track.group, clip_index, "", clip_length)
 
         for track_index in range(num_tracks):
             track = self.tracks[track_index]
@@ -338,18 +342,6 @@ class Set:
         for track in self.tracks:
             for clip in track.active_clips:
                 clip.state = CLIP_STATUS_STOPPED
-
-    def _update_clip_state(self, track_index, clip_index, state):
-        if not self.scanned:
-            return
-        track = self.tracks[track_index]
-
-        # can get a clip_info for clips outside of our clip range
-        # (eg updating the status of a "stop" clip when we play a whole scene)
-        if clip_index < len(track.clips):
-            clip = track.clips[clip_index]
-            if clip:
-                clip.state = state
 
     def open(self, filename: str, wait_for_startup: bool = True):
         """

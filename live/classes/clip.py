@@ -5,6 +5,18 @@ import live.object
 from live.constants import *
 from live.query import Query
 
+def make_getter(class_identifier, prop):
+    def fn(self):
+        return self.live.query("/live/%s/get/%s" % (class_identifier, prop), (self.track.index, self.index,))[2]
+
+    return fn
+
+def make_setter(class_identifier, prop):
+    def fn(self, value):
+        self.live.cmd("/live/%s/set/%s" % (class_identifier, prop), (self.track.index, self.index, value))
+
+    return fn
+
 class Clip:
     """
     An object representing a single clip in a Live set.
@@ -20,6 +32,7 @@ class Clip:
             length: Length of the clip, in beats
         """
         self.track = track
+        self.set = self.track.set
         self.index = index
         self.name = name
         self.length = length
@@ -42,8 +55,9 @@ class Clip:
     def play(self):
         """
         Start playing clip.
+        Must use clip_slot (not clip) as this is also used in group tracks, which have clip_slots without clips.
         """
-        self.live.cmd("/live/clip/fire", (self.track.index, self.index))
+        self.live.cmd("/live/clip_slot/fire", (self.track.index, self.index))
         self.track.playing = True
         if type(self.track) is live.Group:
             for track in self.track.tracks:
@@ -64,3 +78,10 @@ class Clip:
         """
         self.live.cmd("/live/clip/stop", (self.track.index, self.index))
         self.track.playing = False
+
+    pitch_coarse = property(fget=make_getter("clip", "pitch_coarse"),
+                            fset=make_setter("clip", "pitch_coarse"),
+                            doc="pitch_coarse")
+    is_playing = property(fget=make_getter("clip", "is_playing"),
+                          fset=make_setter("clip", "is_playing"),
+                          doc="is_playing")
