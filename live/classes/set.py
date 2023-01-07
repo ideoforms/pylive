@@ -120,34 +120,39 @@ class Set:
 
         self.logger.info("scan: Scanning %d tracks" % num_tracks)
 
+        tracks_per_block = 4
+        num_track_blocks = int(math.ceil(num_tracks / tracks_per_block))
+
         #--------------------------------------------------------------------------------
         # Scan tracks
         #--------------------------------------------------------------------------------
-        rv = self.live.query("/live/song/get/track_data", (0, num_tracks, "track.name", "track.is_foldable", "track.group_track"))
-        for track_index in range(num_tracks):
-            track_offset = track_index * 3
-            track_name, track_is_group, track_group_track = rv[track_offset:track_offset + 3]
-            track_group = self.tracks[track_group_track] if track_group_track is not None else None
-            if track_is_group:
-                group_index = len(self.groups)
-                group = Group(self, track_index, group_index, track_name, track_group)
-                self.tracks.append(group)
-                self.groups.append(group)
-            else:
-                track = Track(self, track_index, track_name, track_group)
-                self.tracks.append(track)
-                if track_group:
-                    track_group.tracks.append(track)
-
-        #--------------------------------------------------------------------------------
-        # Scan clips
-        #--------------------------------------------------------------------------------
-        tracks_per_block = 256
-        num_track_blocks = int(math.ceil(num_tracks / tracks_per_block))
         for track_block_index in range(num_track_blocks):
             track_index_min = track_block_index * tracks_per_block
             track_index_max = min(track_index_min + tracks_per_block, num_tracks)
             tracks_in_block = track_index_max - track_index_min
+
+            print(" - Scanning tracks %d-%d" % (track_index_min, track_index_max))
+            rv = self.live.query("/live/song/get/track_data", (track_index_min, track_index_max, "track.name", "track.is_foldable", "track.group_track"))
+            for track_index_in_block in range(tracks_in_block):
+                track_index = track_index_min + track_index_in_block
+                track_offset = track_index_in_block * 3
+                track_name, track_is_group, track_group_track = rv[track_offset:track_offset + 3]
+                track_group = self.tracks[track_group_track] if track_group_track is not None else None
+                if track_is_group:
+                    group_index = len(self.groups)
+                    group = Group(self, track_index, group_index, track_name, track_group)
+                    self.tracks.append(group)
+                    self.groups.append(group)
+                else:
+                    track = Track(self, track_index, track_name, track_group)
+                    self.tracks.append(track)
+                    if track_group:
+                        track_group.tracks.append(track)
+
+            #--------------------------------------------------------------------------------
+            # Scan clips
+            #--------------------------------------------------------------------------------
+            print(" - Scanning clips in tracks %d-%d" % (track_index_min, track_index_max))
             rv = self.live.query("/live/song/get/track_data", (track_index_min, track_index_max, "clip.name", "clip.length"))
             for track_index_in_block in range(tracks_in_block):
                 track_index = track_index_min + track_index_in_block
@@ -162,14 +167,20 @@ class Set:
                         if track.group is not None and track.group.clips[clip_index] is None:
                             track.group.clips[clip_index] = Clip(track.group, clip_index, "", clip_length)
 
-        for track_index in range(num_tracks):
-            track = self.tracks[track_index]
-            rv = self.live.query("/live/song/get/track_data", (track_index, track_index + 1, "track.num_devices", "device.name"))
-            device_count = rv[0]
-            for device_index in range(device_count):
-                device_name = rv[device_index + 1]
-                device = Device(track, device_index, device_name)
-                track.devices.append(device)
+            #--------------------------------------------------------------------------------
+            # Scan devices
+            #--------------------------------------------------------------------------------
+            print(" - Scanning devices in tracks %d-%d" % (track_index_min, track_index_max))
+            rv = self.live.query("/live/song/get/track_data", (track_index_min, track_index_max, "track.num_devices", "device.name"))
+            rv_index = 0
+            for track_index_in_block in range(tracks_in_block):
+                device_count = rv[rv_index]
+                rv_index += 1
+                for device_index in range(device_count):
+                    device_name = rv[rv_index]
+                    rv_index += 1
+                    device = Device(track, device_index, device_name)
+                    track.devices.append(device)
 
         self.scanned = True
 
