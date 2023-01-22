@@ -12,9 +12,9 @@ If you are looking simply to send MIDI messages to Live, this module is not what
 
 ## Requirements
 
-* [Ableton Live 9+](http://www.ableton.com/live)
-* [Python 2.6+](http://www.python.org)
-* [LiveOSC (fork)](https://github.com/ideoforms/LiveOSC): A maintained fork of the [LiveOSC](http://livecontrol.q3f.org/ableton-liveapi/liveosc/) MIDI control script, updated to work with Live 9.6 and 10. Must be installed in Live's `MIDI Remote Scripts` (see [README](https://github.com/ideoforms/LiveOSC))
+* [Ableton Live 11+](http://www.ableton.com/live)
+* [Python 3.7+](http://www.python.org)
+* [AbletonOSC](https://github.com/ideoforms/AbletonOSC)
 * [liblo](http://liblo.sourceforge.net/): Install via [Homebrew](https://brew.sh/) with `brew install liblo`. See "Alternate installation without liblo" below if you can't install liblo.
 
 ## Installation
@@ -22,7 +22,6 @@ If you are looking simply to send MIDI messages to Live, this module is not what
 From PyPi:
 
 ```
-pip3 install Cython # needed for pyliblo
 pip3 install pylive
 ```
 
