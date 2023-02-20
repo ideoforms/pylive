@@ -53,6 +53,24 @@ class Track:
     def __iter__(self):
         return iter(self.clips)
 
+    def __getstate__(self):
+        return {
+            "index": self.index,
+            "name": self.name,
+            "group": self.group,
+            "is_group": self.is_group,
+            "clips": self.clips,
+            "devices": self.devices,
+        }
+
+    def __setstate__(self, d: dict):
+        self.index = d["index"]
+        self.name = d["name"]
+        self.group = d["group"]
+        self.is_group = d["is_group"]
+        self.clips = d["clips"]
+        self.devices = d["devices"]
+
     @property
     def active_clips(self):
         """

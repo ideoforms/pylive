@@ -61,7 +61,6 @@ class Query:
 
         self.dispatcher = Dispatcher()
         self.dispatcher.set_default_handler(self.osc_handler)
-
         self.osc_server = ThreadingOSCUDPServer((address[0], listen_port),
                                                 self.dispatcher)
 
@@ -135,9 +134,9 @@ class Query:
         return self.query_rv
 
     def osc_handler(self, address, *args):
-        self.handler(address, args, None)
+        self.handler(address, args)
 
-    def handler(self, address, data, types):
+    def handler(self, address, data):
         self.logger.debug("OSC input: %s %s" % (address, data))
 
         #------------------------------------------------------------------------

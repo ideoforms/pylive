@@ -52,6 +52,20 @@ class Clip:
 
         return "Clip (%d,%d)%s [%s]" % (self.track.index, self.index, name, state_symbol)
 
+    def __getstate__(self):
+        return {
+            "track": self.track,
+            "index": self.index,
+            "name": self.name,
+            "length": self.length,
+        }
+
+    def __setstate__(self, d: dict):
+        self.track = d["track"]
+        self.index = d["index"]
+        self.name = d["name"]
+        self.length = d["length"]
+
     def play(self):
         """
         Start playing clip.

@@ -33,6 +33,20 @@ class Group(Track):
     def __iter__(self):
         return iter(self.tracks)
 
+    def __getstate__(self):
+        return {
+            **super().__getstate__(),
+            "track_index": self.track_index,
+            "group_index": self.group_index,
+            "tracks": self.tracks,
+        }
+
+    def __setstate__(self, d: dict):
+        super().__setstate__(d)
+        self.track_index = d["track_index"]
+        self.group_index = d["group_index"]
+        self.tracks = d["tracks"]
+
     def dump(self):
         self.logger.info("%d tracks" % len(self.tracks))
         for track in self.tracks:

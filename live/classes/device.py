@@ -21,6 +21,20 @@ class Device:
     def __str__(self):
         return "Device (%d,%d): %s" % (self.track.index, self.index, self.name)
 
+    def __getstate__(self):
+        return {
+            "track": self.track,
+            "index": self.index,
+            "name": self.name,
+            "parameters": self.parameters,
+        }
+
+    def __setstate__(self, d: dict):
+        self.track = d["track"]
+        self.index = d["index"]
+        self.name = d["name"]
+        self.parameters = d["parameters"]
+
     @property
     def set(self):
         """ Helper function to return the Set that this Device resides within. """

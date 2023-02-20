@@ -81,6 +81,18 @@ class Set:
     def __str__(self):
         return "Set"
 
+    def __getstate__(self):
+        return {
+            "groups": self.groups,
+            "tracks": self.tracks,
+            "scenes": self.scenes,
+        }
+
+    def __setstate__(self, d: dict):
+        self.groups = d["groups"]
+        self.tracks = d["tracks"]
+        self.scenes = d["scenes"]
+
     def reset(self):
         self.groups = []
         self.tracks = []
@@ -205,8 +217,8 @@ class Set:
             if len(self.tracks) != self.num_tracks:
                 self.logger.info("Loaded %d tracks, but found %d - looks like set has changed" % (len(self.tracks), self.num_tracks))
                 self.reset()
-                raise Exception
-        except Exception as e:
+                raise LiveIOError
+        except (EOFError, LiveIOError) as e:
             self.scan(**kwargs)
             self.save(filename)
 
@@ -217,11 +229,10 @@ class Set:
         filename = "%s.pickle" % filename
         try:
             data = pickle.load(open(filename, "rb"))
-        except pickle.UnpicklingError:
+        except (pickle.UnpicklingError, FileNotFoundError):
             raise LiveIOError
 
-        for key, value in list(data.items()):
-            setattr(self, key, value)
+        self.__setstate__(data.__dict__)
         self.logger.info("load: Set loaded OK (%d tracks)" % (len(self.tracks)))
 
         #------------------------------------------------------------------------
@@ -244,16 +255,8 @@ class Set:
         TODO: Do we still need this now scanning is fast?
         """
         filename = "%s.pickle" % filename
-        fd = open(filename, "wb")
-        self._delete_mutexes()
-        data = vars(self)
-
-        pickle.dump(data, fd)
-
-        #------------------------------------------------------------------------
-        # Restore the unpickleables
-        #------------------------------------------------------------------------
-        self._add_mutexes()
+        with open(filename, "wb") as fd:
+            pickle.dump(self, fd)
 
         self.logger.info("save: Set saved OK (%s)" % filename)
 

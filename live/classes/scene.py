@@ -24,6 +24,16 @@ class Scene:
 
         return "Scene (%d)%s" % (self.index, name)
 
+    def __getstate__(self):
+        return {
+            "index": self.index,
+            "name": self.name,
+        }
+
+    def __setstate__(self, d: dict):
+        self.index = d["index"]
+        self.name = d["name"]
+
     def play(self):
         """ Start playing scene. """
         self.logger.info("playing")
