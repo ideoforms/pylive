@@ -19,7 +19,6 @@ from ..query import Query
 from ..constants import CLIP_STATUS_STOPPED
 from ..exceptions import LiveIOError, LiveConnectionError
 
-
 def make_getter(class_identifier, prop):
     # TODO: Replacement for name_cache
     def fn(self):
@@ -132,7 +131,7 @@ class Set:
 
         self.logger.info("scan: Scanning %d tracks" % num_tracks)
 
-        tracks_per_block = 4
+        tracks_per_block = 2
         num_track_blocks = int(math.ceil(num_tracks / tracks_per_block))
 
         #--------------------------------------------------------------------------------
@@ -649,3 +648,11 @@ class Set:
         Jump to the next cue.
         """
         self.live.cmd("/live/next/cue")
+
+
+    #--------------------------------------------------------------------------------
+    # Log level
+    #--------------------------------------------------------------------------------
+    log_level = property(fget=make_getter("api", "log_level"),
+                         fset=make_setter("api", "log_level"),
+                         doc="Log level (can be one of: debug, info, warning, error, critical)")
