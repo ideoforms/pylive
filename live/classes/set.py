@@ -131,7 +131,7 @@ class Set:
 
         self.logger.info("scan: Scanning %d tracks" % num_tracks)
 
-        tracks_per_block = 2
+        tracks_per_block = 1
         num_track_blocks = int(math.ceil(num_tracks / tracks_per_block))
 
         #--------------------------------------------------------------------------------
@@ -196,6 +196,37 @@ class Set:
                     track.devices.append(device)
 
         self.scanned = True
+
+    def scan_import(self):
+        rv = self.live.query("/live/song/export/structure")
+        assert rv[0] == 1
+
+        self.tracks = []
+        self.groups = []
+
+        import json
+        with open("/tmp/abletonosc-song-structure.json", "r") as fd:
+            data = json.load(fd)
+            tracks = data["tracks"]
+            for track_data in tracks:
+                track_group = self.tracks[track_data["group_track"]] if track_data["group_track"] is not None else None
+                if track_data["is_foldable"]:
+                    group_index = len(self.groups)
+                    group = Group(self, track_data["index"], group_index, track_data["name"], track_group)
+                    self.tracks.append(group)
+                    self.groups.append(group)
+                else:
+                    track = Track(self, track_data["index"], track_data["name"], track_group)
+                    self.tracks.append(track)
+                    if track_group:
+                        track_group.tracks.append(track)
+                for clip_data in track_data["clips"]:
+                    clip = Clip(track, clip_data["index"], clip_data["name"], clip_data["length"])
+                    track.clips[clip.index] = clip
+                    if track.group is not None and track.group.clips[clip.index] is None:
+                        track.group.clips[clip.index] = Clip(track.group, clip.index, "", clip.length)
+        self.scanned = True
+        self.logger.info("Scanned %d tracks" % len(self.tracks))
 
     def load_or_scan(self, filename: str = "set", **kwargs):
         """
@@ -656,3 +687,10 @@ class Set:
     log_level = property(fget=make_getter("api", "log_level"),
                          fset=make_setter("api", "log_level"),
                          doc="Log level (can be one of: debug, info, warning, error, critical)")
+
+    def back_to_arranger(self):
+        self.live.cmd("/live/song/back_to_arranger")
+
+    @property
+    def average_process_usage(self):
+        return self.live.query("/live/application/get/average_process_usage")[0]

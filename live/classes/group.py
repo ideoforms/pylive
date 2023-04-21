@@ -19,9 +19,9 @@ class Group(Track):
         # TODO: rename 'index' to 'track_index' on Track objects too
         self.index = track_index
         self.is_group = True
-        self.group = None
+        self.group: Group = None
 
-        self.tracks = []
+        self.tracks: list[Track] = []
         self.logger = logging.getLogger(__name__)
 
     def __str__(self):

@@ -38,7 +38,11 @@ class Clip:
         self.length = length
         self.state = CLIP_STATUS_STOPPED
         self.logger = logging.getLogger(__name__)
-        self.live = Query()
+        # self.live = Query()
+
+    @property
+    def live(self):
+        return Query()
 
     def __str__(self):
         name = ": %s" % self.name if self.name else ""

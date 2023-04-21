@@ -39,7 +39,7 @@ class Track:
 
         self.is_group = False
         self.clip_init = None
-        self.clips = [None] * 256
+        self.clips: list[Clip] = [None] * 1024
         self.devices = []
         self.logger = logging.getLogger(__name__)
         self.live = Query()
@@ -74,6 +74,7 @@ class Track:
     @property
     def active_clips(self):
         """
+        # TODO: Not a great name / concept - revisit or remove
         Return a list of all non-null clips.
         """
         active_clips = [n for n in self.clips if n is not None]
