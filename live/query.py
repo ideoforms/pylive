@@ -1,3 +1,4 @@
+import os
 import inspect
 import logging
 import argparse
@@ -44,7 +45,7 @@ class Query:
         live.cmd(path, *args)
     """
 
-    def __init__(self, address=("127.0.0.1", 11000), listen_port=11001):
+    def __init__(self, address=(os.environ.get('ADDRESS', '127.0.0.1'), 11000), listen_port=11001):
         self.beat_callback = None
         self.startup_callback = None
         self.listen_port = listen_port
