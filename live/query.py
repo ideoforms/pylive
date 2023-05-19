@@ -45,7 +45,7 @@ class Query:
         live.cmd(path, *args)
     """
 
-    def __init__(self, address=(os.environ.get('ADDRESS', '127.0.0.1'), 11000), listen_port=11001):
+    def __init__(self, address=('host.docker.internal', 11000), listen_port=11001):
         self.beat_callback = None
         self.startup_callback = None
         self.listen_port = listen_port
@@ -62,7 +62,7 @@ class Query:
 
         self.dispatcher = Dispatcher()
         self.dispatcher.set_default_handler(self.osc_handler)
-        self.osc_server = ThreadingOSCUDPServer((address[0], listen_port),
+        self.osc_server = ThreadingOSCUDPServer(('0.0.0.0', listen_port),
                                                 self.dispatcher)
 
         self.osc_server_thread = None
