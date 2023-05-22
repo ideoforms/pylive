@@ -15,6 +15,7 @@ from .track import Track
 from .group import Group
 from .scene import Scene
 from .device import Device
+from .parameter import Parameter
 from ..query import Query
 from ..constants import CLIP_STATUS_STOPPED
 from ..exceptions import LiveIOError, LiveConnectionError
@@ -96,6 +97,15 @@ class Set:
         self.groups = []
         self.tracks = []
         self.scenes = []
+
+    def get_device_parameters(self, track_index, device_index):
+        return self.live.query("/live/device", track_index, device_index, response_address="/live/device/allparam")
+
+    def get_device_param(self, track_index, device_index, param_index):
+        return self.live.query("/live/device", track_index, device_index, param_index, response_address="/live/device/param")
+
+    def get_device_parameter_ranges(self, track_index, device_index):
+        return self.live.query("/live/device/range", track_index, device_index)
 
     #--------------------------------------------------------------------------------
     # SCAN
@@ -194,6 +204,20 @@ class Set:
                     rv_index += 1
                     device = Device(track, device_index, device_name)
                     track.devices.append(device)
+                    parameters = self.get_device_parameters(track.index, device.index)
+                    parameters = parameters[2:]
+                    ranges = self.get_device_parameter_ranges(track.index, device.index)
+                    ranges = ranges[2:]
+                    for j in range(0, len(parameters), 3):
+                        index = parameters[j + 0]
+                        value = parameters[j + 1]
+                        name = parameters[j + 2]
+                        minimum = ranges[j + 1]
+                        maximum = ranges[j + 2]
+                        param = Parameter(device, index, name, value)
+                        param.minimum = minimum
+                        param.maximum = maximum
+                        device.parameters.append(param)
 
         self.scanned = True
 
