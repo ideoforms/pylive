@@ -40,7 +40,7 @@ class Query(LoggingObject):
         live.cmd(path, *args)
     """
 
-    def __init__(self, address=("localhost", 9000), listen_port=9001):
+    def __init__(self, address=('host.docker.internal', 11000), listen_port=11001):
         self.beat_callback = None
         self.startup_callback = None
         self.listen_port = listen_port
@@ -65,7 +65,7 @@ class Query(LoggingObject):
         # for some reason, maybe most likely something else, there seem to
         # be less frequent apparent "connection" issues with liblo than with
         # pythonosc...
-        self.osc_server = ThreadingOSCUDPServer((ip, listen_port),
+        self.osc_server = ThreadingOSCUDPServer(('0.0.0.0', listen_port),
             self.dispatcher
         )
 
