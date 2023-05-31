@@ -1,5 +1,6 @@
 import logging
 import random
+from ..query import Query
 
 class Parameter:
     """
@@ -18,14 +19,19 @@ class Parameter:
         self.device = device
         self.index = index
         self.name = name
-        self.value = value
-        self.minimum = 0.0
-        self.maximum = 1.0
+        self._value = value
+        self.min = 0.0
+        self.max = 1.0
+        self.is_quantized = False
         self.indent = 3
         self.logger = logging.getLogger(__name__)
 
+    @property
+    def live(self):
+        return Query()
+
     def __str__(self):
-        return "Parameter (%d,%d,%d): %s (range %.3f-%.3f)" % (self.device.track.index, self.device.index, self.index, self.name, self.minimum, self.maximum)
+        return "Parameter (%d,%d,%d): %s (range %.3f-%.3f)" % (self.device.track.index, self.device.index, self.index, self.name, self.min, self.max)
 
     def is_integer(self):
         # TODO: fix for enums (such as Quality in Reverb unit). how?
@@ -45,19 +51,24 @@ class Parameter:
         self.logger.info()
 
     def set_value(self, value):
-        self.set.set_device_param(self.device.track.index, self.device.index, self.index, value)
+        self._value = value
+        self.live.cmd("/live/device/set/parameter/value",
+                      (self.device.track.index, self.device.index, self.index, value))
+
     def get_value(self):
-        return self.device.track.set.get_device_param(self.device.track.index, self.device.index, self.index)
+        return self.live.query("/live/device/get/parameter/value",
+                               (self.device.track.index, self.device.index, self.index))
+
     value = property(get_value, set_value)
 
     def randomise(self):
         """
         Set the parameter's value to a uniformly random value within
-        [minimum, maximum]
+        [min, max]
         """
 
         if self.is_integer():
-            value = random.randint(self.minimum, self.maximum)
+            value = random.randint(self.min, self.max)
         else:
-            value = random.uniform(self.minimum, self.maximum)
+            value = random.uniform(self.min, self.max)
         self.value = value

@@ -15,9 +15,11 @@ from .track import Track
 from .group import Group
 from .scene import Scene
 from .device import Device
+from .parameter import Parameter
 from ..query import Query
 from ..constants import CLIP_STATUS_STOPPED
 from ..exceptions import LiveIOError, LiveConnectionError
+
 
 def make_getter(class_identifier, prop):
     # TODO: Replacement for name_cache
@@ -26,11 +28,13 @@ def make_getter(class_identifier, prop):
 
     return fn
 
+
 def make_setter(class_identifier, prop):
     def fn(self, value):
         self.live.cmd("/live/%s/set/%s" % (class_identifier, prop), (value,))
 
     return fn
+
 
 class Set:
     """
@@ -46,27 +50,27 @@ class Set:
     """
 
     def __init__(self):
-        #--------------------------------------------------------------------------
+        # --------------------------------------------------------------------------
         # Indicates whether the set has been synchronised with Live
-        #--------------------------------------------------------------------------
+        # --------------------------------------------------------------------------
         self.scanned = False
 
-        #--------------------------------------------------------------------------
+        # --------------------------------------------------------------------------
         # Set caching to True to avoid re-querying properties such as tempo each
         # time they are requested. Increases efficiency in cases where no other
         # processes are going to modify Live's state.
-        #--------------------------------------------------------------------------
+        # --------------------------------------------------------------------------
         self.caching = False
 
-        #--------------------------------------------------------------------------
+        # --------------------------------------------------------------------------
         # For batch queries, limit the max number of tracks to query.
-        #--------------------------------------------------------------------------
+        # --------------------------------------------------------------------------
         self.max_tracks_per_query = 256
 
-        #--------------------------------------------------------------------------
+        # --------------------------------------------------------------------------
         # Create mutexes and events for inter-thread handling (to catch on-beat
         # events, etc)
-        #--------------------------------------------------------------------------
+        # --------------------------------------------------------------------------
         self._add_mutexes()
 
         self.logger = logging.getLogger(__name__)
@@ -97,11 +101,11 @@ class Set:
         self.tracks = []
         self.scenes = []
 
-    #--------------------------------------------------------------------------------
+    # --------------------------------------------------------------------------------
     # SCAN
-    #--------------------------------------------------------------------------------
+    # --------------------------------------------------------------------------------
 
-    def scan(self, scan_scenes: bool = False, scan_devices: bool = False, scan_clip_names: bool = False):
+    def scan(self, scan_scenes: bool = False, scan_device: bool = False, scan_clip_names: bool = False):
         """
         Interrogates the currently open Ableton Live set for its structure:
         number of tracks, clips, scenes, etc.
@@ -114,16 +118,16 @@ class Set:
             scan_clip_names: Queries clips for their human-readable names
         """
 
-        #--------------------------------------------------------------------------------
+        # --------------------------------------------------------------------------------
         # Stop playback before scanning, and clear existing tracks/groups
-        #--------------------------------------------------------------------------------
+        # --------------------------------------------------------------------------------
         self.stop_playing()
         self.tracks = []
         self.groups = []
 
-        #--------------------------------------------------------------------------------
+        # --------------------------------------------------------------------------------
         # Determine total number of tracks/scenes
-        #--------------------------------------------------------------------------------
+        # --------------------------------------------------------------------------------
         num_tracks = self.num_tracks
         num_scenes = self.num_scenes
         if num_tracks is None or num_scenes is None:
@@ -134,16 +138,17 @@ class Set:
         tracks_per_block = 1
         num_track_blocks = int(math.ceil(num_tracks / tracks_per_block))
 
-        #--------------------------------------------------------------------------------
+        # --------------------------------------------------------------------------------
         # Scan tracks
-        #--------------------------------------------------------------------------------
+        # --------------------------------------------------------------------------------
         for track_block_index in range(num_track_blocks):
             track_index_min = track_block_index * tracks_per_block
             track_index_max = min(track_index_min + tracks_per_block, num_tracks)
             tracks_in_block = track_index_max - track_index_min
 
             self.logger.debug(" - Scanning tracks %d-%d" % (track_index_min, track_index_max))
-            rv = self.live.query("/live/song/get/track_data", (track_index_min, track_index_max, "track.name", "track.is_foldable", "track.group_track"))
+            rv = self.live.query("/live/song/get/track_data", (
+            track_index_min, track_index_max, "track.name", "track.is_foldable", "track.group_track"))
             for track_index_in_block in range(tracks_in_block):
                 track_index = track_index_min + track_index_in_block
                 track_offset = track_index_in_block * 3
@@ -160,11 +165,12 @@ class Set:
                     if track_group:
                         track_group.tracks.append(track)
 
-            #--------------------------------------------------------------------------------
+            # --------------------------------------------------------------------------------
             # Scan clips
-            #--------------------------------------------------------------------------------
+            # --------------------------------------------------------------------------------
             self.logger.debug(" - Scanning tracks %d-%d: clips" % (track_index_min, track_index_max))
-            rv = self.live.query("/live/song/get/track_data", (track_index_min, track_index_max, "clip.name", "clip.length"))
+            rv = self.live.query("/live/song/get/track_data",
+                                 (track_index_min, track_index_max, "clip.name", "clip.length"))
             for track_index_in_block in range(tracks_in_block):
                 track_index = track_index_min + track_index_in_block
                 track = self.tracks[track_index]
@@ -178,11 +184,12 @@ class Set:
                         if track.group is not None and track.group.clips[clip_index] is None:
                             track.group.clips[clip_index] = Clip(track.group, clip_index, "", clip_length)
 
-            #--------------------------------------------------------------------------------
+            # --------------------------------------------------------------------------------
             # Scan devices
-            #--------------------------------------------------------------------------------
+            # --------------------------------------------------------------------------------
             self.logger.debug(" - Scanning tracks %d-%d: devices" % (track_index_min, track_index_max))
-            rv = self.live.query("/live/song/get/track_data", (track_index_min, track_index_max, "track.num_devices", "device.name"))
+            rv = self.live.query("/live/song/get/track_data",
+                                 (track_index_min, track_index_max, "track.num_devices", "device.name"))
             rv_index = 0
             for track_index_in_block in range(tracks_in_block):
                 track_index = track_index_min + track_index_in_block
@@ -220,11 +227,24 @@ class Set:
                     self.tracks.append(track)
                     if track_group:
                         track_group.tracks.append(track)
+
                 for clip_data in track_data["clips"]:
                     clip = Clip(track, clip_data["index"], clip_data["name"], clip_data["length"])
                     track.clips[clip.index] = clip
                     if track.group is not None and track.group.clips[clip.index] is None:
                         track.group.clips[clip.index] = Clip(track.group, clip.index, "", clip.length)
+
+                for device_index, device_data in enumerate(track_data["devices"]):
+                    device = Device(track, device_index, device_data["name"])
+                    device.parameters = []
+                    for parameter_index, parameter_data in enumerate(device_data["parameters"]):
+                        parameter = Parameter(device, parameter_index, parameter_data["name"], parameter_data["value"])
+                        parameter.min = parameter_data["min"]
+                        parameter.max = parameter_data["max"]
+                        parameter.is_quantized = parameter_data["is_quantized"]
+                        device.parameters.append(parameter)
+                    track.devices.append(device)
+
         self.scanned = True
         self.logger.info("Scanned %d tracks" % len(self.tracks))
 
@@ -245,7 +265,8 @@ class Set:
 
             self.load(filename)
             if len(self.tracks) != self.num_tracks:
-                self.logger.info("Loaded %d tracks, but found %d - looks like set has changed" % (len(self.tracks), self.num_tracks))
+                self.logger.info(
+                    "Loaded %d tracks, but found %d - looks like set has changed" % (len(self.tracks), self.num_tracks))
                 self.reset()
                 raise LiveIOError
         except (EOFError, LiveIOError) as e:
@@ -265,16 +286,16 @@ class Set:
         self.__setstate__(data.__dict__)
         self.logger.info("load: Set loaded OK (%d tracks)" % (len(self.tracks)))
 
-        #------------------------------------------------------------------------
+        # ------------------------------------------------------------------------
         # After loading, set all active clip states to stopped.
         # Otherwise, if we scanned during playback, it will erroneously appear
         # as if stopped clips are playing.
-        #------------------------------------------------------------------------
+        # ------------------------------------------------------------------------
         self._reset_clip_states()
 
-        #------------------------------------------------------------------------
+        # ------------------------------------------------------------------------
         # re-add unserialisable mutexes.
-        #------------------------------------------------------------------------
+        # ------------------------------------------------------------------------
         self._add_mutexes()
 
     def save(self, filename: str = "set"):
@@ -328,19 +349,19 @@ class Set:
         self._next_beat_event.set()
 
     def wait_for_next_beat(self):
-        #------------------------------------------------------------------------
+        # ------------------------------------------------------------------------
         # we need to use events to prevent lockup -- if we call a callback
         # directly from the Live thread that makes another query to the Live
         # server, the first event will never become unlocked and we'll block
         # forever.
-        #------------------------------------------------------------------------
+        # ------------------------------------------------------------------------
         self._next_beat_event.clear()
         self.live.beat_callback = self._next_beat_callback
 
-        #------------------------------------------------------------------------
+        # ------------------------------------------------------------------------
         # don't want to use .wait() as it prevents response to keyboard input
         # so ctrl-c will not work.
-        #------------------------------------------------------------------------
+        # ------------------------------------------------------------------------
         while not self._next_beat_event.is_set():
             time.sleep(0.01)
 
@@ -359,14 +380,14 @@ class Set:
         # don't want to use .wait() as it prevents response to keyboard input
         # so ctrl-c will not work.
         try:
-            #------------------------------------------------------------------------
+            # ------------------------------------------------------------------------
             # if we can query tempo, the set is running
-            #------------------------------------------------------------------------
+            # ------------------------------------------------------------------------
             tempo = self.live.query("/live/song/get/tempo", timeout=0.1)
         except LiveConnectionError:
-            #------------------------------------------------------------------------
+            # ------------------------------------------------------------------------
             # otherwise, wait for set startup
-            #------------------------------------------------------------------------
+            # ------------------------------------------------------------------------
             while not self._startup_event.is_set():
                 time.sleep(0.01)
 
@@ -405,9 +426,9 @@ class Set:
         if "LIVE_ROOT" in os.environ:
             paths.append(os.environ["LIVE_ROOT"])
 
-        #------------------------------------------------------------------------
+        # ------------------------------------------------------------------------
         # Iterate through each path searching for the project file.
-        #------------------------------------------------------------------------
+        # ------------------------------------------------------------------------
         path = None
         for root in paths:
             path = os.path.join(root, filename)
@@ -429,10 +450,10 @@ class Set:
         if not os.path.exists(path):
             raise LiveIOError("Couldn't find project file '%s'. Have you set the LIVE_ROOT environmental variable?")
 
-        #------------------------------------------------------------------------
+        # ------------------------------------------------------------------------
         # Assume that the alphabetically-last Ableton binary is the one we 
         # want (ie, greatest version number.)
-        #------------------------------------------------------------------------
+        # ------------------------------------------------------------------------
         ableton = sorted(glob.glob("/Applications/Ableton*.app"))[-1]
         subprocess.call(["open", "-a", ableton, path])
 
@@ -441,10 +462,10 @@ class Set:
         return True
 
     def _get_last_opened_set_filename(self) -> Optional[str]:
-        #------------------------------------------------------------------------
+        # ------------------------------------------------------------------------
         # Parse Live's CrashRecoveryInfo file to obtain the pathname of
         # the currently-open set.
-        #------------------------------------------------------------------------
+        # ------------------------------------------------------------------------
         root = os.path.expanduser("~/Library/Preferences/Ableton")
         logfiles = glob.glob("%s/Live */CrashRecoveryInfo.cfg" % root)
 
@@ -455,10 +476,10 @@ class Set:
             with open(logfile, "rb") as fd:
                 data = fd.read()
                 for i in range(len(data) - 4):
-                    #------------------------------------------------------------------------
+                    # ------------------------------------------------------------------------
                     # Locate the array of bytes which indicates the start of the set
                     # pathname.
-                    #------------------------------------------------------------------------
+                    # ------------------------------------------------------------------------
                     if data[i:i + 4] == bytes([0x44, 0x00, 0x12, 0x00]):
                         data = data[i + 5:]
                         data = data[:data.index(0x00)]
@@ -471,9 +492,9 @@ class Set:
         """ Retrieve filename of currently-open Ableton Live set
         based on inspecting Live's last Log.txt, or None if Live not open. """
 
-        #------------------------------------------------------------------------
+        # ------------------------------------------------------------------------
         # If Live is not running at all, return None.
-        #------------------------------------------------------------------------
+        # ------------------------------------------------------------------------
         is_running = os.system("ps axc -o command  | grep -q ^Live$") == 0
         if is_running:
             return self._get_last_opened_set_filename()
@@ -488,9 +509,9 @@ class Set:
         except Exception as e:
             return False
 
-    #------------------------------------------------------------------------
+    # ------------------------------------------------------------------------
     # Properties
-    #------------------------------------------------------------------------
+    # ------------------------------------------------------------------------
 
     tempo = property(fget=make_getter("song", "tempo"),
                      fset=make_setter("song", "tempo"),
@@ -512,9 +533,9 @@ class Set:
                                    fset=make_setter("song", "arrangement_overdub"),
                                    doc="Arrangement overdub")
 
-    #--------------------------------------------------------------------------------
+    # --------------------------------------------------------------------------------
     # Start/stop playback
-    #--------------------------------------------------------------------------------
+    # --------------------------------------------------------------------------------
 
     def start_playing(self) -> None:
         self.live.cmd("/live/song/start_playing")
@@ -531,9 +552,9 @@ class Set:
     is_playing = property(make_getter("song", "is_playing"),
                           doc="Whether the song is playing")
 
-    #--------------------------------------------------------------------------------
+    # --------------------------------------------------------------------------------
     # Undo/redo
-    #--------------------------------------------------------------------------------
+    # --------------------------------------------------------------------------------
 
     can_undo = property(fget=make_getter("song", "can_undo"),
                         doc="Whether an undo operation is possible")
@@ -552,9 +573,9 @@ class Set:
         """
         self.live.cmd("/live/redo")
 
-    #--------------------------------------------------------------------------------
+    # --------------------------------------------------------------------------------
     # Tracks
-    #--------------------------------------------------------------------------------
+    # --------------------------------------------------------------------------------
 
     num_tracks = property(fget=make_getter("song", "num_tracks"),
                           doc="Number of tracks")
@@ -628,9 +649,9 @@ class Set:
                 return group
         return None
 
-    #--------------------------------------------------------------------------------
+    # --------------------------------------------------------------------------------
     # Scenes
-    #--------------------------------------------------------------------------------
+    # --------------------------------------------------------------------------------
 
     num_scenes = property(make_getter("song", "num_scenes"),
                           doc="Number of scenes")
@@ -653,9 +674,9 @@ class Set:
         """
         self.live.cmd("/live/song/delete_scene", scene_index)
 
-    #------------------------------------------------------------------------
+    # ------------------------------------------------------------------------
     # TODO: Master volume
-    #------------------------------------------------------------------------
+    # ------------------------------------------------------------------------
 
     master_volume = property(fget=make_getter("song", "master_volume"),
                              fset=make_setter("song", "master_volume"),
@@ -664,10 +685,10 @@ class Set:
                           fset=make_setter("song", "master_pan"),
                           doc="Master pan (-1..1)")
 
-    #--------------------------------------------------------------------------------
+    # --------------------------------------------------------------------------------
     # Cues
     # TODO: Refactor cues
-    #--------------------------------------------------------------------------------
+    # --------------------------------------------------------------------------------
     def prev_cue(self):
         """
         Jump to the previous cue.
@@ -680,16 +701,16 @@ class Set:
         """
         self.live.cmd("/live/next/cue")
 
-
-    #--------------------------------------------------------------------------------
+    # --------------------------------------------------------------------------------
     # Log level
-    #--------------------------------------------------------------------------------
+    # --------------------------------------------------------------------------------
     log_level = property(fget=make_getter("api", "log_level"),
                          fset=make_setter("api", "log_level"),
                          doc="Log level (can be one of: debug, info, warning, error, critical)")
 
-    def back_to_arranger(self):
-        self.live.cmd("/live/song/back_to_arranger")
+    back_to_arranger = property(fget=make_getter("song", "back_to_arranger"),
+                                fset=make_setter("song", "back_to_arranger"),
+                                doc="Set back to arranger")
 
     @property
     def average_process_usage(self):
