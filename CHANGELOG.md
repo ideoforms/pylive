@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.2.2](https://github.com/ideoforms/pylive/releases/tag/v0.2.2) (2022-06-19)
+
+* Add support for [python-osc](https://pypi.org/project/python-osc/) (thanks to [Tom O'Connell](https://github.com/tom-oconnell))
+
 ## [v0.2.1](https://github.com/ideoforms/pylive/releases/tag/v0.2.1) (2019-09-30)
 
 * Fix bug in which `Set.currently_open()` sometimes does not return the correct path
