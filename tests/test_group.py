@@ -7,12 +7,13 @@ import live
 from tests.shared import open_test_set
 
 def setup_module():
-    open_test_set()
+    # open_test_set()
+    pass
 
 @pytest.fixture(scope="module")
 def group():
     set = live.Set()
-    set.scan(scan_devices = True)
+    set.scan(scan_devices=True)
     set.groups[0].stop()
     time.sleep(0.1)
     return set.groups[0]
@@ -38,4 +39,3 @@ def test_group_stop(group):
     group.stop()
     time.sleep(0.2)
     assert group.is_stopped
-
