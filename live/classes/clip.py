@@ -97,6 +97,10 @@ class Clip:
         self.live.cmd("/live/clip/stop", (self.track.index, self.index))
         self.track.playing = False
 
+    def add_note(self, pitch, start_time, duration, velocity, mute):
+        self.live.cmd("/live/clip/add/notes", (self.track.index, self.index, pitch, start_time, duration, velocity, mute))
+
+
     pitch_coarse = property(fget=make_getter("clip", "pitch_coarse"),
                             fset=make_setter("clip", "pitch_coarse"),
                             doc="pitch_coarse")
