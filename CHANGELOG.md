@@ -1,13 +1,17 @@
 # Changelog
 
+## [v0.3.0](https://github.com/ideoforms/pylive/releases/tag/v0.3.0) (2023-07-14)
+
+- Completely overhaul implementation to use [AbletonOSC](https://github.com/ideoforms/AbletonOSC) as a Live API, retiring support for LiveOSC
+
 ## [v0.2.2](https://github.com/ideoforms/pylive/releases/tag/v0.2.2) (2022-06-19)
 
-* Add support for [python-osc](https://pypi.org/project/python-osc/) (thanks to [Tom O'Connell](https://github.com/tom-oconnell))
+- Add support for [python-osc](https://pypi.org/project/python-osc/) (thanks to [Tom O'Connell](https://github.com/tom-oconnell))
 
 ## [v0.2.1](https://github.com/ideoforms/pylive/releases/tag/v0.2.1) (2019-09-30)
 
-* Fix bug in which `Set.currently_open()` sometimes does not return the correct path
-* Add support in `Track` for creating/deleting clips
+- Fix bug in which `Set.currently_open()` sometimes does not return the correct path
+- Add support in `Track` for creating/deleting clips
 
 ## [v0.2.0](https://github.com/ideoforms/pylive/releases/tag/v0.2.0) (2019-05-28)
 
