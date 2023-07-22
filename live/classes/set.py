@@ -3,6 +3,8 @@
 import os
 import math
 import glob
+import platform
+import tempfile
 import time
 import pickle
 import logging
@@ -212,7 +214,9 @@ class Set:
         self.groups = []
 
         import json
-        with open("/tmp/abletonosc-song-structure.json", "r") as fd:
+        tempdir = tempfile.gettempdir()
+        tmp = tempdir + "\abletonosc-song-structure.json" if platform.system() == "Windows" else "/tmp/abletonosc-song-structure.json"
+        with open(tmp, "r") as fd:
             data = json.load(fd)
             tracks = data["tracks"]
             for track_data in tracks:
