@@ -1,7 +1,9 @@
+import os
 import inspect
 import logging
 import argparse
 import threading
+import tempfile
 
 from live.exceptions import LiveConnectionError
 
@@ -91,7 +93,7 @@ class Query:
             live.cmd("/live/tempo", 110.0) """
 
         self.logger.debug("OSC output: %s %s", msg, args)
-        with open("/tmp/liveosc.log", "a") as fd:
+        with open(os.path.join(tempfile.gettempdir(), "liveosc.log"), "a") as fd:
             import datetime
             fd.write("%s %s %s\n" % (datetime.datetime.now(), msg, args))
         try:

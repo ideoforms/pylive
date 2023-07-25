@@ -159,6 +159,9 @@ class Track:
     fired_slot_index = property(fget=make_getter("track", "fired_slot_index"),
                                 fset=make_setter("track", "fired_slot_index"),
                                 doc="Fired slot index")
+    color_index = property(fget=make_getter("track", "color_index"),
+                           fset=make_setter("track", "color_index"),
+                           doc="Color index (0.69)")
 
     def get_send(self, send_index: int):
         return self.live.query("/live/track/get/send", (self.index, send_index))[1]
