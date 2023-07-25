@@ -214,9 +214,7 @@ class Set:
         self.groups = []
 
         import json
-        tempdir = tempfile.gettempdir()
-        tmp = tempdir + "\abletonosc-song-structure.json" if platform.system() == "Windows" else "/tmp/abletonosc-song-structure.json"
-        with open(tmp, "r") as fd:
+        with open(os.path.join(tempfile.gettempdir(), "abletonosc-song-structure.json"), "r") as fd:
             data = json.load(fd)
             tracks = data["tracks"]
             for track_data in tracks:
