@@ -13,7 +13,7 @@ def setup_module():
 @pytest.fixture(scope="module")
 def live_set():
     set = live.Set()
-    set.scan(scan_devices=True, scan_clip_names=True)
+    set.scan(scan_device=True, scan_clip_names=True)
     set.quantization = 0
     set.tracks[4].stop()
     time.sleep(0.2)
