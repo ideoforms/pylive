@@ -13,13 +13,13 @@ def setup_module():
 @pytest.fixture(scope="module")
 def track():
     set = live.Set()
-    set.scan()
-    set.tracks[1].stop()
-    time.sleep(0.1)
+    set.scan_import()
+    # set.tracks[1].stop()
+    # time.sleep(0.1)
     return set.tracks[1]
 
 def test_track_get_clips(track):
-    assert len(track.clips) == 256
+    assert len(track.clips) == 1024
     assert len(list(filter(lambda n: n is not None, track.clips))) == 4
 
 def test_track_get_active_clips(track):

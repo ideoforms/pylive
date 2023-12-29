@@ -7,15 +7,13 @@ import live
 from tests.shared import open_test_set
 
 def setup_module():
-    # open_test_set()
     pass
 
 @pytest.fixture(scope="module")
 def live_set():
     set = live.Set()
-    set.scan(scan_devices=True, scan_clip_names=True)
+    set.scan_import()
     set.quantization = 0
-    set.tracks[4].stop()
     time.sleep(0.2)
     return set
 

@@ -1,17 +1,27 @@
+from .track import Track
 import logging
 
 class Device:
-    """ Represents an instrument or audio effect residing within a Track.
+    """
+    Represents an instrument or audio effect residing within a Track.
     Contains one one or more Parameters.
 
-    Properties:
-    track -- Track object that this Device resides within
-    index -- Numeric index of this device
-    name -- Human-readable name
-    parameters -- List of Parameter objects
+    Attributes:
+        track: Track object that this Device resides within
+        index: Numeric index of this device
+        name: Human-readable name
+        parameters: List of Parameter objects
     """
 
-    def __init__(self, track, index, name):
+    def __init__(self, track: Track, index: int, name: str):
+        """
+        Encapsulates a Live Device object.
+
+        Args:
+            track (Track): The track that this device belongs to
+            index (int): The index of this device in the track
+            name (str): The name of the track in Live
+        """
         self.track = track
         self.index = index
         self.name = name
@@ -37,17 +47,19 @@ class Device:
 
     @property
     def set(self):
-        """ Helper function to return the Set that this Device resides within. """
+        """
+        Helper function to return the set that this device resides within.
+        """
         return self.track.set
 
-    def set_parameter(self, index, value):
+    def set_parameter(self, index: int, value):
         if type(index) == int:
             parameter = self.parameters[index]
         else:
             parameter = next(p for p in self.parameters if p.name == index)
         parameter.value = value
 
-    def get_parameter(self, index):
+    def get_parameter(self, index: int):
         if type(index) == int:
             parameter = self.parameters[index]
         else:

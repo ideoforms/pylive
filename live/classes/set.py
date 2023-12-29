@@ -105,12 +105,15 @@ class Set:
     # SCAN
     # --------------------------------------------------------------------------------
 
-    def scan(self, scan_scenes: bool = False, scan_device: bool = False, scan_clip_names: bool = False):
+    def scan(self,
+             scan_scenes: bool = False,
+             scan_devices: bool = False,
+             scan_clip_names: bool = False):
         """
         Interrogates the currently open Ableton Live set for its structure:
         number of tracks, clips, scenes, etc.
 
-        For speed, certain elements are not scanned by default:
+        For speed, certain elements are not scanned by default.
 
         Args:
             scan_scenes: Queries scene names

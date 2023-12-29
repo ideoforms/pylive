@@ -1,5 +1,7 @@
 import logging
 import random
+from .device import Device
+from .track import Track
 from ..query import Query
 
 class Parameter:
@@ -8,7 +10,7 @@ class Parameter:
     effects unit.)
     """
 
-    def __init__(self, device, index, name, value):
+    def __init__(self, device: Device, index: int, name: str, value: float):
         """
         Args:
             device: the Device object that this Parameter belongs to
@@ -39,29 +41,41 @@ class Parameter:
 
     @property
     def set(self):
-        """ Helper function to return the Set that this parameter resides within. """
+        """ Returns the Set that this parameter resides within. """
         return self.device.track.set
 
     @property
-    def track(self):
-        """ Helper function to return the Track that this parameter resides within. """
+    def track(self) -> Track:
+        """ Returns the Track that this parameter resides within. """
         return self.device.track
 
-    def dump(self):
-        self.logger.info()
+    def dump(self) -> None:
+        self.logger.info(str(self))
 
-    def set_value(self, value):
+    def set_value(self, value: float) -> None:
+        """
+        Set the value of this parameter.
+
+        Args:
+            value (float): The value to set.
+        """
         self._value = value
         self.live.cmd("/live/device/set/parameter/value",
                       (self.device.track.index, self.device.index, self.index, value))
 
-    def get_value(self):
+    def get_value(self) -> float:
+        """
+        Query the value of this parameter.
+
+        Returns:
+            The parameter's current value in Live.
+        """
         return self.live.query("/live/device/get/parameter/value",
                                (self.device.track.index, self.device.index, self.index))
 
-    value = property(get_value, set_value)
+    value = property(get_value, set_value, doc="Query or set the value of this parameter")
 
-    def randomise(self):
+    def randomise(self) -> None:
         """
         Set the parameter's value to a uniformly random value within
         [min, max]
