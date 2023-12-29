@@ -52,7 +52,7 @@ import random
 # Scan the set's contents and set its tempo to 110bpm.
 #------------------------------------------------------------------------
 set = live.Set()
-set.scan(scan_clip_names = True, scan_devices = True)
+set.scan(scan_clip_names = True, scan_device = True)
 set.tempo = 110.0
 
 #------------------------------------------------------------------------

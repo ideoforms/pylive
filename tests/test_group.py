@@ -13,8 +13,6 @@ def setup_module():
 def group():
     set = live.Set()
     set.scan_import()
-    # set.groups[0].stop()
-    # time.sleep(0.1)
     return set.groups[0]
 
 def test_group_properties(group):
