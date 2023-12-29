@@ -3,8 +3,6 @@
 import os
 import math
 import glob
-import platform
-import tempfile
 import time
 import pickle
 import logging
@@ -202,6 +200,59 @@ class Set:
                     device_name = rv[rv_index]
                     rv_index += 1
                     device = Device(track, device_index, device_name)
+
+                    rv_num_params = self.live.query("/live/device/get/num_parameters",
+                                 (track_index, device_index))
+
+                    # print(f"{rv_num_params}: NUM PARAMS for track {track_index}'s device {device_index}")
+
+                    rv_param_names = self.live.query("/live/device/get/parameters/name",
+                                 (track_index, device_index)) 
+                
+                    # print(f"{rv_param_names}: PARAM VALUES for track {track_index}'s device {device_index}")
+
+                    rv_param_values = self.live.query("/live/device/get/parameters/value",
+                                 (track_index, device_index)) 
+                
+                    # print(f"{rv_param_values}: PARAM VALUES for track {track_index}'s device {device_index}")
+
+
+                    rv_param_min = self.live.query("/live/device/get/parameters/min",
+                                 (track_index, device_index)) 
+                
+                    # print(f"{rv_param_min}: PARAM VALUES for track {track_index}'s device {device_index}")
+
+                    rv_param_max = self.live.query("/live/device/get/parameters/max",
+                                 (track_index, device_index)) 
+                
+                    # print(f"{rv_param_max}: PARAM VALUES for track {track_index}'s device {device_index}")
+
+                    rv_param_quantized = self.live.query("/live/device/get/parameters/is_quantized",
+                                 (track_index, device_index)) 
+                    
+                    all_parameters = []
+
+                    for i in range(rv_num_params[2]): # +1 here? shift 6 for track 2 device 1?
+                        all_parameters.append({
+                            "name": rv_param_names[i+2], # first 2 params are empty??? is this for all devices?
+                            "value": rv_param_values[i],
+                            "min": rv_param_min[i],
+                            "max": rv_param_max[i],
+                            "is_quantized": rv_param_quantized[i]
+                        })
+
+                    # print(list(all_parameters))
+
+
+                    # print(f"{rv_param_quantized}: PARAM VALUES for track {track_index}'s device {device_index}")
+
+                    device.parameters = []
+                    for parameter_index, parameter_data in enumerate(all_parameters):
+                        parameter = Parameter(device, parameter_index, parameter_data["name"], parameter_data["value"])
+                        parameter.min = parameter_data["min"]
+                        parameter.max = parameter_data["max"]
+                        parameter.is_quantized = parameter_data["is_quantized"]
+                        device.parameters.append(parameter)
                     track.devices.append(device)
 
         self.scanned = True
@@ -214,7 +265,7 @@ class Set:
         self.groups = []
 
         import json
-        with open(os.path.join(tempfile.gettempdir(), "abletonosc-song-structure.json"), "r") as fd:
+        with open("/tmp/abletonosc-song-structure.json", "r") as fd:
             data = json.load(fd)
             tracks = data["tracks"]
             for track_data in tracks:
