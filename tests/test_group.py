@@ -13,7 +13,7 @@ def setup_module():
 @pytest.fixture(scope="module")
 def group():
     set = live.Set()
-    set.scan(scan_devices=True)
+    set.scan(scan_device=True)
     set.groups[0].stop()
     time.sleep(0.1)
     return set.groups[0]
