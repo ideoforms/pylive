@@ -35,10 +35,6 @@ class Parameter:
     def __str__(self):
         return "Parameter (%d,%d,%d): %s (range %.3f-%.3f)" % (self.device.track.index, self.device.index, self.index, self.name, self.min, self.max)
 
-    def is_integer(self):
-        # TODO: fix for enums (such as Quality in Reverb unit). how?
-        return self.name.endswith("On")
-
     @property
     def set(self):
         """ Returns the Set that this parameter resides within. """
@@ -81,7 +77,7 @@ class Parameter:
         [min, max]
         """
 
-        if self.is_integer():
+        if self.is_quantized:
             value = random.randint(self.min, self.max)
         else:
             value = random.uniform(self.min, self.max)
