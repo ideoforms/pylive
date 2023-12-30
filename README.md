@@ -1,7 +1,5 @@
 # PyLive
 
-**NOTE: pylive has now been updated to to interface exclusively with [AbletonOSC](https://github.com/ideoforms/AbletonOSC) for Live 11 support. Legacy LiveOSC is no longer supported beyond [v0.2.2](https://github.com/ideoforms/pylive/releases/tag/v0.2.2).**
-
 PyLive is a framework for querying and controlling Ableton Live from a standalone Python script, mediated via Open Sound Control. It is effectively an interface to the Live Control Surfaces paradigm, which means it can do anything that a hardware control surface can do, including:
 
  - query and modify global parameters such as tempo, volume, pan, quantize, arrangement time
@@ -11,6 +9,8 @@ PyLive is a framework for querying and controlling Ableton Live from a standalon
 It can perform many of the operations described in the [AbletonOSC API](https://github.com/ideoforms/AbletonOSC). **More comprehensive feature coverage is a work-in-progress.**
 
 If you are looking simply to send MIDI messages to Live, this module is not what you want. Instead, try setting up a [virtual MIDI bus](https://help.ableton.com/hc/en-us/articles/209774225-How-to-setup-a-virtual-MIDI-bus) and using [isobar](https://ideoforms.github.io/isobar/) to generate MIDI sequences.
+
+**Note for legacy users: As of 2023, pylive has been updated to to interface exclusively with [AbletonOSC](https://github.com/ideoforms/AbletonOSC) for Live 11 support. Legacy LiveOSC is no longer supported beyond [v0.2.2](https://github.com/ideoforms/pylive/releases/tag/v0.2.2).**
 
 ## Requirements
 
@@ -26,7 +26,7 @@ From PyPi:
 pip3 install pylive
 ```
 
-Or via git:
+Or to install the latest (pre-release) code from git:
 ```
 git clone https://github.com/ideoforms/pylive.git
 cd pylive
