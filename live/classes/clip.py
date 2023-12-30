@@ -97,7 +97,12 @@ class Clip:
         self.live.cmd("/live/clip/stop", (self.track.index, self.index))
         self.track.playing = False
 
-    def add_note(self, pitch, start_time, duration, velocity, mute):
+    def add_note(self,
+                 pitch: int,
+                 start_time: float,
+                 duration: float,
+                 velocity: int,
+                 mute: bool):
         self.live.cmd("/live/clip/add/notes", (self.track.index, self.index, pitch, start_time, duration, velocity, mute))
 
 

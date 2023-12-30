@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import logging
-
 from .track import Track
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .clip import Clip
 
 class Group(Track):
     """
@@ -53,7 +56,7 @@ class Group(Track):
             track.dump()
 
     @property
-    def active_clips(self):
+    def active_clips(self) -> list[Clip]:
         """ Return a dictionary of all non-empty clipslots: { index : Clip, ... } """
         active_clips = [n for n in self.clips if n is not None]
         return active_clips

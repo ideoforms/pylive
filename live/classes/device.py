@@ -1,4 +1,11 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from .track import Track
+if TYPE_CHECKING:
+    from .set import Set
+    from .parameter import Parameter
+    
+
 import logging
 
 class Device:
@@ -25,7 +32,7 @@ class Device:
         self.track = track
         self.index = index
         self.name = name
-        self.parameters = []
+        self.parameters: list[Parameter] = []
         self.logger = logging.getLogger(__name__)
 
     def __str__(self):
@@ -46,20 +53,20 @@ class Device:
         self.parameters = d["parameters"]
 
     @property
-    def set(self):
+    def set(self) -> Set:
         """
         Helper function to return the set that this device resides within.
         """
         return self.track.set
 
-    def set_parameter(self, index: int, value):
+    def set_parameter(self, index: int, value: float) -> None:
         if type(index) == int:
             parameter = self.parameters[index]
         else:
             parameter = next(p for p in self.parameters if p.name == index)
         parameter.value = value
 
-    def get_parameter(self, index: int):
+    def get_parameter(self, index: int) -> float:
         if type(index) == int:
             parameter = self.parameters[index]
         else:

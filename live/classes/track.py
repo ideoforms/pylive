@@ -3,7 +3,12 @@ from __future__ import annotations
 from ..constants import CLIP_STATUS_PLAYING, CLIP_STATUS_STARTING
 from ..exceptions import LiveInvalidOperationException
 from ..query import Query
+from typing import TYPE_CHECKING
 from .clip import Clip
+
+if TYPE_CHECKING:
+    from .device import Device
+    from .group import Group
 
 import logging
 
@@ -24,7 +29,7 @@ class Track:
     May be contained within a Group.
     """
 
-    def __init__(self, set, index: int, name: str, group: "Group" = None):
+    def __init__(self, set, index: int, name: str, group: Group = None):
         """
         Args:
             set: The containing Set object
@@ -40,7 +45,7 @@ class Track:
         self.is_group = False
         self.clip_init = None
         self.clips: list[Clip] = [None] * 1024
-        self.devices = []
+        self.devices: list[Device] = []
         self.logger = logging.getLogger(__name__)
         self.live = Query()
 
