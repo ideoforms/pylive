@@ -4,18 +4,10 @@ import pytest
 import time
 import live
 
-from tests.shared import open_test_set
+from .shared import open_test_set, live_set
 
 def setup_module():
-    pass
-
-@pytest.fixture(scope="module")
-def live_set():
-    set = live.Set()
-    set.scan_import()
-    set.quantization = 0
-    time.sleep(0.2)
-    return set
+    open_test_set()
 
 @pytest.fixture(scope="module")
 def clip(live_set):

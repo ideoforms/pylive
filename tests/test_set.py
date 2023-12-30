@@ -7,12 +7,13 @@ import os
 import live
 from live import Set
 from . import set
+from .shared import open_test_set
 
 LIVE_TMP_SET_NAME = ".tmp_set"
 LIVE_TMP_SET_PATH = "%s.pickle" % LIVE_TMP_SET_NAME
 
 def setup_module():
-    pass
+    open_test_set()
 
 def test_set_connected(set: Set):
     assert set.is_connected
@@ -70,7 +71,7 @@ def test_set_num_tracks(set: Set):
     assert set.num_tracks == 6
     set.create_midi_track(-1)
     assert set.num_tracks == 7
-    set.delete_track(4)
+    set.delete_track(6)
     assert set.num_tracks == 6
 
 def test_set_num_scenes(set: Set):
@@ -176,6 +177,5 @@ def test_set_wait_for_next_beat(set: Set):
     set.stop_playing()
     assert True
 
-@pytest.mark.skip
 def test_set_currently_open(set: Set):
-    assert set.currently_open().endswith("Tests.als")
+    assert set.get_open_set_filename().endswith("Tests.als")

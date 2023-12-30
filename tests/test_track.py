@@ -4,18 +4,15 @@ import pytest
 import time
 import live
 
-from tests.shared import open_test_set
+from .shared import open_test_set
 
 def setup_module():
-    #open_test_set()
-    pass
+    open_test_set()
 
 @pytest.fixture(scope="module")
 def track():
     set = live.Set()
     set.scan_import()
-    # set.tracks[1].stop()
-    # time.sleep(0.1)
     return set.tracks[1]
 
 def test_track_get_clips(track):
@@ -28,26 +25,31 @@ def test_track_get_active_clips(track):
 def test_track_get_devices(track):
     assert len(track.devices) == 1
 
-def test_track_create_clip(track):
+def test_track_create_delete_clip(track):
+    # create a clip where one already exists
     with pytest.raises(live.LiveInvalidOperationException) as excinfo:
         track.create_clip(0, 1.0)
-    track.create_clip(5, 1.0)
 
-def test_track_delete_clip(track):
+    # delete a clip where one does not exist
     with pytest.raises(live.LiveInvalidOperationException) as excinfo:
         track.delete_clip(6)
-    track.delete_clip(5)
+
+    # create and delete a clip
+    track.create_clip(6, 1.0)
+    track.delete_clip(6)
 
 def test_track_states(track):
-    # is_stopped
-    # is_starting
-    # is_playing
-    track.set.clip_trigger_quantization = 7
+    # Set quantization to 1/2 bar, and ensure track states are passed through as expected:
+    #  - stopped
+    #  - starting
+    #  - playing
+    #  - stopped
+    track.set.clip_trigger_quantization = 5
     assert track.is_stopped
     track.set.start_playing()
-    time.sleep(0.1)
+    time.sleep(0.25)
     track.clips[0].play()
-    time.sleep(0.2)
+    time.sleep(0.25)
     assert track.is_starting
     time.sleep(0.5)
     assert track.is_playing
@@ -55,6 +57,7 @@ def test_track_states(track):
     time.sleep(0.2)
     assert track.is_stopped
     track.set.stop_playing()
+    track.set.clip_trigger_quantization = 0
 
 def test_track_stop(track):
     track.set.quantization = 0
@@ -65,6 +68,7 @@ def test_track_stop(track):
     track.stop()
     time.sleep(0.2)
     assert track.is_stopped
+    track.set.stop_playing()
 
 def test_track_scan_clip_names(track):
     assert track.active_clips[0].name == "one"

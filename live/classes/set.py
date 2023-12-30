@@ -1,11 +1,13 @@
-# -*- coding: utf-8 -*-
-
+import re
 import os
+import sys
 import math
 import glob
+import json
 import time
 import pickle
 import logging
+import tempfile
 import threading
 import subprocess
 from typing import Optional
@@ -19,7 +21,6 @@ from .parameter import Parameter
 from ..query import Query
 from ..constants import CLIP_STATUS_STOPPED
 from ..exceptions import LiveIOError, LiveConnectionError
-
 
 def make_getter(class_identifier, prop):
     # TODO: Replacement for name_cache
@@ -261,14 +262,27 @@ class Set:
         self.scanned = True
 
     def scan_import(self):
+        """
+        Scans the contents of the Live set by exporting the song structure to a local .json file.
+        Note that this will not work if the Live set is running on another system, i.e. over a network.
+        """
         rv = self.live.query("/live/song/export/structure")
         assert rv[0] == 1
 
         self.tracks = []
         self.groups = []
 
-        import json
-        with open("/tmp/abletonosc-song-structure.json", "r") as fd:
+        if sys.platform == "darwin":
+            #--------------------------------------------------------------------------------
+            # On macOS, TMPDIR by default points to a process-specific directory.
+            # We want to use a global temp dir (typically, tmp) so that other processes
+            # know where to find this output .json, so unset TMPDIR.
+            #--------------------------------------------------------------------------------
+            os.environ["TMPDIR"] = ""
+        tempdir = tempfile.gettempdir()
+        json_path = os.path.join(tempdir, "abletonosc-song-structure.json")
+                                   
+        with open(json_path, "r") as fd:
             data = json.load(fd)
             tracks = data["tracks"]
             for track_data in tracks:
@@ -302,7 +316,10 @@ class Set:
                     track.devices.append(device)
 
         self.scanned = True
-        self.logger.info("Scanned %d tracks" % len(self.tracks))
+
+        num_tracks = len(self.tracks)
+        num_clips = sum([len(track.active_clips) for track in self.tracks])
+        self.logger.info("Discovered %d clips in %d tracks" % (num_clips, num_tracks))
 
     def load_or_scan(self, filename: str = "set", **kwargs):
         """
@@ -475,7 +492,7 @@ class Set:
         Will only work with OS X right now as it presupposes an /Applications/*.app
         format for the Live app.
 
-        wait = True: block until the set is loaded (waits for a LiveOSC trigger)
+        wait_for_startup = True: block until the set is loaded (waits for a LiveOSC trigger)
         """
 
         paths = ["."]
@@ -497,14 +514,14 @@ class Set:
                 path = "%s Project/%s.als" % (path, path)
                 break
 
-        current = self.currently_open()
-        path = os.path.abspath(path)
-        if current and current == path:
+        if not os.path.exists(path):
+            raise LiveIOError("Couldn't find project file '%s'" % path)
+
+        path_abs = os.path.abspath(path)
+        path_current = self.get_open_set_filename()
+        if path_abs is not None and path_current == path_abs:
             self.logger.info("Project '%s' is already open" % os.path.basename(path))
             return
-
-        if not os.path.exists(path):
-            raise LiveIOError("Couldn't find project file '%s'. Have you set the LIVE_ROOT environmental variable?")
 
         # ------------------------------------------------------------------------
         # Assume that the alphabetically-last Ableton binary is the one we 
@@ -519,34 +536,35 @@ class Set:
 
     def _get_last_opened_set_filename(self) -> Optional[str]:
         # ------------------------------------------------------------------------
-        # Parse Live's CrashRecoveryInfo file to obtain the pathname of
-        # the currently-open set.
+        # Parse Live's Log.txt to obtain the pathname of the currently-open set.
+        # Tested on Live 11.2.
         # ------------------------------------------------------------------------
         root = os.path.expanduser("~/Library/Preferences/Ableton")
-        logfiles = glob.glob("%s/Live */CrashRecoveryInfo.cfg" % root)
+        log_path_wildcard = os.path.join(root, "Live *", "Log.txt")
+        log_paths = glob.glob(log_path_wildcard)
 
-        if logfiles:
-            logfiles = list(sorted(logfiles, key=lambda a: os.path.getmtime(a)))
-            logfile = logfiles[-1]
+        if log_paths:
+            log_paths = list(sorted(log_paths, key=lambda a: os.path.getmtime(a)))
+            log_path = log_paths[-1]
 
-            with open(logfile, "rb") as fd:
-                data = fd.read()
-                for i in range(len(data) - 4):
-                    # ------------------------------------------------------------------------
-                    # Locate the array of bytes which indicates the start of the set
-                    # pathname.
-                    # ------------------------------------------------------------------------
-                    if data[i:i + 4] == bytes([0x44, 0x00, 0x12, 0x00]):
-                        data = data[i + 5:]
-                        data = data[:data.index(0x00)]
-                        path = "/" + data.decode("utf8")
-                        return path
+            # Match any document-load actions that are *not* loads of MIDI Track (etc) defaults
+            pattern = r'Loading document "([^"]+)"'
+            antipattern = r"/Defaults/"
+            with open(log_path, "r") as fd:
+                for line in reversed(fd.readlines()):
+                    match = re.search(pattern, line)
+                    if match and not re.search(antipattern, line):
+                        return match.group(1)
 
         return None
 
-    def currently_open(self) -> Optional[str]:
-        """ Retrieve filename of currently-open Ableton Live set
-        based on inspecting Live's last Log.txt, or None if Live not open. """
+    def get_open_set_filename(self) -> Optional[str]:
+        """
+        Returns the full pathname to the currently-open Ableton Live set
+        based on inspecting Live's Log.txt, or None if Live not open.
+
+        Only presently supported on macOS, fixes welcomed.
+        """
 
         # ------------------------------------------------------------------------
         # If Live is not running at all, return None.
@@ -559,7 +577,12 @@ class Set:
 
     @property
     def is_connected(self) -> bool:
-        """ Test whether we can connect to Live """
+        """
+        Test whether we can connect to Live.
+
+        Returns:
+            bool: True if Live currently appears to be running, False otherwise.
+        """
         try:
             return bool(self.tempo)
         except Exception as e:
@@ -729,17 +752,6 @@ class Set:
             scene_index: The index of the scene to delete.
         """
         self.live.cmd("/live/song/delete_scene", scene_index)
-
-    # ------------------------------------------------------------------------
-    # TODO: Master volume
-    # ------------------------------------------------------------------------
-
-    master_volume = property(fget=make_getter("song", "master_volume"),
-                             fset=make_setter("song", "master_volume"),
-                             doc="Master volume (0..1)")
-    master_pan = property(fget=make_getter("song", "master_pan"),
-                          fset=make_setter("song", "master_pan"),
-                          doc="Master pan (-1..1)")
 
     # --------------------------------------------------------------------------------
     # Cues

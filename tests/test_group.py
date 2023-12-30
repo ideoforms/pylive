@@ -4,10 +4,10 @@ import pytest
 import time
 import live
 
-from tests.shared import open_test_set
+from .shared import open_test_set
 
 def setup_module():
-    pass
+    open_test_set()
 
 @pytest.fixture(scope="module")
 def group():
