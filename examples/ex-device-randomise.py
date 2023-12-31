@@ -14,7 +14,6 @@ logging.getLogger("live").setLevel(logging.INFO)
 
 def main():
     set = Set(scan=True)
-    set.scan()
     for track in set.tracks:
         for device in track.devices:
             print("%s: Randomising %d parameters" % (device, len(device.parameters)))
