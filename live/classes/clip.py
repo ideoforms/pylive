@@ -102,13 +102,31 @@ class Clip:
                  start_time: float,
                  duration: float,
                  velocity: int,
-                 mute: bool):
-        self.live.cmd("/live/clip/add/notes", (self.track.index, self.index, pitch, start_time, duration, velocity, mute))
+                 mute: bool) -> None:
+        """
+        Add a MIDI note event to this clip.
 
+        Args:
+            pitch: The MIDI pitch of the note, where 60 = C3
+            start_time: The floating-point start time in the clip, in beats
+            duration: The floating-point duration of the note, in beats
+            velocity: The MIDI velocity of the note, from 0..127
+            mute: If True, mutes the note.
+        """
+        self.live.cmd("/live/clip/add/notes", (self.track.index, self.index, pitch, start_time, duration, velocity, mute))
 
     pitch_coarse = property(fget=make_getter("clip", "pitch_coarse"),
                             fset=make_setter("clip", "pitch_coarse"),
-                            doc="pitch_coarse")
+                            doc="Coarse pitch bend")
+
     is_playing = property(fget=make_getter("clip", "is_playing"),
                           fset=make_setter("clip", "is_playing"),
-                          doc="is_playing")
+                          doc="True if the clip is playing, False otherwise")
+
+    is_midi_clip = property(fget=make_getter("clip", "is_midi_clip"),
+                            fset=make_setter("clip", "is_midi_clip"),
+                            doc="True if the clip is a MIDI clip, False otherwise")
+
+    is_audio_clip = property(fget=make_getter("clip", "is_audio_clip"),
+                             fset=make_setter("clip", "is_audio_clip"),
+                             doc="True if the clip is an audio clip, False otherwise")
