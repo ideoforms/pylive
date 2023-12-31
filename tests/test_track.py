@@ -11,8 +11,7 @@ def setup_module():
 
 @pytest.fixture(scope="module")
 def track():
-    set = live.Set()
-    set.scan_import()
+    set = live.Set(scan=True)
     return set.tracks[1]
 
 def test_track_get_clips(track):

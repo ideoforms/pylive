@@ -48,9 +48,14 @@ class Set:
     for its contents by calling the scan() method.
     """
 
-    def __init__(self):
+    def __init__(self, scan: bool = False):
         """
         Create a new Set object.
+        If scan is True, automatically connects to Live and queries the full set of tracks,
+        clips and devices in the set.
+
+        Args:
+            scan: If True, automatically scans the contents of the set.
         """
         # --------------------------------------------------------------------------
         # Indicates whether the set has been synchronised with Live
@@ -82,6 +87,10 @@ class Set:
         self.tracks: list[Track] = []
         self.scenes: list[Scene] = []
         self.reset()
+
+        if scan:
+            self.scan()
+
 
     def __str__(self):
         return "Set"

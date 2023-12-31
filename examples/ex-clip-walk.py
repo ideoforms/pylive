@@ -21,8 +21,7 @@ def main():
     #------------------------------------------------------------------------
     # Scan the contents of the Live set, and start it playing.
     #------------------------------------------------------------------------
-    set = live.Set()
-    set.scan()
+    set = live.Set(scan=True)
     set.dump()
     set.start_playing()
 

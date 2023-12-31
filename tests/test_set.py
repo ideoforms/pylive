@@ -13,8 +13,7 @@ LIVE_TMP_SET_PATH = "%s.pickle" % LIVE_TMP_SET_NAME
 
 @pytest.fixture
 def set() -> Set:
-    set = Set()
-    set.scan()
+    set = Set(scan=True)
     return set
 
 def setup_module():

@@ -11,8 +11,7 @@ def setup_module():
 
 @pytest.fixture(scope="module")
 def group():
-    set = live.Set()
-    set.scan_import()
+    set = live.Set(scan=True)
     return set.groups[0]
 
 def test_group_properties(group):

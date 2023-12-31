@@ -2,7 +2,7 @@ import live
 import pytest
 
 def open_test_set():
-    set = live.Set()
+    set = live.Set(scan=False)
     set.open("tests/Tests Project/Tests.als", wait_for_startup=True)
     set.clip_trigger_quantization = 0
     set.stop_playing()
@@ -10,6 +10,5 @@ def open_test_set():
 
 @pytest.fixture(scope="module")
 def live_set():
-    set = live.Set()
-    set.scan_import()
+    set = live.Set(scan=True)
     return set

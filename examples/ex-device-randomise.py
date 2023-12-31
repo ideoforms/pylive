@@ -13,7 +13,7 @@ logging.basicConfig(format="%(asctime)-15s %(message)s")
 logging.getLogger("live").setLevel(logging.INFO)
 
 def main():
-    set = Set()
+    set = Set(scan=True)
     set.scan()
     for track in set.tracks:
         for device in track.devices:

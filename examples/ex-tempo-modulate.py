@@ -18,7 +18,7 @@ logging.getLogger("live").setLevel(logging.INFO)
 # Don't need to scan the set for simple set-wide operations.
 #------------------------------------------------------------------------
 def main():
-    set = Set()
+    set = Set(scan=True)
 
     tempo_default = 120.0
     tempo_range = tempo_default * 0.5
