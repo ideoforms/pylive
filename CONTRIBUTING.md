@@ -1,5 +1,13 @@
 # Contributing 
 
+## Testing
+
+A test suite is included which automatically opens a predetermined set in Ableton Live and runs an array of unit tests. To run the tests:
+
+```
+python3 setup.py test
+```
+
 ## Publishing on pypi
 
 ```
