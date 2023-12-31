@@ -6,11 +6,16 @@ import os
 
 import live
 from live import Set
-from . import set
 from .shared import open_test_set
 
 LIVE_TMP_SET_NAME = ".tmp_set"
 LIVE_TMP_SET_PATH = "%s.pickle" % LIVE_TMP_SET_NAME
+
+@pytest.fixture
+def set() -> Set:
+    set = Set()
+    set.scan()
+    return set
 
 def setup_module():
     open_test_set()
@@ -149,20 +154,14 @@ def test_set_save(set: Set):
 
     os.unlink(LIVE_TMP_SET_PATH)
 
-@pytest.mark.skip
 def test_set_get_track_named(set: Set):
-    set.scan()
-
-    track = set.get_track_named("2-Operator")
-    assert track == set.tracks[1]
+    track = set.get_track_named("5-Conga")
+    assert track == set.tracks[4]
 
     track = set.get_track_named("Nonexistent")
     assert track is None
 
-@pytest.mark.skip
 def test_set_get_group_named(set: Set):
-    set.scan()
-
     group = set.get_group_named("1. Group")
     assert group == set.groups[0]
 

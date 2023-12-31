@@ -2,10 +2,8 @@ import live
 import pytest
 
 def open_test_set():
-    print("Opening test set")
     set = live.Set()
     set.open("tests/Tests Project/Tests.als", wait_for_startup=True)
-    set.scan_import()
     set.clip_trigger_quantization = 0
     set.stop_playing()
     set.stop_playing()

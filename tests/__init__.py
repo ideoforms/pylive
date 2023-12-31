@@ -4,10 +4,3 @@
 #
 # https://docs.pytest.org/en/latest/goodpractices.html#test-package-name
 #------------------------------------------------------------------------
-import pytest
-
-from live import Set
-
-@pytest.fixture
-def set() -> Set:
-    return Set()
