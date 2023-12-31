@@ -29,13 +29,11 @@ def make_getter(class_identifier, prop):
 
     return fn
 
-
 def make_setter(class_identifier, prop):
     def fn(self, value):
         self.live.cmd("/live/%s/set/%s" % (class_identifier, prop), (value,))
 
     return fn
-
 
 class Set:
     """
@@ -51,6 +49,9 @@ class Set:
     """
 
     def __init__(self):
+        """
+        Create a new Set object.
+        """
         # --------------------------------------------------------------------------
         # Indicates whether the set has been synchronised with Live
         # --------------------------------------------------------------------------
@@ -106,10 +107,29 @@ class Set:
     # SCAN
     # --------------------------------------------------------------------------------
 
-    def scan(self,
-             scan_scenes: bool = False,
-             scan_devices: bool = False,
-             scan_clip_names: bool = False):
+    def scan(self, mode: str = "auto") -> None:
+        """
+        Queries the currently-open Live set and populates this Set's list of
+        tracks, clips, devices etc.
+
+        Args:
+            mode: Can be one of "auto", "file" or "network".
+                  "file" exports the set's contents using a local .json file.
+                         This is the fastest approach, but does not work if Live is running on a different computer.
+                  "network" queries the set's contents via OSC.
+                         This is slower, but can be used if Live is on a different computer.
+                  "auto" uses "file" for a local install, and "network" for a remote instance.
+        """
+
+        if mode == "auto" or mode == "local":
+            self._scan_via_file()
+        elif mode == "network":
+            self._scan_via_network()
+        else:
+            raise ValueError("Invalid value for 'mode': %s" % mode)
+
+    def _scan_via_network(self,
+                          scan_device_parameters: bool = False) -> None:
         """
         Interrogates the currently open Ableton Live set for its structure:
         number of tracks, clips, scenes, etc.
@@ -117,9 +137,7 @@ class Set:
         For speed, certain elements are not scanned by default.
 
         Args:
-            scan_scenes: Queries scene names
-            scan_devices: Queries tracks for devices and their corresponding parameters
-            scan_clip_names: Queries clips for their human-readable names
+            scan_device_parameters: Queries tracks for devices and their corresponding parameters
         """
 
         # --------------------------------------------------------------------------------
@@ -152,7 +170,7 @@ class Set:
 
             self.logger.debug(" - Scanning tracks %d-%d" % (track_index_min, track_index_max))
             rv = self.live.query("/live/song/get/track_data", (
-            track_index_min, track_index_max, "track.name", "track.is_foldable", "track.group_track"))
+                track_index_min, track_index_max, "track.name", "track.is_foldable", "track.group_track"))
             for track_index_in_block in range(tracks_in_block):
                 track_index = track_index_min + track_index_in_block
                 track_offset = track_index_in_block * 3
@@ -205,63 +223,40 @@ class Set:
                     rv_index += 1
                     device = Device(track, device_index, device_name)
 
-                    rv_num_params = self.live.query("/live/device/get/num_parameters",
-                                 (track_index, device_index))
+                    if scan_device_parameters:
+                        rv_num_params = self.live.query("/live/device/get/num_parameters", (track_index, device_index))
+                        rv_param_names = self.live.query("/live/device/get/parameters/name", (track_index, device_index))
+                        rv_param_values = self.live.query("/live/device/get/parameters/value", (track_index, device_index))
+                        rv_param_min = self.live.query("/live/device/get/parameters/min", (track_index, device_index))
+                        rv_param_max = self.live.query("/live/device/get/parameters/max", (track_index, device_index))
+                        rv_param_quantized = self.live.query("/live/device/get/parameters/is_quantized",
+                                                             (track_index, device_index))
 
-                    # print(f"{rv_num_params}: NUM PARAMS for track {track_index}'s device {device_index}")
+                        all_parameters = []
 
-                    rv_param_names = self.live.query("/live/device/get/parameters/name",
-                                 (track_index, device_index)) 
-                
-                    # print(f"{rv_param_names}: PARAM VALUES for track {track_index}'s device {device_index}")
+                        for i in range(rv_num_params[2]):
+                            all_parameters.append({
+                                # first 2 params are empty??? is this for all devices?
+                                "name": rv_param_names[i + 2],
+                                "value": rv_param_values[i],
+                                "min": rv_param_min[i],
+                                "max": rv_param_max[i],
+                                "is_quantized": rv_param_quantized[i]
+                            })
 
-                    rv_param_values = self.live.query("/live/device/get/parameters/value",
-                                 (track_index, device_index)) 
-                
-                    # print(f"{rv_param_values}: PARAM VALUES for track {track_index}'s device {device_index}")
+                        device.parameters = []
+                        for parameter_index, parameter_data in enumerate(all_parameters):
+                            parameter = Parameter(device, parameter_index, parameter_data["name"], parameter_data["value"])
+                            parameter.min = parameter_data["min"]
+                            parameter.max = parameter_data["max"]
+                            parameter.is_quantized = parameter_data["is_quantized"]
+                            device.parameters.append(parameter)
 
-
-                    rv_param_min = self.live.query("/live/device/get/parameters/min",
-                                 (track_index, device_index)) 
-                
-                    # print(f"{rv_param_min}: PARAM VALUES for track {track_index}'s device {device_index}")
-
-                    rv_param_max = self.live.query("/live/device/get/parameters/max",
-                                 (track_index, device_index)) 
-                
-                    # print(f"{rv_param_max}: PARAM VALUES for track {track_index}'s device {device_index}")
-
-                    rv_param_quantized = self.live.query("/live/device/get/parameters/is_quantized",
-                                 (track_index, device_index)) 
-                    
-                    all_parameters = []
-
-                    for i in range(rv_num_params[2]): # +1 here? shift 6 for track 2 device 1?
-                        all_parameters.append({
-                            "name": rv_param_names[i+2], # first 2 params are empty??? is this for all devices?
-                            "value": rv_param_values[i],
-                            "min": rv_param_min[i],
-                            "max": rv_param_max[i],
-                            "is_quantized": rv_param_quantized[i]
-                        })
-
-                    # print(list(all_parameters))
-
-
-                    # print(f"{rv_param_quantized}: PARAM VALUES for track {track_index}'s device {device_index}")
-
-                    device.parameters = []
-                    for parameter_index, parameter_data in enumerate(all_parameters):
-                        parameter = Parameter(device, parameter_index, parameter_data["name"], parameter_data["value"])
-                        parameter.min = parameter_data["min"]
-                        parameter.max = parameter_data["max"]
-                        parameter.is_quantized = parameter_data["is_quantized"]
-                        device.parameters.append(parameter)
                     track.devices.append(device)
 
         self.scanned = True
 
-    def scan_import(self):
+    def _scan_via_file(self) -> None:
         """
         Scans the contents of the Live set by exporting the song structure to a local .json file.
         Note that this will not work if the Live set is running on another system, i.e. over a network.
@@ -281,7 +276,7 @@ class Set:
             os.environ["TMPDIR"] = ""
         tempdir = tempfile.gettempdir()
         json_path = os.path.join(tempdir, "abletonosc-song-structure.json")
-                                   
+
         with open(json_path, "r") as fd:
             data = json.load(fd)
             tracks = data["tracks"]
@@ -535,10 +530,14 @@ class Set:
         return True
 
     def _get_last_opened_set_filename(self) -> Optional[str]:
-        # ------------------------------------------------------------------------
-        # Parse Live's Log.txt to obtain the pathname of the currently-open set.
-        # Tested on Live 11.2.
-        # ------------------------------------------------------------------------
+        """
+        Parse Live's Log.txt to obtain the pathname of the last-opened set.
+        Tested on Live 11.2.
+
+        Returns:
+            str: The absolute path to the last-opened set, or None if no log entry
+                 is found. Note that the set may not still be open!
+        """
         root = os.path.expanduser("~/Library/Preferences/Ableton")
         log_path_wildcard = os.path.join(root, "Live *", "Log.txt")
         log_paths = glob.glob(log_path_wildcard)
@@ -547,7 +546,7 @@ class Set:
             log_paths = list(sorted(log_paths, key=lambda a: os.path.getmtime(a)))
             log_path = log_paths[-1]
 
-            # Match any document-load actions that are *not* loads of MIDI Track (etc) defaults
+            # Match any document-load events that are *not* loads of MIDI Track (etc) defaults
             pattern = r'Loading document "([^"]+)"'
             antipattern = r"/Defaults/"
             with open(log_path, "r") as fd:
@@ -560,15 +559,16 @@ class Set:
 
     def get_open_set_filename(self) -> Optional[str]:
         """
-        Returns the full pathname to the currently-open Ableton Live set
+        Returns the absolute path to the currently-open Ableton Live set
         based on inspecting Live's Log.txt, or None if Live not open.
 
         Only presently supported on macOS, fixes welcomed.
+
+        Returns:
+            str: The absolute pathname, or None if Live is not running.
         """
 
-        # ------------------------------------------------------------------------
-        # If Live is not running at all, return None.
-        # ------------------------------------------------------------------------
+        # TODO: This is macOS-only. Need a Windows equivalent.
         is_running = os.system("ps axc -o command  | grep -q ^Live$") == 0
         if is_running:
             return self._get_last_opened_set_filename()
