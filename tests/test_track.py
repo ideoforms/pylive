@@ -4,7 +4,7 @@ import pytest
 import time
 import live
 
-from .shared import open_test_set
+from .shared import open_test_set, live_set
 
 def setup_module():
     open_test_set()
@@ -116,3 +116,13 @@ def test_track_device_named(track):
     device = track.get_device_named("Operator")
     assert device is not None
     assert device == track.devices[0]
+
+def test_track_type(live_set):
+    assert live_set.tracks[1].is_midi_track
+    assert not (live_set.tracks[1].is_audio_track)
+    assert live_set.tracks[2].is_midi_track
+    assert not (live_set.tracks[2].is_audio_track)
+    assert live_set.tracks[4].is_audio_track
+    assert not (live_set.tracks[4].is_midi_track)
+    assert live_set.tracks[5].is_audio_track
+    assert not (live_set.tracks[5].is_midi_track)
