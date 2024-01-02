@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.4.0](https://github.com/ideoforms/pylive/releases/tag/v0.4.0) (2023-01-02)
+
+ - Significantly reduced set scanning times by using a local JSON file to exchange set data, including devices and parameters
+ - Fixed `get_open_set_filename()` for latest Live
+ - Expanded type hints
+ - Updated beat listener to interoperate with latest AbletonOSC
+ - Fixed and expanded unit tests, ensuring that tests are idempotent
+
 ## [v0.3.0](https://github.com/ideoforms/pylive/releases/tag/v0.3.0) (2023-07-14)
 
 - Completely overhaul implementation to use [AbletonOSC](https://github.com/ideoforms/AbletonOSC) as a Live API, retiring support for LiveOSC
