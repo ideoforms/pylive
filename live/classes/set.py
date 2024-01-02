@@ -234,20 +234,19 @@ class Set:
                     device = Device(track, device_index, device_name)
 
                     if scan_device_parameters:
-                        rv_num_params = self.live.query("/live/device/get/num_parameters", (track_index, device_index))
-                        rv_param_names = self.live.query("/live/device/get/parameters/name", (track_index, device_index))
-                        rv_param_values = self.live.query("/live/device/get/parameters/value", (track_index, device_index))
-                        rv_param_min = self.live.query("/live/device/get/parameters/min", (track_index, device_index))
-                        rv_param_max = self.live.query("/live/device/get/parameters/max", (track_index, device_index))
+                        rv_num_params = self.live.query("/live/device/get/num_parameters", (track_index, device_index))[2:]
+                        rv_param_names = self.live.query("/live/device/get/parameters/name", (track_index, device_index))[2:]
+                        rv_param_values = self.live.query("/live/device/get/parameters/value", (track_index, device_index))[2:]
+                        rv_param_min = self.live.query("/live/device/get/parameters/min", (track_index, device_index))[2:]
+                        rv_param_max = self.live.query("/live/device/get/parameters/max", (track_index, device_index))[2:]
                         rv_param_quantized = self.live.query("/live/device/get/parameters/is_quantized",
-                                                             (track_index, device_index))
+                                                             (track_index, device_index))[2:]
 
                         all_parameters = []
 
-                        for i in range(rv_num_params[2]):
+                        for i in range(rv_num_params[0]):
                             all_parameters.append({
-                                # first 2 params are empty??? is this for all devices?
-                                "name": rv_param_names[i + 2],
+                                "name": rv_param_names[i],
                                 "value": rv_param_values[i],
                                 "min": rv_param_min[i],
                                 "max": rv_param_max[i],
