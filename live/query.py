@@ -160,7 +160,7 @@ class Query:
             self.osc_server_events[address].set()
             return
 
-        if address == "/live/song/beat":
+        if address == "/live/song/get/beat":
             if self.beat_callback is not None:
                 #------------------------------------------------------------------------
                 # Beat callbacks are used if we want to trigger an event on each beat,

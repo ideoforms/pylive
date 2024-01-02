@@ -91,6 +91,7 @@ class Set:
         if scan:
             self.scan()
 
+        self.start_beat_listener()
 
     def __str__(self):
         return "Set"
@@ -278,12 +279,12 @@ class Set:
 
         if sys.platform == "darwin":
             #--------------------------------------------------------------------------------
-            # On macOS, TMPDIR by default points to a process-specific directory.
-            # We want to use a global temp dir (typically, tmp) so that other processes
-            # know where to find this output .json, so unset TMPDIR.
+            # On macOS, tempfile.gettempdir() uses a process-specific directory.
+            # Use global temp dir (/tmp) as this is the directory used by AbletonOSC.
             #--------------------------------------------------------------------------------
-            os.environ["TMPDIR"] = ""
-        tempdir = tempfile.gettempdir()
+            tempdir = "/tmp"
+        else:
+            tempdir = tempfile.gettempdir()
         json_path = os.path.join(tempdir, "abletonosc-song-structure.json")
 
         with open(json_path, "r") as fd:
@@ -639,6 +640,12 @@ class Set:
 
     is_playing = property(make_getter("song", "is_playing"),
                           doc="Whether the song is playing")
+
+    def start_beat_listener(self) -> None:
+        self.live.cmd("/live/song/start_listen/beat")
+
+    def stop_beat_listener(self) -> None:
+        self.live.cmd("/live/song/stop_listen/beat")
 
     # --------------------------------------------------------------------------------
     # Undo/redo
