@@ -293,9 +293,9 @@ class Set:
                 track_group = self.tracks[track_data["group_track"]] if track_data["group_track"] is not None else None
                 if track_data["is_foldable"]:
                     group_index = len(self.groups)
-                    group = Group(self, track_data["index"], group_index, track_data["name"], track_group)
-                    self.tracks.append(group)
-                    self.groups.append(group)
+                    track = Group(self, track_data["index"], group_index, track_data["name"], track_group)
+                    self.tracks.append(track)
+                    self.groups.append(track)
                 else:
                     track = Track(self, track_data["index"], track_data["name"], track_group)
                     self.tracks.append(track)
