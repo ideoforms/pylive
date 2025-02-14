@@ -631,6 +631,9 @@ class Set:
     def continue_playing(self) -> None:
         self.live.cmd("/live/song/continue_playing")
 
+    def play_selection(self) -> None:
+        self.live.cmd("/live/song/play_selection")
+
     def stop_playing(self) -> None:
         self.live.cmd("/live/song/stop_playing")
 
