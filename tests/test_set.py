@@ -53,6 +53,12 @@ def test_set_play(set: Set):
     set.stop_playing()
     assert set.current_song_time > 0.0
 
+    # Repeat for play_selection
+    set.play_selection()
+    time.sleep(0.1)
+    set.stop_playing()
+    assert set.current_song_time > 0.0
+
     #------------------------------------------------------------------------
     # Play without reset
     #------------------------------------------------------------------------
