@@ -10,7 +10,7 @@ It can perform many of the operations described in the [AbletonOSC API](https://
 
 If you are looking simply to send MIDI messages to Live, this module is not what you want. Instead, try setting up a [virtual MIDI bus](https://help.ableton.com/hc/en-us/articles/209774225-How-to-setup-a-virtual-MIDI-bus) and using [isobar](https://ideoforms.github.io/isobar/) to generate MIDI sequences.
 
-**Note for legacy users:** As of 2023, pylive has been updated to to interface exclusively with [AbletonOSC](https://github.com/ideoforms/AbletonOSC) for Live 11 support. Legacy LiveOSC is no longer supported beyond [v0.2.2](https://github.com/ideoforms/pylive/releases/tag/v0.2.2).
+**Note for legacy users:** As of 2023, pylive has been updated to interface exclusively with [AbletonOSC](https://github.com/ideoforms/AbletonOSC) for Live 11 support. Legacy LiveOSC is no longer supported beyond [v0.2.2](https://github.com/ideoforms/pylive/releases/tag/v0.2.2).
 
 ## Requirements
 
