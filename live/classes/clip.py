@@ -115,6 +115,19 @@ class Clip:
         """
         self.live.cmd("/live/clip/add/notes", (self.track.index, self.index, pitch, start_time, duration, velocity, mute))
 
+    def duplicate(self, to_track, to_clip):
+        """
+        Duplicates the current clip slot to a specified target track and clip slot.
+
+        Args:
+            to_track (int): The index of the target track where the clip should be duplicated.
+            to_clip (int): The index of the target clip slot within the target track.
+        """
+        to_track_index = to_track - 1
+        to_clip_index = to_clip - 1
+        self.live.cmd("/live/clip_slot/duplicate_clip_to", (self.track.index, self.index, to_track_index, to_clip_index))
+        self.set.scan()
+
     pitch_coarse = property(fget=make_getter("clip", "pitch_coarse"),
                             fset=make_setter("clip", "pitch_coarse"),
                             doc="Coarse pitch bend")
