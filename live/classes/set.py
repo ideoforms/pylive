@@ -770,19 +770,18 @@ class Set:
 
     # --------------------------------------------------------------------------------
     # Cues
-    # TODO: Refactor cues
     # --------------------------------------------------------------------------------
     def prev_cue(self):
         """
         Jump to the previous cue.
         """
-        self.live.cmd("/live/prev/cue")
+        self.live.cmd("/live/song/jump_to_prev_cue")
 
     def next_cue(self):
         """
         Jump to the next cue.
         """
-        self.live.cmd("/live/next/cue")
+        self.live.cmd("/live/song/jump_to_next_cue")
 
     # --------------------------------------------------------------------------------
     # Log level
