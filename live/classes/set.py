@@ -621,7 +621,7 @@ class Set:
                                    fset=make_setter("song", "arrangement_overdub"),
                                    doc="Arrangement overdub")
     
-    looping = property(fget=make_getter("song", "loop"),
+    loop = property(fget=make_getter("song", "loop"),
                      fset=make_setter("song", "loop"),
                      doc="Looping active/inactive")
 
