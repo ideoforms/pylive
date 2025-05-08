@@ -238,3 +238,24 @@ class Track:
 
     def set_send(self, send_index: int, value: float):
         self.live.cmd("/live/track/set/send", (self.index, send_index, value))
+
+    #------------------------------------------------------------------------
+    # Query clip properties in Arrangement
+    #------------------------------------------------------------------------
+    """
+    All functions retrieve properties of the clips in the track in the arrangement.
+    The function always returns an array with the track_id in place 0 and the resp. property for
+    each clip in order after that.
+    The available attributes are: name, length, start_time
+    Returns: An array of track_id and the queried information of the clips in the arrangement in order.
+    Example: [track_id, name first clip, name second clip, ...]
+    """
+
+    def get_arrangement_clips_name(self):
+        return self.live.query("/live/track/get/arrangement_clips/name", (self.index,))
+
+    def get_arrangement_clips_length(self):
+        return self.live.query("/live/track/get/arrangement_clips/length", (self.index,))
+    
+    def get_arrangement_clips_start_time(self):
+        return self.live.query("/live/track/get/arrangement_clips/start_time", (self.index,))
