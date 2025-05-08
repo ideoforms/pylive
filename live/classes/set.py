@@ -771,13 +771,13 @@ class Set:
     # --------------------------------------------------------------------------------
     # Cues
     # --------------------------------------------------------------------------------
-    def prev_cue(self):
+    def jump_to_prev_cue(self):
         """
         Jump to the previous cue.
         """
         self.live.cmd("/live/song/jump_to_prev_cue")
 
-    def next_cue(self):
+    def jump_to_next_cue(self):
         """
         Jump to the next cue.
         """
