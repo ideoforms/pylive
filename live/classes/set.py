@@ -621,6 +621,10 @@ class Set:
     arrangement_overdub = property(fget=make_getter("song", "arrangement_overdub"),
                                    fset=make_setter("song", "arrangement_overdub"),
                                    doc="Arrangement overdub")
+    
+    loop = property(fget=make_getter("song", "loop"),
+                     fset=make_setter("song", "loop"),
+                     doc="Looping active/inactive")
 
     # --------------------------------------------------------------------------------
     # Start/stop playback
@@ -771,19 +775,18 @@ class Set:
 
     # --------------------------------------------------------------------------------
     # Cues
-    # TODO: Refactor cues
     # --------------------------------------------------------------------------------
-    def prev_cue(self):
+    def jump_to_prev_cue(self):
         """
         Jump to the previous cue.
         """
-        self.live.cmd("/live/prev/cue")
+        self.live.cmd("/live/song/jump_to_prev_cue")
 
-    def next_cue(self):
+    def jump_to_next_cue(self):
         """
         Jump to the next cue.
         """
-        self.live.cmd("/live/next/cue")
+        self.live.cmd("/live/song/jump_to_next_cue")
 
     # --------------------------------------------------------------------------------
     # Log level

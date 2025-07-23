@@ -130,3 +130,7 @@ class Clip:
     is_audio_clip = property(fget=make_getter("clip", "is_audio_clip"),
                              fset=make_setter("clip", "is_audio_clip"),
                              doc="True if the clip is an audio clip, False otherwise")
+
+    file_path = property(fget=make_getter("clip", "file_path"),
+                         fset=make_setter("clip", "file_path"),
+                         doc="Return the clip's file_path attribute")
