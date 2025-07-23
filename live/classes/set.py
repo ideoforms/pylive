@@ -325,6 +325,7 @@ class Set:
         num_clips = sum([len(track.active_clips) for track in self.tracks])
         self.logger.info("Discovered %d clips in %d tracks" % (num_clips, num_tracks))
 
+    # TODO: Retire all of these methods now scanning is basically instant
     def load_or_scan(self, filename: str = "set", **kwargs):
         """
         Load from file; if file does not exist, scan, then save.
@@ -794,6 +795,10 @@ class Set:
     back_to_arranger = property(fget=make_getter("song", "back_to_arranger"),
                                 fset=make_setter("song", "back_to_arranger"),
                                 doc="Set back to arranger")
+    
+    is_ableton_link_enabled = property(fget=make_getter("song", "is_ableton_link_enabled"),
+                                       fset=make_setter("song", "is_ableton_link_enabled"),
+                                       doc="Whether Ableton Link is enabled")
 
     @property
     def average_process_usage(self):
