@@ -18,6 +18,7 @@ from .group import Group
 from .scene import Scene
 from .device import Device
 from .parameter import Parameter
+from .view import View
 from ..query import Query
 from ..constants import CLIP_STATUS_STOPPED
 from ..exceptions import LiveIOError, LiveConnectionError
@@ -57,6 +58,11 @@ class Set:
         Args:
             scan: If True, automatically scans the contents of the set.
         """
+        # --------------------------------------------------------------------------
+        # Class used to query AbletonOSCs view endpoints.
+        # --------------------------------------------------------------------------
+        self.view = View()
+
         # --------------------------------------------------------------------------
         # Indicates whether the set has been synchronised with Live
         # --------------------------------------------------------------------------
