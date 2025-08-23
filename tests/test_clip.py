@@ -42,3 +42,7 @@ def test_clip_pitch_coarse(audio_clip):
     audio_clip.pitch_coarse = -24
     assert audio_clip.pitch_coarse == -24
     audio_clip.pitch_coarse = 0
+
+def test_clip_duplicate(clip, live_set):
+    clip.duplicate(1, 1)
+    assert len(live_set.tracks[1].clips) == 2
